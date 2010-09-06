@@ -2,6 +2,8 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
 {
     if (!require("oro.nifti"))
         stop("The \"oro.nifti\" package is required")
+    if (missing(source) || missing(target))
+        stop("Source and target images must be given")
     if (!is.nifti(source) || !is.nifti(target))
         stop("Source and target images must be \"nifti\" objects")
     if (!is.null(targetMask) && !is.nifti(targetMask))

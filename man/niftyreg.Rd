@@ -39,6 +39,8 @@ A list of class \code{"niftyreg"} with components
 
 \note{
 A precalculated affine matrix can be applied to transform a new image by giving an appropriate \code{initAffine} and setting \code{nLevels} to 0.
+
+If substantial parts of the target image are zero-valued, for example because the target image has been brain-extracted, it can be useful to pass it as a target mask as well as the target image. That is, \code{niftyreg(source, target, target)}.
 }
 
 \references{
