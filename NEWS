@@ -1,0 +1,5 @@
+Significant changes to the RNiftyReg package are laid out below for each release.
+
+VERSION 0.1.0
+
+- First public release. Affine and rigid-body registration are available.
