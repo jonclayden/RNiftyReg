@@ -234,7 +234,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     bool usingTargetMask = (targetMaskImage != NULL);
     bool twoDimRegistration = (sourceImage->nz == 1 || targetImage->nz == 1);
     float sourceBGValue = 0.0;
-    nifti_image *resultImage, *positionFieldImage;
+    nifti_image *resultImage, *positionFieldImage = NULL;
     
     // Initial affine matrix is the identity
     if (affineTransformation == NULL)
