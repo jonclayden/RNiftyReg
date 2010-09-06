@@ -53,4 +53,4 @@ Ourselin, S., Stefanescu, R. and Pennec, X. (2002). Robust registration of multi
 
 \author{Jon Clayden <jon.clayden+rniftyreg@gmail.com>}
 
-\seealso{\code{\link{nifti}} (no relation!), in the \code{oro.nifti} package, for creating the image objects passed to this function}
+\seealso{\code{nifti} (no relation!), in the \code{oro.nifti} package, for creating the image objects passed to this function}

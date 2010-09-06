@@ -21,4 +21,4 @@ xformToAffine(image, useQuaternionFirst = TRUE)
 
 \author{Jon Clayden <jon.clayden+rniftyreg@gmail.com>}
 
-\seealso{\code{\link{nifti}}, in the \code{oro.nifti} package}
+\seealso{\code{nifti}, in the \code{oro.nifti} package}
