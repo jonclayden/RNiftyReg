@@ -47,9 +47,9 @@ convertAffine <- function (affine, source, target, newType = c("niftyreg","fsl")
         targetScaling <- diag(c(sqrt(colSums(targetXform[1:3,1:3]^2)), 1))
         
         if (newType == "fsl")
-            newAffine <- sourceXform %*% solve(sourceScaling) %*% solve(affine) %*% targetScaling %*% solve(targetXform)
-        else
             newAffine <- targetScaling %*% solve(targetXform) %*% solve(affine) %*% sourceXform %*% solve(sourceScaling)
+        else
+            newAffine <- sourceXform %*% solve(sourceScaling) %*% solve(affine) %*% targetScaling %*% solve(targetXform)
         
         attr(newAffine, "affineType") <- newType
         return (newAffine)
