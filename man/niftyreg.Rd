@@ -1,9 +1,9 @@
 \name{niftyreg}
 \alias{niftyreg}
 
-\title{Two and three dimensional image registration}
+\title{Three dimensional image registration}
 \description{
-The \code{niftyreg} function performs registration for two and three dimensional images. Rigid-body (6 degrees of freedom) and affine (12 degrees of freedom) registration can currently be performed.
+The \code{niftyreg} function performs registration for three dimensional images. Rigid-body (6 degrees of freedom) and affine (12 degrees of freedom) registration can currently be performed.
 }
 
 \usage{

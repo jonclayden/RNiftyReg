@@ -6,6 +6,8 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
         stop("Source and target images must be given")
     if (!is.nifti(source) || !is.nifti(target))
         stop("Source and target images must be \"nifti\" objects")
+    if (source@dim_[1] != 3 || target@dim_[1] != 3)
+        stop("Only 3D source and target images may be used at present")
     if (!is.null(targetMask) && !is.nifti(targetMask))
         stop("Target mask must be NULL or a \"nifti\" object")
     if (any(sapply(list(nLevels,maxIterations,useBlockPercentage,verbose), length) != 1))
