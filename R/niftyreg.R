@@ -1,3 +1,22 @@
+.fixTypes <- function (image)
+{
+    if (is.null(image))
+        return (NULL)
+    else
+    {
+        integerSlots <- c("dim_", "intent_code", "datatype", "bitpix", "slice_start", "slice_end", "slice_code", "xyzt_units", "qform_code", "sform_code")
+        numericSlots <- c("intent_p1", "intent_p2", "intent_p3", "slice_duration", "pixdim", "vox_offset", "scl_slope", "scl_inter", "toffset", "cal_max", "cal_min", "quatern_b", "quatern_c", "quatern_d", "qoffset_x", "qoffset_y", "qoffset_z", "srow_x", "srow_y", "srow_z")
+        
+        for (i in seq_along(integerSlots))
+            slot(image, integerSlots[i]) <- as.integer(slot(image, integerSlots[i]))
+        
+        for (i in seq_along(numericSlots))
+            slot(image, numericSlots[i]) <- as.numeric(slot(image, numericSlots[i]))
+        
+        return (image)
+    }
+}
+
 niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, verbose = FALSE)
 {
     if (!require("oro.nifti"))
@@ -25,7 +44,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     
     scope <- match.arg(scope)
     
-    returnValue <- .Call("reg_aladin", source, target, scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), targetMask, initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+    returnValue <- .Call("reg_aladin", .fixTypes(source), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
     
     dim(returnValue[[1]]) <- dim(target)
     dim(returnValue[[2]]) <- c(4,4)
