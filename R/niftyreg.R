@@ -13,6 +13,17 @@
         for (i in seq_along(numericSlots))
             slot(image, numericSlots[i]) <- as.numeric(slot(image, numericSlots[i]))
         
+        invalidDatatypes <- c("COMPLEX64", "RGB24", "INT64", "UINT64", "FLOAT128", "COMPLEX128", "COMPLEX256", "RGBA32")
+        doubleDatatypes <- c("FLOAT32", "FLOAT64")
+        
+        datatypeName <- convert.datatype(image@datatype)
+        if (datatypeName %in% invalidDatatypes)
+            stop("RNiftyReg does not support the \"", datatypeName, "\" image data type")
+        else if (datatypeName %in% doubleDatatypes)
+            storage.mode(image@.Data) <- "double"
+        else
+            storage.mode(image@.Data) <- "integer"
+        
         return (image)
     }
 }
