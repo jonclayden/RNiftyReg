@@ -20,7 +20,7 @@
 #include "niftyreg.h"
 
 extern "C"
-SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP targetMask, SEXP affineComponents, SEXP verbose)
+SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
 {
     int i, j;
     SEXP returnValue, data;
@@ -47,7 +47,7 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIter
     
     int regType = (strcmp(CHAR(STRING_ELT(type,0)),"rigid")==0 ? RIGID : AFFINE);
     
-    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
+    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
     
     PROTECT(returnValue = NEW_LIST(2));
     
@@ -228,7 +228,7 @@ nifti_image * create_position_field (nifti_image *templateImage, bool twoDimRegi
 }
 
 // Run the "aladin" registration algorithm
-aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int nLevels, int maxIterations, int useBlockPercentage, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
+aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
 {
     int i;
     bool usingTargetMask = (targetMaskImage != NULL);
@@ -412,7 +412,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     resultImage->datatype = sourceImage->datatype;
     resultImage->nbyper = sourceImage->nbyper;
     resultImage->data = calloc(resultImage->nvox, resultImage->nbyper);
-    reg_resampleSourceImage<double>(targetImage, sourceImage, resultImage, positionFieldImage, NULL, 3, sourceBGValue);
+    reg_resampleSourceImage<double>(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourceBGValue);
     
     nifti_image_free(positionFieldImage);
     

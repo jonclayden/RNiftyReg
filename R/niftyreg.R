@@ -28,7 +28,7 @@
     }
 }
 
-niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, verbose = FALSE)
+niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE)
 {
     if (!require("oro.nifti"))
         stop("The \"oro.nifti\" package is required")
@@ -40,8 +40,10 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
         stop("Only 3D source and target images may be used at present")
     if (!is.null(targetMask) && !is.nifti(targetMask))
         stop("Target mask must be NULL or a \"nifti\" object")
-    if (any(sapply(list(nLevels,maxIterations,useBlockPercentage,verbose), length) != 1))
+    if (any(sapply(list(nLevels,maxIterations,useBlockPercentage,finalInterpolation,verbose), length) != 1))
         stop("Control parameters must all be of unit length")
+    if (!(finalInterpolation %in% c(0,1,3)))
+        stop("Final interpolation specifier must be 0, 1 or 3")
     
     if (!is.null(initAffine))
     {
@@ -55,7 +57,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     
     scope <- match.arg(scope)
     
-    returnValue <- .Call("reg_aladin", .fixTypes(source), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+    returnValue <- .Call("reg_aladin", .fixTypes(source), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
     
     dim(returnValue[[1]]) <- dim(target)
     dim(returnValue[[2]]) <- c(4,4)
