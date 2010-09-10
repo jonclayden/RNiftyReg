@@ -2,6 +2,16 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 0.2.0
+
+- Added an option to niftyreg() to control the type of interpolation that is
+  applied to the final coregistered image.
+- Performing better type checking of image data before passing it to the C++
+  code, to avoid intermittent errors from R.
+- Documentation improvements.
+
+=================================================================================
+
 VERSION 0.1.0
 
 - First public release. 3D affine and rigid-body registration are available.
