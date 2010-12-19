@@ -100,7 +100,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
         }
         
         resultImage <- as.nifti(finalArray, target)
-        resultImage@dim_[nSourceDims] <- nReps
+        resultImage@dim_[nSourceDims+1] <- nReps
     }
     
     resultImage@cal_min <- min(resultImage@.Data)
