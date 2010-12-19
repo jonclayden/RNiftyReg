@@ -36,8 +36,14 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
         stop("Source and target images must be given")
     if (!is.nifti(source) || !is.nifti(target))
         stop("Source and target images must be \"nifti\" objects")
-    if (source@dim_[1] != 3 || target@dim_[1] != 3)
-        stop("Only 3D source and target images may be used at present")
+    if (!(source@dim_[1] %in% c(2,3,4)))
+        stop("Only 2D, 3D or 4D source images may be used")
+    if (!(target@dim_[1] %in% c(2,3)))
+        stop("Only 2D or 3D target images may be used")
+    if (length(dim(source)) - length(dim(target)) > 1)
+        stop("The source image may not have more than one extra dimension")
+    if (any(dim(source) < 4) || any(dim(target) < 4))
+        stop("Images of fewer than 4 voxels in any dimension cannot be registered")
     if (!is.null(targetMask) && !is.nifti(targetMask))
         stop("Target mask must be NULL or a \"nifti\" object")
     if (any(sapply(list(nLevels,maxIterations,useBlockPercentage,finalInterpolation,verbose), length) != 1))
@@ -57,13 +63,46 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     
     scope <- match.arg(scope)
     
-    returnValue <- .Call("reg_aladin", .fixTypes(source), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+    if (source@dim_[1] == target@dim_[1])
+    {
+        returnValue <- .Call("reg_aladin", .fixTypes(source), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+
+        dim(returnValue[[1]]) <- dim(target)
+        dim(returnValue[[2]]) <- c(4,4)
+        attr(returnValue[[2]], "affineType") <- "niftyreg"
+
+        resultImage <- as.nifti(returnValue[[1]], target)
+        affine <- list(returnValue[[2]])
+    }
+    else
+    {
+        nSourceDims <- source@dim_[1]
+        finalDims <- c(dim(target), dim(source)[nSourceDims])
+        nReps <- finalDims[length(finalDims)]
+        finalArray <- array(0, dim=finalDims)
+        affine <- vector("list", nReps)
+        for (i in seq_len(nReps))
+        {
+            if (nSourceDims == 3)
+            {
+                returnValue <- .Call("reg_aladin", .fixTypes(as.nifti(source[,,i],source)), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+                finalArray[,,i] <- returnValue[[1]]
+            }
+            else if (nSourceDims == 4)
+            {
+                returnValue <- .Call("reg_aladin", .fixTypes(as.nifti(source[,,,i],source)), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+                finalArray[,,,i] <- returnValue[[1]]
+            }
+            
+            dim(returnValue[[2]]) <- c(4,4)
+            attr(returnValue[[2]], "affineType") <- "niftyreg"
+            affine[[i]] <- returnValue[[2]]
+        }
+        
+        resultImage <- as.nifti(finalArray, target)
+        resultImage@dim_[nSourceDims] <- nReps
+    }
     
-    dim(returnValue[[1]]) <- dim(target)
-    dim(returnValue[[2]]) <- c(4,4)
-    attr(returnValue[[2]], "affineType") <- "niftyreg"
-    
-    resultImage <- as.nifti(returnValue[[1]], target)
     resultImage@cal_min <- min(resultImage@.Data)
     resultImage@cal_max <- max(resultImage@.Data)
     resultImage@scl_slope <- source@scl_slope
@@ -71,7 +110,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     resultImage@datatype <- source@datatype
     resultImage@bitpix <- as.numeric(source@bitpix)
     
-    result <- list(image=resultImage, affine=returnValue[[2]], scope=scope)
+    result <- list(image=resultImage, affine=affine, scope=scope)
     class(result) <- "niftyreg"
     
     return (result)
