@@ -2,6 +2,19 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 0.3.0
+
+- 2D-to-2D, 3D-to-2D and 4D-to-3D registration are now supported by niftyreg().
+  As a result of this added flexibility, a list of affine matrices, rather than
+  a single matrix, is now returned by this function.
+- An image of fewer than 4 pixels/voxels in any dimension cannot be registered
+  since it cannot accommodate a single matching block. Providing such an image
+  as the source or target now produces an error rather than a crash. (Thanks to
+  Takeo Katsuki for pointing this out.)
+- Further documentation improvements.
+
+=================================================================================
+
 VERSION 0.2.0
 
 - Added an option to niftyreg() to control the type of interpolation that is
