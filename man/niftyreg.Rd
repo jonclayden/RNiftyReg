@@ -44,6 +44,8 @@ A list of class \code{"niftyreg"} with components
 A precalculated affine matrix can be applied to transform a new image by giving an appropriate \code{initAffine} and setting \code{nLevels} to 0.
 
 If substantial parts of the target image are zero-valued, for example because the target image has been brain-extracted, it can be useful to pass it as a target mask as well as the target image, viz. \code{niftyreg(source, target, target)}.
+
+There is no reason that images other than medical images cannot be registered using this function. A standard R array can be converted to a valid \code{nifti} object easily for these purposes using the \code{as.nifti} function in the \code{oro.nifti} package.
 }
 
 \references{
@@ -56,4 +58,4 @@ Ourselin, S., Stefanescu, R. and Pennec, X. (2002). Robust registration of multi
 
 \author{Jon Clayden <jon.clayden+rniftyreg@gmail.com>}
 
-\seealso{\code{nifti} (no relation!), in the \code{oro.nifti} package, for creating the image objects passed to this function}
+\seealso{\code{nifti} (no relation!), in the \code{oro.nifti} package, for creating the image objects passed to this function. Useful related functions are \code{as.nifti}, \code{readNIfTI} and \code{writeNIfTI}.}
