@@ -1,18 +1,18 @@
 \name{niftyreg}
 \alias{niftyreg}
 
-\title{Three dimensional image registration}
+\title{Two and three dimensional image registration}
 \description{
-The \code{niftyreg} function performs registration for three dimensional images. Rigid-body (6 degrees of freedom) and affine (12 degrees of freedom) registration can currently be performed.
+The \code{niftyreg} function performs registration for two and three dimensional images. 4D images may also be registered volumewise to a 3D image, or 3D images slicewise to a 2D image. Rigid-body (6 degrees of freedom) and affine (12 degrees of freedom) registration can currently be performed.
 }
 
 \usage{
-niftyreg(source, target, targetMask = NULL, initAffine = NULL, scope = c("affine", "rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE)
+niftyreg(source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE)
 }
 
 \arguments{
-  \item{source}{The source image, an object of class \code{"nifti"}. Package \code{oro.nifti} defines this class and provides functions for reading and writing NIfTI files.}
-  \item{target}{The target image, also an object of class \code{"nifti"}.}
+  \item{source}{The source image, an object of class \code{"nifti"} with 2, 3 or 4 dimensions. Package \code{oro.nifti} defines this class and provides functions for reading and writing NIfTI files.}
+  \item{target}{The target image, an object of class \code{"nifti"} with 2 or 3 dimensions.}
   \item{targetMask}{An optional mask image (again a \code{"nifti"} object), whose nonzero region will be taken as the region of interest for the registration. Must have the same voxel and image dimensions as the target image.}
   \item{initAffine}{An optional affine matrix to initialise the algorithm. If \code{NULL}, the identity matrix is used, with an appropriate offset to account for differences in the image origins.}
   \item{scope}{A string describing the scope, or number of degrees of freedom (DOF), of the registration. Only \code{"affine"} (12 DOF) and \code{"rigid"} (6 DOF) are currently supported.}
@@ -29,19 +29,21 @@ This function performs the dual operations of finding a transformation to optimi
 The algorithm is based on a block-matching approach and Least Trimmed Squares (LTS) fitting. Firstly, the block matching provides a set of corresponding points between a target and a source image. Secondly, using this set of corresponding points, the best rigid or affine transformation is evaluated. This two-step loop is repeated until convergence to the best transformation.
 
 In the NiftyReg implementation, normalised cross-correlation between the target and source blocks is used to evaluate correspondence. The block width is constant and has been set to 4 voxels. A coarse-to-fine approach is used, where the registration is first performed on down-sampled images (using a Gaussian filter to resample images), and finally performed on full resolution images.
+
+The source image may have 2, 3 or 4 dimensions, and the target 2 or 3. The dimensionality of the target image determines whether 2D or 3D registration is applied, and source images with one more dimension than the target (i.e. 4D to 3D, or 3D to 2D) will be registered volumewise or slicewise, as appropriate. In the latter case the last dimension of the resulting image is taken from the source image, while all other dimensions come from the target. One affine matrix is returned for each registration performed.
 }
 
 \value{
 A list of class \code{"niftyreg"} with components
 \item{image}{An image object of class \code{"nifti"} representing the registered and resampled \code{source} image in the space of the \code{target} image.}
-\item{affine}{A 4x4 matrix containing the optimised affine transformation matrix.}
+\item{affine}{A list of 4x4 matrices containing the optimised affine transformations for each slice or volume of the source image. If the target is a 2D image, elements involving the Z dimension will have no effect.}
 \item{scope}{Copied from the function argument of the same name.}
 }
 
 \note{
 A precalculated affine matrix can be applied to transform a new image by giving an appropriate \code{initAffine} and setting \code{nLevels} to 0.
 
-If substantial parts of the target image are zero-valued, for example because the target image has been brain-extracted, it can be useful to pass it as a target mask as well as the target image. That is, \code{niftyreg(source, target, target)}.
+If substantial parts of the target image are zero-valued, for example because the target image has been brain-extracted, it can be useful to pass it as a target mask as well as the target image, viz. \code{niftyreg(source, target, target)}.
 }
 
 \references{
