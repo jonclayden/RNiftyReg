@@ -292,15 +292,15 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
             int ratio = (int) powf(2.0f, l+1.0f);
 
             bool sourceDownsampleAxis[8] = {true,true,true,true,true,true,true,true};
-            if ((sourceImageCopy->nx/ratio) < 32) sourceDownsampleAxis[1] = false;
-            if ((sourceImageCopy->ny/ratio) < 32) sourceDownsampleAxis[2] = false;
-            if ((sourceImageCopy->nz/ratio) < 32) sourceDownsampleAxis[3] = false;
+            if ((sourceImage->nx/ratio) < 32) sourceDownsampleAxis[1] = false;
+            if ((sourceImage->ny/ratio) < 32) sourceDownsampleAxis[2] = false;
+            if ((sourceImage->nz/ratio) < 32) sourceDownsampleAxis[3] = false;
             reg_downsampleImage<PRECISION_TYPE>(sourceImageCopy, 1, sourceDownsampleAxis);
 
             bool targetDownsampleAxis[8] = {true,true,true,true,true,true,true,true};
-            if ((targetImageCopy->nx/ratio) < 32) targetDownsampleAxis[1] = false;
-            if ((targetImageCopy->ny/ratio) < 32) targetDownsampleAxis[2] = false;
-            if ((targetImageCopy->nz/ratio) < 32) targetDownsampleAxis[3] = false;
+            if ((targetImage->nx/ratio) < 32) targetDownsampleAxis[1] = false;
+            if ((targetImage->ny/ratio) < 32) targetDownsampleAxis[2] = false;
+            if ((targetImage->nz/ratio) < 32) targetDownsampleAxis[3] = false;
             reg_downsampleImage<PRECISION_TYPE>(targetImageCopy, 1, targetDownsampleAxis);
 
             if (usingTargetMask)
