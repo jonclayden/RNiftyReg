@@ -2,6 +2,14 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 0.3.1
+
+- A bug in previous releases affecting the downsampling of images during early
+  "levels" of alignment has been fixed. Coregistration of larger images, in
+  particular, should be improved as a result.
+
+=================================================================================
+
 VERSION 0.3.0
 
 - 2D-to-2D, 3D-to-2D and 4D-to-3D registration are now supported by niftyreg().
