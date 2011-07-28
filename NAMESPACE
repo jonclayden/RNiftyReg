@@ -1,3 +1,5 @@
 useDynLib("RNiftyReg")
 
+import(reportr)
+
 exportPattern("^[^\\.]")

@@ -2,6 +2,12 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 0.4.1
+
+- The reportr package is now properly imported in the namespace file.
+
+=================================================================================
+
 VERSION 0.4.0
 
 - The applyAffine() function has been added as a convenience wrapper to
