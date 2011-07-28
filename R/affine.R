@@ -4,7 +4,7 @@ readAffine <- function (fileName, type)
     affine <- as.matrix(read.table(fileName))
     
     if (!isTRUE(all.equal(dim(affine), c(4,4))))
-        stop("The specified file does not contain a 4x4 affine matrix")
+        report(OL$Error, "The specified file does not contain a 4x4 affine matrix")
     
     attr(affine, "affineType") <- type
     return (affine)
@@ -13,18 +13,18 @@ readAffine <- function (fileName, type)
 writeAffine <- function (affine, fileName)
 {
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
-        stop("Specified affine matrix is not valid")
+        report(OL$Error, "Specified affine matrix is not valid")
     write.table(affine, fileName, row.names=FALSE, col.names=FALSE)
 }
 
 convertAffine <- function (affine, source, target, newType = c("niftyreg","fsl"), currentType = NULL)
 {
     if (!require("oro.nifti"))
-        stop("The \"oro.nifti\" package is required")
+        report(OL$Error, "The \"oro.nifti\" package is required")
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
-        stop("Specified affine matrix is not valid")
+        report(OL$Error, "Specified affine matrix is not valid")
     if (!is.nifti(source) || !is.nifti(target))
-        stop("Source and target images must be specified as \"nifti\" objects")
+        report(OL$Error, "Source and target images must be specified as \"nifti\" objects")
     
     newType <- match.arg(newType)
     
@@ -32,7 +32,7 @@ convertAffine <- function (affine, source, target, newType = c("niftyreg","fsl")
     {
         currentType <- attr(affine, "affineType")
         if (is.null(currentType))
-            stop("The current affine type was not specified and is not stored with the matrix")
+            report(OL$Error, "The current affine type was not specified and is not stored with the matrix")
     }
     else
         currentType <- match.arg(currentType, c("niftyreg","fsl"))
@@ -59,12 +59,12 @@ convertAffine <- function (affine, source, target, newType = c("niftyreg","fsl")
 decomposeAffine <- function (affine, source = NULL, target = NULL, type = NULL)
 {
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
-        stop("Specified affine matrix is not valid")
+        report(OL$Error, "Specified affine matrix is not valid")
     if (is.null(type))
     {
         type <- attr(affine, "affineType")
         if (is.null(type))
-            stop("The current affine type was not specified and is not stored with the matrix")
+            report(OL$Error, "The current affine type was not specified and is not stored with the matrix")
     }
     
     if (type == "niftyreg")

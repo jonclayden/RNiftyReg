@@ -1,9 +1,9 @@
 xformToAffine <- function (image, useQuaternionFirst = TRUE)
 {
     if (!require("oro.nifti"))
-        stop("The \"oro.nifti\" package is required")
+        report(OL$Error, "The \"oro.nifti\" package is required")
     if (!is.nifti(image))
-        stop("The specified image is not a \"nifti\" object")
+        report(OL$Error, "The specified image is not a \"nifti\" object")
     
     # With no information, assume Analyze orientation and zero origin
     if (image@qform_code <= 0 && image@sform_code <= 0)

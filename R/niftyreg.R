@@ -18,7 +18,7 @@
         
         datatypeName <- convert.datatype(image@datatype)
         if (datatypeName %in% invalidDatatypes)
-            stop("RNiftyReg does not support the \"", datatypeName, "\" image data type")
+            report(OL$Error, "RNiftyReg does not support the \"", datatypeName, "\" image data type")
         else if (datatypeName %in% doubleDatatypes)
             storage.mode(image@.Data) <- "double"
         else
@@ -31,30 +31,30 @@
 niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE)
 {
     if (!require("oro.nifti"))
-        stop("The \"oro.nifti\" package is required")
+        report(OL$Error, "The \"oro.nifti\" package is required")
     if (missing(source) || missing(target))
-        stop("Source and target images must be given")
+        report(OL$Error, "Source and target images must be given")
     if (!is.nifti(source) || !is.nifti(target))
-        stop("Source and target images must be \"nifti\" objects")
+        report(OL$Error, "Source and target images must be \"nifti\" objects")
     if (!(source@dim_[1] %in% c(2,3,4)))
-        stop("Only 2D, 3D or 4D source images may be used")
+        report(OL$Error, "Only 2D, 3D or 4D source images may be used")
     if (!(target@dim_[1] %in% c(2,3)))
-        stop("Only 2D or 3D target images may be used")
+        report(OL$Error, "Only 2D or 3D target images may be used")
     if (length(dim(source)) - length(dim(target)) > 1)
-        stop("The source image may not have more than one extra dimension")
+        report(OL$Error, "The source image may not have more than one extra dimension")
     if (any(dim(source) < 4) || any(dim(target) < 4))
-        stop("Images of fewer than 4 voxels in any dimension cannot be registered")
+        report(OL$Error, "Images of fewer than 4 voxels in any dimension cannot be registered")
     if (!is.null(targetMask) && !is.nifti(targetMask))
-        stop("Target mask must be NULL or a \"nifti\" object")
+        report(OL$Error, "Target mask must be NULL or a \"nifti\" object")
     if (any(sapply(list(nLevels,maxIterations,useBlockPercentage,finalInterpolation,verbose), length) != 1))
-        stop("Control parameters must all be of unit length")
+        report(OL$Error, "Control parameters must all be of unit length")
     if (!(finalInterpolation %in% c(0,1,3)))
-        stop("Final interpolation specifier must be 0, 1 or 3")
+        report(OL$Error, "Final interpolation specifier must be 0, 1 or 3")
     
     if (!is.null(initAffine))
     {
         if (!is.matrix(initAffine) || !isTRUE(all.equal(dim(initAffine), c(4,4))))
-            stop("Specified affine matrix is not valid")
+            report(OL$Error, "Specified affine matrix is not valid")
         else if (!is.null(attr(initAffine,"affineType")) && attr(initAffine,"affineType") != "niftyreg")
             initAffine <- convertAffine(initAffine, source, target, newType="niftyreg")
         
@@ -119,13 +119,13 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
 applyAffine <- function (affine, source, target, affineType = NULL, finalInterpolation = 3)
 {
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
-        stop("Specified affine matrix is not valid")
+        report(OL$Error, "Specified affine matrix is not valid")
     
     if (is.null(affineType))
     {
         affineType <- attr(affine, "affineType")
         if (is.null(affineType))
-            stop("The current affine type was not specified and is not stored with the matrix")
+            report(OL$Error, "The current affine type was not specified and is not stored with the matrix")
     }
     else
         attr(affine, "affineType") <- affineType
