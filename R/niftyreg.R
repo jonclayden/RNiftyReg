@@ -55,7 +55,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     {
         if (!is.matrix(initAffine) || !isTRUE(all.equal(dim(initAffine), c(4,4))))
             stop("Specified affine matrix is not valid")
-        else if (!is.null(attr(initAffine,"affineType")) && attr(initAffine,"affineType") == "fsl")
+        else if (!is.null(attr(initAffine,"affineType")) && attr(initAffine,"affineType") != "niftyreg")
             initAffine <- convertAffine(initAffine, source, target, newType="niftyreg")
         
         initAffine <- as.vector(initAffine, "numeric")
@@ -114,4 +114,21 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     class(result) <- "niftyreg"
     
     return (result)
+}
+
+applyAffine <- function (affine, source, target, affineType = NULL, finalInterpolation = 3)
+{
+    if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
+        stop("Specified affine matrix is not valid")
+    
+    if (is.null(affineType))
+    {
+        affineType <- attr(affine, "affineType")
+        if (is.null(affineType))
+            stop("The current affine type was not specified and is not stored with the matrix")
+    }
+    else
+        attr(affine, "affineType") <- affineType
+    
+    return (niftyreg(source, target, targetMask=NULL, initAffine=affine, scope="affine", nLevels=0, finalInterpolation=finalInterpolation, verbose=FALSE))
 }
