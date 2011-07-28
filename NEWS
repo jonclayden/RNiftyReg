@@ -2,6 +2,16 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 0.4.0
+
+- The applyAffine() function has been added as a convenience wrapper to
+  niftyreg(...,nLevels=0), for applying a precomputed affine transformation to
+  a new image without further optimisation.
+- RNiftyReg now uses the reportr package for message and error reporting.
+- The package now has a formal namespace.
+
+=================================================================================
+
 VERSION 0.3.1
 
 - A bug in previous releases affecting the downsampling of images during early
