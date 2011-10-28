@@ -67,13 +67,11 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIter
     SET_ELEMENT(returnValue, 0, data);
     
     if (!affineProvided)
-    {
         PROTECT(affineComponents = NEW_NUMERIC(16));
-        for (i = 0; i < 4; i++)
-        {
-            for (j = 0; j < 4; j++)
-                REAL(affineComponents)[(j*4)+i] = (double) result.affine->m[i][j];
-        }
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+            REAL(affineComponents)[(j*4)+i] = (double) result.affine->m[i][j];
     }
     
     SET_ELEMENT(returnValue, 1, affineComponents);
