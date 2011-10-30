@@ -2,8 +2,12 @@
 #define RIGID 0
 #define AFFINE 1
 
-// Working precision for the source and target images
-#define PRECISION_TYPE float
+// Preceision levels for final image
+#define SOURCE 0
+#define DOUBLE 1
+
+// Working precision for the source and target images: float and double are valid for the NiftyReg code
+#define PRECISION_TYPE double
 
 // Convergence criterion
 #define CONVERGENCE_EPS 0.00001
@@ -20,7 +24,7 @@
 #include "niftyreg.h"
 
 extern "C"
-SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
+SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
 {
     int i, j;
     SEXP returnValue, data;
@@ -46,8 +50,9 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIter
     }
     
     int regType = (strcmp(CHAR(STRING_ELT(type,0)),"rigid")==0 ? RIGID : AFFINE);
+    int precisionType = (strcmp(CHAR(STRING_ELT(finalPrecision,0)),"source")==0 ? SOURCE : DOUBLE);
     
-    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
+    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, precisionType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
     
     PROTECT(returnValue = NEW_LIST(2));
     
@@ -228,7 +233,7 @@ nifti_image * create_position_field (nifti_image *templateImage, bool twoDimRegi
 }
 
 // Run the "aladin" registration algorithm
-aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
+aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
 {
     int i;
     bool usingTargetMask = (targetMaskImage != NULL);
@@ -276,6 +281,13 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     if (usingTargetMask)
         reg_tool_binarise_image(targetMaskImage);
     
+    // Change the data type to ensure precision unless using nearest neighbour interpolation
+    if (finalPrecision == DOUBLE)
+    {
+        reg_changeDatatype<PRECISION_TYPE>(sourceImage);
+        reg_changeDatatype<PRECISION_TYPE>(targetImage);
+    }
+    
     for (int level = 0; level < nLevels; level++)
     {
         nifti_image *sourceImageCopy = copy_complete_nifti_image(sourceImage);
@@ -284,8 +296,11 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
         if (usingTargetMask)
             targetMaskImageCopy = copy_complete_nifti_image(targetMaskImage);
         
-        reg_changeDatatype<PRECISION_TYPE>(sourceImageCopy);
-        reg_changeDatatype<PRECISION_TYPE>(targetImageCopy);
+        if (finalInterpolation == SOURCE)
+        {
+            reg_changeDatatype<PRECISION_TYPE>(sourceImageCopy);
+            reg_changeDatatype<PRECISION_TYPE>(targetImageCopy);
+        }
         
         for (int l = level; l < nLevels-1; l++)
         {
@@ -412,7 +427,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     resultImage->datatype = sourceImage->datatype;
     resultImage->nbyper = sourceImage->nbyper;
     resultImage->data = calloc(resultImage->nvox, resultImage->nbyper);
-    reg_resampleSourceImage<double>(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourceBGValue);
+    reg_resampleSourceImage<PRECISION_TYPE>(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourceBGValue);
     
     nifti_image_free(positionFieldImage);
     
