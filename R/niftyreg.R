@@ -110,6 +110,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     resultImage@scl_inter <- source@scl_inter
     
     resultImage@datatype <- switch(precision, source=source@datatype, single=16L, double=64L)
+    resultImage@data_type <- convert.datatype(resultImage@datatype)
     resultImage@bitpix <- switch(precision, source=as.numeric(source@bitpix), single=32, double=64)
     
     result <- list(image=resultImage, affine=affine, scope=scope)

@@ -385,7 +385,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
                 // Resample the source image
                 reg_resampleSourceImage<PRECISION_TYPE>(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, targetMask, 1, sourceBGValue);
                 
-                // Compute the correspondances between blocks
+                // Compute the correspondances between blocks - this is the expensive bit
                 block_matching_method<PRECISION_TYPE>(targetImageCopy, resultImage, &blockMatchingParams, targetMask);
                 
                 // Optimise the update matrix
