@@ -28,7 +28,7 @@
     }
 }
 
-niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE, precision = c("source","single","double"))
+niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE, interpolationPrecision = NULL)
 {
     if (!require("oro.nifti"))
         report(OL$Error, "The \"oro.nifti\" package is required")
@@ -62,11 +62,17 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     }
     
     scope <- match.arg(scope)
-    precision <- match.arg(precision)
+    
+    if (!is.null(interpolationPrecision))
+        interpolationPrecision <- match.arg(interpolationPrecision, c("source","single","double"))
+    else if (finalInterpolation == 0)
+        interpolationPrecision <- "source"
+    else
+        interpolationPrecision <- "single"
     
     if (source@dim_[1] == target@dim_[1])
     {
-        returnValue <- .Call("reg_aladin", .fixTypes(source), .fixTypes(target), scope, precision, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+        returnValue <- .Call("reg_aladin", .fixTypes(source), .fixTypes(target), scope, interpolationPrecision, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
         
         dim(returnValue[[1]]) <- dim(target)
         dim(returnValue[[2]]) <- c(4,4)
@@ -86,12 +92,12 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
         {
             if (nSourceDims == 3)
             {
-                returnValue <- .Call("reg_aladin", .fixTypes(as.nifti(source[,,i],source)), .fixTypes(target), scope, precision, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+                returnValue <- .Call("reg_aladin", .fixTypes(as.nifti(source[,,i],source)), .fixTypes(target), scope, interpolationPrecision, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
                 finalArray[,,i] <- returnValue[[1]]
             }
             else if (nSourceDims == 4)
             {
-                returnValue <- .Call("reg_aladin", .fixTypes(as.nifti(source[,,,i],source)), .fixTypes(target), scope, precision, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+                returnValue <- .Call("reg_aladin", .fixTypes(as.nifti(source[,,,i],source)), .fixTypes(target), scope, interpolationPrecision, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
                 finalArray[,,,i] <- returnValue[[1]]
             }
             
@@ -109,9 +115,9 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     resultImage@scl_slope <- source@scl_slope
     resultImage@scl_inter <- source@scl_inter
     
-    resultImage@datatype <- switch(precision, source=source@datatype, single=16L, double=64L)
+    resultImage@datatype <- switch(interpolationPrecision, source=source@datatype, single=16L, double=64L)
     resultImage@data_type <- convert.datatype(resultImage@datatype)
-    resultImage@bitpix <- switch(precision, source=as.numeric(source@bitpix), single=32, double=64)
+    resultImage@bitpix <- switch(interpolationPrecision, source=as.numeric(source@bitpix), single=32, double=64)
     
     result <- list(image=resultImage, affine=affine, scope=scope)
     class(result) <- "niftyreg"
