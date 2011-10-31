@@ -51,7 +51,7 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP 
     }
     
     int regType = (strcmp(CHAR(STRING_ELT(type,0)),"rigid")==0 ? RIGID : AFFINE);
-    char *precisionString = CHAR(STRING_ELT(finalPrecision,0));
+    const char *precisionString = CHAR(STRING_ELT(finalPrecision,0));
     int precisionType = SOURCE;
     
     if (strcmp(precisionString,"single") == 0)
