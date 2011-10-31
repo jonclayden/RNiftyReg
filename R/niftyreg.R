@@ -125,7 +125,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     return (result)
 }
 
-applyAffine <- function (affine, source, target, affineType = NULL, finalInterpolation = 3)
+applyAffine <- function (affine, source, target, affineType = NULL, finalInterpolation = 3, interpolationPrecision = NULL)
 {
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
         report(OL$Error, "Specified affine matrix is not valid")
@@ -139,5 +139,5 @@ applyAffine <- function (affine, source, target, affineType = NULL, finalInterpo
     else
         attr(affine, "affineType") <- affineType
     
-    return (niftyreg(source, target, targetMask=NULL, initAffine=affine, scope="affine", nLevels=0, finalInterpolation=finalInterpolation, verbose=FALSE))
+    return (niftyreg(source, target, targetMask=NULL, initAffine=affine, scope="affine", nLevels=0, finalInterpolation=finalInterpolation, interpolationPrecision=interpolationPrecision, verbose=FALSE))
 }
