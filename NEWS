@@ -2,6 +2,30 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 0.5.0
+
+- The niftyreg() and applyAffine() functions gain an "interpolationPrecision"
+  argument, which affects the data type of the final image. See ?niftyreg for
+  details.
+- The actual number of algorithm iterations run at each level is now stored in
+  the output produced by niftyreg().
+- A bug has been addressed whereby niftyreg() returned the affine matrix used
+  for initialisation, if specified, rather than the final one. (Reported by
+  Brandon Whitcher.)
+- The first level of the algorithm is supposed to include both a rigid-body and
+  affine optimisation, but the latter was previously omitted due to a bug. This
+  has been corrected. In addition, the first level is allowed twice as many
+  iterations as subsequent levels, as in the original NiftyReg implementation.
+- The "data_type" slot of the "nifti" class is now properly set in the image
+  returned by niftyreg().
+- The underlying NIfTI reference library files have been updated.
+- Spurious parameters have been removed to avoid warnings at compile time.
+- Calls to problematic C/C++ functions such as exit() have been avoided
+  (although NIfTI and NiftyReg library functions still use printf() and the 
+  like).
+
+=================================================================================
+
 VERSION 0.4.1
 
 - The reportr package is now properly imported in the namespace file.
