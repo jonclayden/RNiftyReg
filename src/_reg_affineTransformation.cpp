@@ -14,6 +14,10 @@
 
 #include "_reg_affineTransformation.h"
 
+#ifdef RNIFTYREG
+#include <R.h>
+#endif
+
 /* *************************************************************** */
 mat44 reg_mat44_mul(mat44 *A, mat44 *B)
 {
@@ -53,7 +57,11 @@ void reg_mat44_mul(	mat44 *mat,
 /* *************************************************************** */
 void reg_mat44_disp(mat44 *mat, char * title)
 {
+#ifdef RNIFTYREG
+    Rprintf("%s:\n%g\t%g\t%g\t%g\n%g\t%g\t%g\t%g\n%g\t%g\t%g\t%g\n%g\t%g\t%g\t%g\n", title,
+#else
     printf("%s:\n%g\t%g\t%g\t%g\n%g\t%g\t%g\t%g\n%g\t%g\t%g\t%g\n%g\t%g\t%g\t%g\n", title,
+#endif
            mat->m[0][0], mat->m[0][1], mat->m[0][2], mat->m[0][3],
            mat->m[1][0], mat->m[1][1], mat->m[1][2], mat->m[1][3],
            mat->m[2][0], mat->m[2][1], mat->m[2][2], mat->m[2][3],
@@ -62,7 +70,11 @@ void reg_mat44_disp(mat44 *mat, char * title)
 /* *************************************************************** */
 void reg_mat33_disp(mat33 *mat, char * title)
 {
+#ifdef RNIFTYREG
+    Rprintf("%s:\n%g\t%g\t%g\n%g\t%g\t%g\n%g\t%g\t%g\n", title,
+#else
     printf("%s:\n%g\t%g\t%g\n%g\t%g\t%g\n%g\t%g\t%g\n", title,
+#endif
            mat->m[0][0], mat->m[0][1], mat->m[0][2],
            mat->m[1][0], mat->m[1][1], mat->m[1][2],
            mat->m[2][0], mat->m[2][1], mat->m[2][2]);
@@ -156,7 +168,7 @@ void reg_affine_positionField(mat44 *affineTransformation,
                 reg_affine_positionField2D<double>(affineTransformation, targetImage, positionFieldImage);
                 break;
             default:
-                printf("err\treg_affine_positionField\tThe deformation field data type is not supported\n");
+                // printf("err\treg_affine_positionField\tThe deformation field data type is not supported\n");
                 return;
         }
     }
@@ -169,7 +181,7 @@ void reg_affine_positionField(mat44 *affineTransformation,
                 reg_affine_positionField3D<double>(affineTransformation, targetImage, positionFieldImage);
                 break;
             default:
-                printf("err\treg_affine_positionField\tThe deformation field data type is not supported\n");
+                // printf("err\treg_affine_positionField\tThe deformation field data type is not supported\n");
                 return;
         }
     }

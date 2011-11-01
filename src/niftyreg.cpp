@@ -167,7 +167,7 @@ nifti_image * s4_image_to_struct (SEXP object)
         header.datatype = DT_FLOAT64;  // This assumes that sizeof(double) == 8
     else
     {
-        fprintf(stderr, "** ERROR: Data type %d is not supported\n", header.datatype);
+        error("Data type %d is not supported", header.datatype);
         return NULL;
     }
     
@@ -350,15 +350,15 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
         if (verbose)
         {
             // Display some parameters specific to the current level
-            printf("Current level %i / %i\n", level+1, nLevels);
-            printf("Target image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", targetImageCopy->nx, targetImageCopy->ny, targetImageCopy->nz, targetImageCopy->dx, targetImageCopy->dy, targetImageCopy->dz);
-            printf("Source image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", sourceImageCopy->nx, sourceImageCopy->ny, sourceImageCopy->nz, sourceImageCopy->dx, sourceImageCopy->dy, sourceImageCopy->dz);
+            Rprintf("Current level %i / %i\n", level+1, nLevels);
+            Rprintf("Target image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", targetImageCopy->nx, targetImageCopy->ny, targetImageCopy->nz, targetImageCopy->dx, targetImageCopy->dy, targetImageCopy->dz);
+            Rprintf("Source image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", sourceImageCopy->nx, sourceImageCopy->ny, sourceImageCopy->nz, sourceImageCopy->dx, sourceImageCopy->dy, sourceImageCopy->dz);
             if (twoDimRegistration)
-                printf("Block size = [4 4 1]\n");
+                Rprintf("Block size = [4 4 1]\n");
             else
-                printf("Block size = [4 4 4]\n");
-            printf("Block number = [%i %i %i]\n", blockMatchingParams.blockNumber[0], blockMatchingParams.blockNumber[1], blockMatchingParams.blockNumber[2]);
-            printf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+                Rprintf("Block size = [4 4 4]\n");
+            Rprintf("Block number = [%i %i %i]\n", blockMatchingParams.blockNumber[0], blockMatchingParams.blockNumber[1], blockMatchingParams.blockNumber[2]);
+            Rprintf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
             reg_mat44_disp(affineTransformation, (char *) "Initial affine transformation");
         }
 
@@ -410,7 +410,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
         if (verbose)
         {
             reg_mat44_disp(affineTransformation, (char *)"Final affine transformation");
-            printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n");
+            Rprintf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n");
         }
     }
     
