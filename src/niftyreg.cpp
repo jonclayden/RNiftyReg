@@ -2,8 +2,12 @@
 #define RIGID 0
 #define AFFINE 1
 
-// Working precision for the source and target images
-#define PRECISION_TYPE float
+// Precision levels for final interpolation
+#define INTERP_PREC_SOURCE 0
+#define INTERP_PREC_DOUBLE 1
+
+// Working precision for the source and target images: float and double are valid for the NiftyReg code
+#define PRECISION_TYPE double
 
 // Convergence criterion
 #define CONVERGENCE_EPS 0.00001
@@ -20,7 +24,7 @@
 #include "niftyreg.h"
 
 extern "C"
-SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
+SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
 {
     int i, j;
     SEXP returnValue, data;
@@ -46,19 +50,22 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIter
     }
     
     int regType = (strcmp(CHAR(STRING_ELT(type,0)),"rigid")==0 ? RIGID : AFFINE);
+    int precisionType = (strcmp(CHAR(STRING_ELT(finalPrecision,0)),"source")==0 ? INTERP_PREC_SOURCE : INTERP_PREC_DOUBLE);
     
-    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
+    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, precisionType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
     
     PROTECT(returnValue = NEW_LIST(2));
     
     if (result.image->datatype == DT_INT32)
     {
+        // Integer-valued data went in, and precision must be "source"
         PROTECT(data = NEW_INTEGER((R_len_t) result.image->nvox));
         for (size_t i = 0; i < result.image->nvox; i++)
             INTEGER(data)[i] = ((int *) result.image->data)[i];
     }
     else
     {
+        // All other cases
         PROTECT(data = NEW_NUMERIC((R_len_t) result.image->nvox));
         for (size_t i = 0; i < result.image->nvox; i++)
             REAL(data)[i] = ((double *) result.image->data)[i];
@@ -226,7 +233,7 @@ nifti_image * create_position_field (nifti_image *templateImage, bool twoDimRegi
 }
 
 // Run the "aladin" registration algorithm
-aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
+aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
 {
     int i;
     bool usingTargetMask = (targetMaskImage != NULL);
@@ -366,7 +373,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
                 // Resample the source image
                 reg_resampleSourceImage<PRECISION_TYPE>(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, targetMask, 1, sourceBGValue);
                 
-                // Compute the correspondances between blocks
+                // Compute the correspondances between blocks - this is the expensive bit
                 block_matching_method<PRECISION_TYPE>(targetImageCopy, resultImage, &blockMatchingParams, targetMask);
                 
                 // Optimise the update matrix
@@ -402,6 +409,10 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     
     // The corresponding deformation field is evaluated and saved
     reg_affine_positionField(affineTransformation, targetImage, positionFieldImage);
+    
+    // The source data type is changed for precision if requested
+    if (finalPrecision == INTERP_PREC_DOUBLE)
+        reg_changeDatatype<double>(sourceImage);
 
     // The result image is resampled using a cubic spline interpolation
     resultImage = nifti_copy_nim_info(targetImage);
@@ -412,7 +423,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     resultImage->datatype = sourceImage->datatype;
     resultImage->nbyper = sourceImage->nbyper;
     resultImage->data = calloc(resultImage->nvox, resultImage->nbyper);
-    reg_resampleSourceImage<double>(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourceBGValue);
+    reg_resampleSourceImage<PRECISION_TYPE>(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourceBGValue);
     
     nifti_image_free(positionFieldImage);
     
