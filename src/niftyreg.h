@@ -4,6 +4,7 @@
 typedef struct {
     nifti_image *image;
     mat44 *affine;
+    int *completedIterations;
 } aladin_result;
 
 extern "C"

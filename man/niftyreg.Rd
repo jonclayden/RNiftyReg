@@ -51,6 +51,7 @@ The \code{applyAffine} function is a convenience wrapper that calls \code{niftyr
 For both functions, a list of class \code{"niftyreg"} with components
 \item{image}{An image object of class \code{"nifti"} representing the registered and resampled \code{source} image in the space of the \code{target} image.}
 \item{affine}{A list of 4x4 matrices containing the optimised affine transformations for each slice or volume of the source image. If the target is a 2D image, elements involving the Z dimension will have no effect.}
+\item{iterations}{A list of integer vectors giving the number of iterations actually run within each level, for each slice or volume of the source image. Note that for the first level specifically, twice the specified number of iterations is allowed.}
 \item{scope}{Copied from the function argument of the same name.}
 }
 

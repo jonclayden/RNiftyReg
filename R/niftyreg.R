@@ -80,6 +80,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
 
         resultImage <- as.nifti(returnValue[[1]], target)
         affine <- list(returnValue[[2]])
+        iterations <- list(returnValue[[3]])
     }
     else
     {
@@ -87,7 +88,8 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
         finalDims <- c(dim(target), dim(source)[nSourceDims])
         nReps <- finalDims[length(finalDims)]
         finalArray <- array(0, dim=finalDims)
-        affine <- vector("list", nReps)
+        affine <- iterations <- vector("list", nReps)
+
         for (i in seq_len(nReps))
         {
             if (nSourceDims == 3)
@@ -104,6 +106,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
             dim(returnValue[[2]]) <- c(4,4)
             attr(returnValue[[2]], "affineType") <- "niftyreg"
             affine[[i]] <- returnValue[[2]]
+            iterations[[i]] <- returnValue[[3]]
         }
         
         resultImage <- as.nifti(finalArray, target)
@@ -119,7 +122,7 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     resultImage@data_type <- convert.datatype(resultImage@datatype)
     resultImage@bitpix <- switch(interpolationPrecision, source=as.numeric(source@bitpix), single=32, double=64)
     
-    result <- list(image=resultImage, affine=affine, scope=scope)
+    result <- list(image=resultImage, affine=affine, iterations=iterations, scope=scope)
     class(result) <- "niftyreg"
     
     return (result)

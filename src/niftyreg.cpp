@@ -26,8 +26,8 @@
 extern "C"
 SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
 {
-    int i, j;
-    SEXP returnValue, data;
+    int i, j, levels = *(INTEGER(nLevels));
+    SEXP returnValue, data, completedIterations;
     
     bool affineProvided = !isNull(affineComponents);
     
@@ -54,7 +54,7 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP 
     
     aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, precisionType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
     
-    PROTECT(returnValue = NEW_LIST(2));
+    PROTECT(returnValue = NEW_LIST(3));
     
     if (result.image->datatype == DT_INT32)
     {
@@ -83,6 +83,12 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP 
     
     SET_ELEMENT(returnValue, 1, affineComponents);
     
+    PROTECT(completedIterations = NEW_INTEGER(levels));
+    for (i = 0; i < levels; i++)
+        INTEGER(completedIterations)[i] = result.completedIterations[i];
+    
+    SET_ELEMENT(returnValue, 2, completedIterations);
+    
     nifti_image_free(sourceImage);
     nifti_image_free(targetImage);
     if (targetMaskImage != NULL)
@@ -90,7 +96,7 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP 
     nifti_image_free(result.image);
     free(result.affine);
     
-    UNPROTECT(affineProvided ? 2 : 3);
+    UNPROTECT(affineProvided ? 3 : 4);
     
     return returnValue;
 }
@@ -241,6 +247,8 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     float sourceBGValue = 0.0;
     nifti_image *resultImage, *positionFieldImage = NULL;
     
+    int *completedIterations = (int *) calloc(nLevels, sizeof(int));
+    
     // Initial affine matrix is the identity
     if (affineTransformation == NULL)
     {
@@ -388,6 +396,8 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
                 iteration++;
             }
         }
+        
+        completedIterations[level] = iteration;
 
         free(targetMask);
         nifti_image_free(resultImage);
@@ -430,6 +440,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     aladin_result result;
     result.image = resultImage;
     result.affine = affineTransformation;
+    result.completedIterations = completedIterations;
     
     return result;
 }
