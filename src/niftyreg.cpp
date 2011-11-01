@@ -1,4 +1,4 @@
-// Registration types (degrees of freedom)
+// Registration types (degrees of freedom) - these constants have to have these values
 #define RIGID 0
 #define AFFINE 1
 
@@ -348,15 +348,17 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
         }
 
         int nLoops = ((type==AFFINE && level==0) ? 2 : 1);
-        int currentType, iteration = 0;
+        int currentType, iteration;
         mat44 updateAffineMatrix;
         
         for (i = 0; i < nLoops; i++)
         {
+            // The first optimisation is rigid even if the final scope is affine
             currentType = ((i==0 && nLoops==2) ? RIGID : type);
+            iteration = 0;
             
             // Twice as many iterations are performed during the first level
-            while (iteration < (level==0 ? maxIterations : 2*maxIterations))
+            while (iteration < (level==0 ? 2*maxIterations : maxIterations))
             {
                 // Compute the affine transformation deformation field
                 reg_affine_positionField(affineTransformation, targetImageCopy, positionFieldImage);
