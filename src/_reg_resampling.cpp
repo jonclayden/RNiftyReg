@@ -1202,7 +1202,12 @@ void CubicSplineGradientResultImage(PrecisionTYPE *sourceCoefficients,
 		sourceIJKMatrix=sourceImage->sto_ijk;
 	else sourceIJKMatrix=sourceImage->qto_ijk;nifti_set_filenames(resultGradientImage, "gra.nii", 0, 0);
 nifti_image_write(resultGradientImage);
+#ifdef RNIFTYREG
+return;
+#else
+// (JDC) Bit odd this...
 exit(0);
+#endif
 
 	for(int index=0;index<resultGradientImage->nx*resultGradientImage->ny*resultGradientImage->nz; index++){
 
