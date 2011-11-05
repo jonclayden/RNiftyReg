@@ -445,9 +445,13 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     return result;
 }
 
-f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
+f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, bool verbose)
 {
     bool twoDimRegistration = (sourceImage->nz == 1 || targetImage->nz == 1);
+    
+    // This is due to the extrapolation of the joint histogram using the Parzen window
+    nBins += 4;
+    
     // param->binning += 4; //This is due to the extrapolation of the joint histogram using the Parzen window
     // if(param->spacing[0]<0) param->spacing[0] *=
     //     -1.0f * targetHeader->dx * powf(2.0f, (float)(param->levelNumber-param->level2Perform));
@@ -458,148 +462,116 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
     // param->sourcePaddingValue = std::numeric_limits<float>::quiet_NaN();
     // nifti_image *controlPointImage=NULL;
     
-    for(int level=0; level<param->level2Perform; level++)
+    for (int level = 0; level < nLevels; level++)
     {
-        /* Read the target and source image */
-        nifti_image *targetImage = nifti_image_read(param->targetImageName,true);
-        if(targetImage->data == NULL){
-            fprintf(stderr, "* ERROR Error when reading the target image: %s\n", param->targetImageName);
-            return 1;
+        nifti_image *sourceImageCopy = copy_complete_nifti_image(sourceImage);
+        nifti_image *targetImageCopy = copy_complete_nifti_image(targetImage);
+        nifti_image *targetMaskImageCopy = NULL;
+        if (usingTargetMask)
+            targetMaskImageCopy = copy_complete_nifti_image(targetMaskImage);
+        
+        reg_changeDatatype<PRECISION_TYPE>(sourceImageCopy);
+        reg_changeDatatype<PRECISION_TYPE>(targetImageCopy);
+        
+        for (int l = level; l < nLevels-1; l++)
+        {
+            int ratio = (int) powf(2.0f, l+1.0f);
+
+            bool sourceDownsampleAxis[8] = {true,true,true,true,true,true,true,true};
+            if ((sourceImage->nx/ratio) < 32) sourceDownsampleAxis[1] = false;
+            if ((sourceImage->ny/ratio) < 32) sourceDownsampleAxis[2] = false;
+            if ((sourceImage->nz/ratio) < 32) sourceDownsampleAxis[3] = false;
+            reg_downsampleImage<PRECISION_TYPE>(sourceImageCopy, 1, sourceDownsampleAxis);
+
+            bool targetDownsampleAxis[8] = {true,true,true,true,true,true,true,true};
+            if ((targetImage->nx/ratio) < 32) targetDownsampleAxis[1] = false;
+            if ((targetImage->ny/ratio) < 32) targetDownsampleAxis[2] = false;
+            if ((targetImage->nz/ratio) < 32) targetDownsampleAxis[3] = false;
+            reg_downsampleImage<PRECISION_TYPE>(targetImageCopy, 1, targetDownsampleAxis);
+
+            if (usingTargetMask)
+                reg_downsampleImage<PRECISION_TYPE>(targetMaskImageCopy, 0, targetDownsampleAxis);
         }
-        reg_changeDatatype<PrecisionTYPE>(targetImage);
-        nifti_image *sourceImage = nifti_image_read(param->sourceImageName,true);
-        if(sourceImage->data == NULL){
-            fprintf(stderr, "* ERROR Error when reading the source image: %s\n", param->sourceImageName);
-            return 1;
+        
+        int activeVoxelNumber = 0;
+        int *targetMask = (int *) calloc(targetImageCopy->nvox, sizeof(int));
+        if (usingTargetMask)
+        {
+            reg_tool_binaryImage2int(targetMaskImageCopy, targetMask, activeVoxelNumber);
+            nifti_image_free(targetMaskImageCopy);
         }
-        reg_changeDatatype<PrecisionTYPE>(sourceImage);
-
-        /* declare the target mask array */
-        int *targetMask;
-        int activeVoxelNumber=0;
-
-        /* downsample the input images if appropriate */
-        if(flag->pyramidFlag){
-            nifti_image *tempMaskImage=NULL;
-            if(flag->targetMaskFlag){
-                tempMaskImage = nifti_copy_nim_info(targetMaskImage);
-                tempMaskImage->data = (void *)malloc(tempMaskImage->nvox * tempMaskImage->nbyper);
-                memcpy(tempMaskImage->data, targetMaskImage->data, tempMaskImage->nvox*tempMaskImage->nbyper);
-            }
-
-			for(int l=level; l<param->levelNumber-1; l++){
-                int ratio = (int)powf(2.0f,l+1.0f);
-
-                bool sourceDownsampleAxis[8]={true,true,true,true,true,true,true,true};
-                if((sourceHeader->nx/ratio) < 32) sourceDownsampleAxis[1]=false;
-                if((sourceHeader->ny/ratio) < 32) sourceDownsampleAxis[2]=false;
-                if((sourceHeader->nz/ratio) < 32) sourceDownsampleAxis[3]=false;
-                reg_downsampleImage<PrecisionTYPE>(sourceImage, 1, sourceDownsampleAxis);
-
-                bool targetDownsampleAxis[8]={true,true,true,true,true,true,true,true};
-                if((targetHeader->nx/ratio) < 32) targetDownsampleAxis[1]=false;
-                if((targetHeader->ny/ratio) < 32) targetDownsampleAxis[2]=false;
-                if((targetHeader->nz/ratio) < 32) targetDownsampleAxis[3]=false;
-                reg_downsampleImage<PrecisionTYPE>(targetImage, 1, targetDownsampleAxis);
-
-                if(flag->targetMaskFlag){
-                    reg_downsampleImage<PrecisionTYPE>(tempMaskImage, 0, targetDownsampleAxis);
-                }
-            }
-            targetMask = (int *)malloc(targetImage->nvox*sizeof(int));
-            if(flag->targetMaskFlag){
-                reg_tool_binaryImage2int(tempMaskImage, targetMask, activeVoxelNumber);
-                nifti_image_free(tempMaskImage);
-            }
-            else{
-                for(unsigned int i=0; i<targetImage->nvox; i++)
-                    targetMask[i]=i;
-                activeVoxelNumber=targetImage->nvox;
-            }
-        }
-		else{
-            targetMask = (int *)malloc(targetImage->nvox*sizeof(int));
-            if(flag->targetMaskFlag){
-                reg_tool_binaryImage2int(targetMaskImage, targetMask, activeVoxelNumber);
-            }
-            else{
-                for(unsigned int i=0; i<targetImage->nvox; i++)
-                    targetMask[i]=i;
-                activeVoxelNumber=targetImage->nvox;
-            }
-		}
-
-
-        /* smooth the input image if appropriate */
-        if(flag->targetSigmaFlag){
-            bool smoothAxis[8]={true,true,true,true,true,true,true,true};
-            reg_gaussianSmoothing<PrecisionTYPE>(targetImage, param->targetSigmaValue, smoothAxis);
-        }
-        if(flag->sourceSigmaFlag){
-            bool smoothAxis[8]={true,true,true,true,true,true,true,true};
-            reg_gaussianSmoothing<PrecisionTYPE>(sourceImage, param->sourceSigmaValue, smoothAxis);
+        else
+        {
+            for (unsigned int j = 0; j < targetImageCopy->nvox; j++)
+                targetMask[j] = j;
+            activeVoxelNumber = targetImageCopy->nvox;
         }
 
-        /* the target and source are resampled between 0 and bin-1
-         * The images are then shifted by two which is the suport of the spline used
-         * by the parzen window filling of the joint histogram */
-        reg_intensityRescale(targetImage,2.0f,(float)param->binning-3.0f, param->targetLowThresholdValue, param->targetUpThresholdValue);
-        reg_intensityRescale(sourceImage,2.0f,(float)param->binning-3.0f, param->sourceLowThresholdValue, param->sourceUpThresholdValue);
+        // Resample the target and source images to [0,nBins-1]
+        // The images are then shifted by two, which is the suport of the spline used by the parzen window filling of the joint histogram
+        reg_intensityRescale(targetImageCopy, 2.0f, (float)nBins-3.0f, -FLT_MAX, FLT_MAX);
+        reg_intensityRescale(sourceImageCopy, 2.0f, (float)nBins-3.0f, -FLT_MAX, FLT_MAX);
 
-        if(level==0){
-            if(!flag->inputCPPFlag){
-                /* allocate the control point image */
+        if (level == 0)
+        {
+            if (controlPointImage != NULL)
+            {
+                // Allocate the control point image
                 int dim_cpp[8];
                 float gridSpacing[3];
-                dim_cpp[0]=5;
+                dim_cpp[0] = 5;
                 gridSpacing[0] = param->spacing[0] * powf(2.0f, (float)(param->level2Perform-1));
-                dim_cpp[1]=(int)floor(targetImage->nx*targetImage->dx/gridSpacing[0])+5;
+                dim_cpp[1] = (int) floor(targetImageCopy->nx*targetImageCopy->dx/gridSpacing[0]) + 5;
                 gridSpacing[1] = param->spacing[1] * powf(2.0f, (float)(param->level2Perform-1));
-                dim_cpp[2]=(int)floor(targetImage->ny*targetImage->dy/gridSpacing[1])+5;
-                if(flag->twoDimRegistration){
+                dim_cpp[2] = (int) floor(targetImageCopy->ny*targetImageCopy->dy/gridSpacing[1]) + 5;
+                if (twoDimRegistration)
+                {
                     gridSpacing[2] = 1.0f;
                 	dim_cpp[3]=1;
                 	dim_cpp[5]=2;
                 }
-                else{
+                else
+                {
                     gridSpacing[2] = param->spacing[2] * powf(2.0f, (float)(param->level2Perform-1));
-                    dim_cpp[3]=(int)floor(targetImage->nz*targetImage->dz/gridSpacing[2])+5;
+                    dim_cpp[3]=(int)floor(targetImageCopy->nz*targetImageCopy->dz/gridSpacing[2])+5;
                 	dim_cpp[5]=3;
                 }
-                dim_cpp[4]=dim_cpp[6]=dim_cpp[7]=1;
-                if(sizeof(PrecisionTYPE)==4) controlPointImage = nifti_make_new_nim(dim_cpp, NIFTI_TYPE_FLOAT32, true);
-                else controlPointImage = nifti_make_new_nim(dim_cpp, NIFTI_TYPE_FLOAT64, true);
-                controlPointImage->cal_min=0;
-                controlPointImage->cal_max=0;
-                controlPointImage->pixdim[0]=1.0f;
-                controlPointImage->pixdim[1]=controlPointImage->dx=gridSpacing[0];
-                controlPointImage->pixdim[2]=controlPointImage->dy=gridSpacing[1];
-                if(flag->twoDimRegistration){
-                    controlPointImage->pixdim[3]=controlPointImage->dz=1.0f;
-                }
-                else controlPointImage->pixdim[3]=controlPointImage->dz=gridSpacing[2];
-                controlPointImage->pixdim[4]=controlPointImage->dt=1.0f;
-                controlPointImage->pixdim[5]=controlPointImage->du=1.0f;
-                controlPointImage->pixdim[6]=controlPointImage->dv=1.0f;
-                controlPointImage->pixdim[7]=controlPointImage->dw=1.0f;
-                controlPointImage->qform_code=targetImage->qform_code;
-                controlPointImage->sform_code=targetImage->sform_code;
+                dim_cpp[4] = dim_cpp[6] = dim_cpp[7] = 1;
+                
+                if (sizeof(PrecisionTYPE) == 4)
+                    controlPointImage = nifti_make_new_nim(dim_cpp, NIFTI_TYPE_FLOAT32, true);
+                else
+                    controlPointImage = nifti_make_new_nim(dim_cpp, NIFTI_TYPE_FLOAT64, true);
+                
+                controlPointImage->cal_min = 0;
+                controlPointImage->cal_max = 0;
+                controlPointImage->pixdim[0] = 1.0f;
+                controlPointImage->pixdim[1] = controlPointImage->dx=gridSpacing[0];
+                controlPointImage->pixdim[2] = controlPointImage->dy=gridSpacing[1];
+                if (twoDimRegistration)
+                    controlPointImage->pixdim[3] = controlPointImage->dz = 1.0f;
+                else
+                    controlPointImage->pixdim[3] = controlPointImage->dz = gridSpacing[2];
+                controlPointImage->pixdim[4] = controlPointImage->dt = 1.0f;
+                controlPointImage->pixdim[5] = controlPointImage->du = 1.0f;
+                controlPointImage->pixdim[6] = controlPointImage->dv = 1.0f;
+                controlPointImage->pixdim[7] = controlPointImage->dw = 1.0f;
+                controlPointImage->qform_code = targetImageCopy->qform_code;
+                controlPointImage->sform_code = targetImageCopy->sform_code;
             }
         }
-        else{
-			reg_bspline_refineControlPointGrid(targetImage, controlPointImage);
-        }
+        else
+            reg_bspline_refineControlPointGrid(targetImage, controlPointImage);
 
 		// The qform (and sform) are set for the control point position image
         float qb, qc, qd, qx, qy, qz, dx, dy, dz, qfac;
-        nifti_mat44_to_quatern( targetImage->qto_xyz, &qb, &qc, &qd, &qx, &qy, &qz, &dx, &dy, &dz, &qfac);
-        controlPointImage->quatern_b=qb;
-        controlPointImage->quatern_c=qc;
-        controlPointImage->quatern_d=qd;
-        controlPointImage->qfac=qfac;
+        nifti_mat44_to_quatern(targetImageCopy->qto_xyz, &qb, &qc, &qd, &qx, &qy, &qz, &dx, &dy, &dz, &qfac);
+        controlPointImage->quatern_b = qb;
+        controlPointImage->quatern_c = qc;
+        controlPointImage->quatern_d = qd;
+        controlPointImage->qfac = qfac;
 
-        controlPointImage->qto_xyz = nifti_quatern_to_mat44(qb, qc, qd, qx, qy, qz,
-            controlPointImage->dx, controlPointImage->dy, controlPointImage->dz, qfac);
+        controlPointImage->qto_xyz = nifti_quatern_to_mat44(qb, qc, qd, qx, qy, qz, controlPointImage->dx, controlPointImage->dy, controlPointImage->dz, qfac);
 
         // Origin is shifted from 1 control point in the qform
         float originIndex[3];
@@ -607,20 +579,22 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
         originIndex[0] = -1.0f;
         originIndex[1] = -1.0f;
         originIndex[2] = 0.0f;
-        if(targetImage->nz>1) originIndex[2] = -1.0f;
+        if (targetImageCopy->nz > 1)
+            originIndex[2] = -1.0f;
         reg_mat44_mul(&(controlPointImage->qto_xyz), originIndex, originReal);
-        if(controlPointImage->qform_code==0) controlPointImage->qform_code=1;
+        if (controlPointImage->qform_code == 0)
+            controlPointImage->qform_code=1;
         controlPointImage->qto_xyz.m[0][3] = controlPointImage->qoffset_x = originReal[0];
         controlPointImage->qto_xyz.m[1][3] = controlPointImage->qoffset_y = originReal[1];
         controlPointImage->qto_xyz.m[2][3] = controlPointImage->qoffset_z = originReal[2];
 
         controlPointImage->qto_ijk = nifti_mat44_inverse(controlPointImage->qto_xyz);
 
-        if(controlPointImage->sform_code>0){
-			nifti_mat44_to_quatern( targetImage->sto_xyz, &qb, &qc, &qd, &qx, &qy, &qz, &dx, &dy, &dz, &qfac);
+        if (controlPointImage->sform_code > 0)
+        {
+			nifti_mat44_to_quatern(targetImage->sto_xyz, &qb, &qc, &qd, &qx, &qy, &qz, &dx, &dy, &dz, &qfac);
 
-			controlPointImage->sto_xyz = nifti_quatern_to_mat44(qb, qc, qd, qx, qy, qz,
-				controlPointImage->dx, controlPointImage->dy, controlPointImage->dz, qfac);
+			controlPointImage->sto_xyz = nifti_quatern_to_mat44(qb, qc, qd, qx, qy, qz, controlPointImage->dx, controlPointImage->dy, controlPointImage->dz, qfac);
 
 			// Origin is shifted from 1 control point in the sform
 			originIndex[0] = -1.0f;
@@ -635,66 +609,80 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
             controlPointImage->sto_ijk = nifti_mat44_inverse(controlPointImage->sto_xyz);
         }
 
-        if(level==0 && !flag->inputCPPFlag){
-                // The control point position image is initialised with the affine transformation
-                if(reg_bspline_initialiseControlPointGridWithAffine(affineTransformation, controlPointImage)) return 1;
-                free(affineTransformation);
+        if (level==0 && !flag->inputCPPFlag)
+        {
+            // The control point position image is initialised with the affine transformation
+            if (reg_bspline_initialiseControlPointGridWithAffine(affineTransformation, controlPointImage))
+                return 1;
+            free(affineTransformation);
         }
-
 
         mat44 *cppMatrix_xyz;
         mat44 *targetMatrix_ijk;
         mat44 *sourceMatrix_xyz;
-        if(controlPointImage->sform_code)
+        if (controlPointImage->sform_code)
             cppMatrix_xyz = &(controlPointImage->sto_xyz);
-        else cppMatrix_xyz = &(controlPointImage->qto_xyz);
-        if(targetImage->sform_code)
+        else
+            cppMatrix_xyz = &(controlPointImage->qto_xyz);
+        if (targetImage->sform_code)
             targetMatrix_ijk = &(targetImage->sto_ijk);
-        else targetMatrix_ijk = &(targetImage->qto_ijk);
-        if(sourceImage->sform_code)
+        else
+            targetMatrix_ijk = &(targetImage->qto_ijk);
+        if (sourceImage->sform_code)
             sourceMatrix_xyz = &(sourceImage->sto_xyz);
-        else sourceMatrix_xyz = &(sourceImage->qto_xyz);
+        else
+            sourceMatrix_xyz = &(sourceImage->qto_xyz);
 
         mat33 reorient_NMI_gradient;
-        for(unsigned int i=0; i<3; i++){
-            for(unsigned int  j=0; j<3; j++){
+        for(unsigned int i=0; i<3; i++)
+        {
+            for(unsigned int  j=0; j<3; j++)
                 reorient_NMI_gradient.m[i][j] = sourceMatrix_xyz->m[i][j];
-            }
         }
 
         /* allocate the deformation Field image */
         nifti_image *positionFieldImage = nifti_copy_nim_info(targetImage);
-        positionFieldImage->dim[0]=positionFieldImage->ndim=5;
-        positionFieldImage->dim[1]=positionFieldImage->nx=targetImage->nx;
-        positionFieldImage->dim[2]=positionFieldImage->ny=targetImage->ny;
-        positionFieldImage->dim[3]=positionFieldImage->nz=targetImage->nz;
-        positionFieldImage->dim[4]=positionFieldImage->nt=1;positionFieldImage->pixdim[4]=positionFieldImage->dt=1.0;
-        if(flag->twoDimRegistration) positionFieldImage->dim[5]=positionFieldImage->nu=2;
-        else positionFieldImage->dim[5]=positionFieldImage->nu=3;
-        positionFieldImage->pixdim[5]=positionFieldImage->du=1.0;
-        positionFieldImage->dim[6]=positionFieldImage->nv=1;positionFieldImage->pixdim[6]=positionFieldImage->dv=1.0;
-        positionFieldImage->dim[7]=positionFieldImage->nw=1;positionFieldImage->pixdim[7]=positionFieldImage->dw=1.0;
-        positionFieldImage->nvox=positionFieldImage->nx*positionFieldImage->ny*positionFieldImage->nz*positionFieldImage->nt*positionFieldImage->nu;
-        if(sizeof(PrecisionTYPE)==4) positionFieldImage->datatype = NIFTI_TYPE_FLOAT32;
-        else positionFieldImage->datatype = NIFTI_TYPE_FLOAT64;
+        positionFieldImage->dim[0] = positionFieldImage->ndim = 5;
+        positionFieldImage->dim[1] = positionFieldImage->nx = targetImage->nx;
+        positionFieldImage->dim[2] = positionFieldImage->ny = targetImage->ny;
+        positionFieldImage->dim[3] = positionFieldImage->nz = targetImage->nz;
+        positionFieldImage->dim[4] = positionFieldImage->nt = 1;
+        positionFieldImage->pixdim[4] = positionFieldImage->dt = 1.0;
+        if (twoDimRegistration)
+            positionFieldImage->dim[5] = positionFieldImage->nu = 2;
+        else
+            positionFieldImage->dim[5] = positionFieldImage->nu = 3;
+        positionFieldImage->pixdim[5] = positionFieldImage->du = 1.0;
+        positionFieldImage->dim[6] = positionFieldImage->nv = 1;
+        positionFieldImage->pixdim[6] = positionFieldImage->dv = 1.0;
+        positionFieldImage->dim[7] = positionFieldImage->nw = 1;
+        positionFieldImage->pixdim[7] = positionFieldImage->dw = 1.0;
+        positionFieldImage->nvox = positionFieldImage->nx*positionFieldImage->ny*positionFieldImage->nz*positionFieldImage->nt*positionFieldImage->nu;
+        if (sizeof(PrecisionTYPE)==4)
+            positionFieldImage->datatype = NIFTI_TYPE_FLOAT32;
+        else
+            positionFieldImage->datatype = NIFTI_TYPE_FLOAT64;
         positionFieldImage->nbyper = sizeof(PrecisionTYPE);
-            positionFieldImage->data = (void *)calloc(positionFieldImage->nvox, positionFieldImage->nbyper);
+        positionFieldImage->data = (void *)calloc(positionFieldImage->nvox, positionFieldImage->nbyper);
 
         /* allocate the result image */
         nifti_image *resultImage = nifti_copy_nim_info(targetImage);
         resultImage->datatype = sourceImage->datatype;
         resultImage->nbyper = sourceImage->nbyper;
-            resultImage->data = (void *)calloc(resultImage->nvox, resultImage->nbyper);
+        resultImage->data = (void *)calloc(resultImage->nvox, resultImage->nbyper);
 
-		printf("Current level %i / %i\n", level+1, param->levelNumber);
-		printf("Target image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n",
-		       targetImage->nx, targetImage->ny, targetImage->nz, targetImage->dx, targetImage->dy, targetImage->dz);
-		printf("Source image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n",
-		       sourceImage->nx, sourceImage->ny, sourceImage->nz, sourceImage->dx, sourceImage->dy, sourceImage->dz);
-		printf("Control point position image name: %s\n",param->outputCPPName);
-		printf("\t%ix%ix%i control points (%i DoF)\n",controlPointImage->nx,controlPointImage->ny,controlPointImage->nz,(int)controlPointImage->nvox);
-		printf("\t%gx%gx%g mm\n",controlPointImage->dx,controlPointImage->dy,controlPointImage->dz);	
-        printf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+        if (verbose)
+        {
+    		printf("Current level %i / %i\n", level+1, param->levelNumber);
+    		printf("Target image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n",
+    		       targetImage->nx, targetImage->ny, targetImage->nz, targetImage->dx, targetImage->dy, targetImage->dz);
+    		printf("Source image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n",
+    		       sourceImage->nx, sourceImage->ny, sourceImage->nz, sourceImage->dx, sourceImage->dy, sourceImage->dz);
+    		printf("Control point position image name: %s\n",param->outputCPPName);
+    		printf("\t%ix%ix%i control points (%i DoF)\n",controlPointImage->nx,controlPointImage->ny,controlPointImage->nz,(int)controlPointImage->nvox);
+    		printf("\t%gx%gx%g mm\n",controlPointImage->dx,controlPointImage->dy,controlPointImage->dz);	
+            printf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+        }
 
 		float maxStepSize = (targetImage->dx>targetImage->dy)?targetImage->dx:targetImage->dy;
 		maxStepSize = (targetImage->dz>maxStepSize)?targetImage->dz:maxStepSize;
