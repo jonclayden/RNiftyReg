@@ -7,6 +7,12 @@ typedef struct {
     int *completedIterations;
 } aladin_result;
 
+typedef struct {
+    nifti_image *image;
+    nifti_image *controlPoints;
+    int *completedIterations;
+} f3d_result;
+
 extern "C"
 SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose);
 
