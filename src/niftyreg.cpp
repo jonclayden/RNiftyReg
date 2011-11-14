@@ -12,10 +12,20 @@
 // Convergence criterion
 #define CONVERGENCE_EPS 0.00001
 
+#define JH_TRI 0
+#define JH_PARZEN_WIN 1
+#define JH_PW_APPROX 2
+
+#define FOLDING_CORRECTION_STEP 20
+
 #include "_reg_resampling.h"
 #include "_reg_affineTransformation.h"
 #include "_reg_blockMatching.h"
 #include "_reg_tools.h"
+#include "_reg_bspline.h"
+#include "_reg_bspline_comp.h"
+#include "_reg_mutualinformation.h"
+#include "_reg_ssd.h"
 
 #include <R.h>
 #include <Rdefines.h>
@@ -445,23 +455,25 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     return result;
 }
 
-f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, bool verbose)
+f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, float *spacing, float bendingEnergyWeight, float jacobianWeight, bool verbose)
 {
     bool usingTargetMask = (targetMaskImage != NULL);
+    bool controlPointImageProvided = (controlPointImage != NULL);
     bool twoDimRegistration = (sourceImage->nz == 1 || targetImage->nz == 1);
+    PRECISION_TYPE sourcePaddingValue = std::numeric_limits<float>::quiet_NaN();
+    nifti_image *resultImage, *positionFieldImage = NULL;
+    
+    int *completedIterations = (int *) calloc(nLevels, sizeof(int));
     
     // This is due to the extrapolation of the joint histogram using the Parzen window
     nBins += 4;
     
-    // param->binning += 4; //This is due to the extrapolation of the joint histogram using the Parzen window
-    // if(param->spacing[0]<0) param->spacing[0] *=
-    //     -1.0f * targetHeader->dx * powf(2.0f, (float)(param->levelNumber-param->level2Perform));
-    // if(param->spacing[1]<1) param->spacing[1] *=
-    //     -1.0f * targetHeader->dy * powf(2.0f, (float)(param->levelNumber-param->level2Perform));
-    // if(param->spacing[2]<2) param->spacing[2] *=
-    //     -1.0f * targetHeader->dz * powf(2.0f, (float)(param->levelNumber-param->level2Perform));
-    // param->sourcePaddingValue = std::numeric_limits<float>::quiet_NaN();
-    // nifti_image *controlPointImage=NULL;
+    if (spacing[0] < 0)
+        spacing[0] *= -1.0f * targetImage->dx;
+    if (spacing[1] < 1)
+        spacing[1] *= -1.0f * targetImage->dy;
+    if (spacing[2] < 2)
+        spacing[2] *= -1.0f * targetImage->dz;
     
     for (int level = 0; level < nLevels; level++)
     {
@@ -515,15 +527,15 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
 
         if (level == 0)
         {
-            if (controlPointImage != NULL)
+            if (!controlPointImageProvided)
             {
                 // Allocate the control point image
                 int dim_cpp[8];
                 float gridSpacing[3];
                 dim_cpp[0] = 5;
-                gridSpacing[0] = param->spacing[0] * powf(2.0f, (float)(param->level2Perform-1));
+                gridSpacing[0] = spacing[0] * powf(2.0f, (float)(nLevels-1));
                 dim_cpp[1] = (int) floor(targetImageCopy->nx*targetImageCopy->dx/gridSpacing[0]) + 5;
-                gridSpacing[1] = param->spacing[1] * powf(2.0f, (float)(param->level2Perform-1));
+                gridSpacing[1] = spacing[1] * powf(2.0f, (float)(nLevels-1));
                 dim_cpp[2] = (int) floor(targetImageCopy->ny*targetImageCopy->dy/gridSpacing[1]) + 5;
                 if (twoDimRegistration)
                 {
@@ -533,7 +545,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
                 }
                 else
                 {
-                    gridSpacing[2] = param->spacing[2] * powf(2.0f, (float)(param->level2Perform-1));
+                    gridSpacing[2] = spacing[2] * powf(2.0f, (float)(nLevels-1));
                     dim_cpp[3]=(int)floor(targetImageCopy->nz*targetImageCopy->dz/gridSpacing[2])+5;
                 	dim_cpp[5]=3;
                 }
@@ -562,7 +574,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
             }
         }
         else
-            reg_bspline_refineControlPointGrid(targetImage, controlPointImage);
+            reg_bspline_refineControlPointGrid(targetImageCopy, controlPointImage);
 
 		// The qform (and sform) are set for the control point position image
         float qb, qc, qd, qx, qy, qz, dx, dy, dz, qfac;
@@ -593,7 +605,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
 
         if (controlPointImage->sform_code > 0)
         {
-			nifti_mat44_to_quatern(targetImage->sto_xyz, &qb, &qc, &qd, &qx, &qy, &qz, &dx, &dy, &dz, &qfac);
+			nifti_mat44_to_quatern(targetImageCopy->sto_xyz, &qb, &qc, &qd, &qx, &qy, &qz, &dx, &dy, &dz, &qfac);
 
 			controlPointImage->sto_xyz = nifti_quatern_to_mat44(qb, qc, qd, qx, qy, qz, controlPointImage->dx, controlPointImage->dy, controlPointImage->dz, qfac);
 
@@ -601,7 +613,8 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
 			originIndex[0] = -1.0f;
 			originIndex[1] = -1.0f;
 			originIndex[2] = 0.0f;
-			if(targetImage->nz>1) originIndex[2] = -1.0f;
+			if (targetImageCopy->nz > 1)
+			    originIndex[2] = -1.0f;
 			reg_mat44_mul(&(controlPointImage->sto_xyz), originIndex, originReal);
 			controlPointImage->sto_xyz.m[0][3] = originReal[0];
 			controlPointImage->sto_xyz.m[1][3] = originReal[1];
@@ -610,12 +623,11 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
             controlPointImage->sto_ijk = nifti_mat44_inverse(controlPointImage->sto_xyz);
         }
 
-        if (level==0 && !flag->inputCPPFlag)
+        if (level==0 && !controlPointImageProvided)
         {
             // The control point position image is initialised with the affine transformation
             if (reg_bspline_initialiseControlPointGridWithAffine(affineTransformation, controlPointImage))
-                return 1;
-            free(affineTransformation);
+                error("Failed to initialise control point image");
         }
 
         mat44 *cppMatrix_xyz;
@@ -625,10 +637,10 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
             cppMatrix_xyz = &(controlPointImage->sto_xyz);
         else
             cppMatrix_xyz = &(controlPointImage->qto_xyz);
-        if (targetImage->sform_code)
-            targetMatrix_ijk = &(targetImage->sto_ijk);
+        if (targetImageCopy->sform_code)
+            targetMatrix_ijk = &(targetImageCopy->sto_ijk);
         else
-            targetMatrix_ijk = &(targetImage->qto_ijk);
+            targetMatrix_ijk = &(targetImageCopy->qto_ijk);
         if (sourceImageCopy->sform_code)
             sourceMatrix_xyz = &(sourceImageCopy->sto_xyz);
         else
@@ -642,69 +654,29 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
         }
 
         /* allocate the deformation Field image */
-        nifti_image *positionFieldImage = nifti_copy_nim_info(targetImage);
-        positionFieldImage->dim[0] = positionFieldImage->ndim = 5;
-        positionFieldImage->dim[1] = positionFieldImage->nx = targetImage->nx;
-        positionFieldImage->dim[2] = positionFieldImage->ny = targetImage->ny;
-        positionFieldImage->dim[3] = positionFieldImage->nz = targetImage->nz;
-        positionFieldImage->dim[4] = positionFieldImage->nt = 1;
-        positionFieldImage->pixdim[4] = positionFieldImage->dt = 1.0;
-        if (twoDimRegistration)
-            positionFieldImage->dim[5] = positionFieldImage->nu = 2;
-        else
-            positionFieldImage->dim[5] = positionFieldImage->nu = 3;
-        positionFieldImage->pixdim[5] = positionFieldImage->du = 1.0;
-        positionFieldImage->dim[6] = positionFieldImage->nv = 1;
-        positionFieldImage->pixdim[6] = positionFieldImage->dv = 1.0;
-        positionFieldImage->dim[7] = positionFieldImage->nw = 1;
-        positionFieldImage->pixdim[7] = positionFieldImage->dw = 1.0;
-        positionFieldImage->nvox = positionFieldImage->nx*positionFieldImage->ny*positionFieldImage->nz*positionFieldImage->nt*positionFieldImage->nu;
-        if (sizeof(PRECISION_TYPE)==4)
-            positionFieldImage->datatype = NIFTI_TYPE_FLOAT32;
-        else
-            positionFieldImage->datatype = NIFTI_TYPE_FLOAT64;
-        positionFieldImage->nbyper = sizeof(PRECISION_TYPE);
-        positionFieldImage->data = (void *)calloc(positionFieldImage->nvox, positionFieldImage->nbyper);
+        positionFieldImage = create_position_field(targetImageCopy, twoDimRegistration);
 
         /* allocate the result image */
-        nifti_image *resultImage = nifti_copy_nim_info(targetImage);
+        resultImage = nifti_copy_nim_info(targetImageCopy);
         resultImage->datatype = sourceImageCopy->datatype;
         resultImage->nbyper = sourceImageCopy->nbyper;
         resultImage->data = (void *)calloc(resultImage->nvox, resultImage->nbyper);
 
         if (verbose)
         {
-    		printf("Current level %i / %i\n", level+1, param->levelNumber);
-    		printf("Target image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", targetImage->nx, targetImage->ny, targetImage->nz, targetImage->dx, targetImage->dy, targetImage->dz);
+    		printf("Current level %i / %i\n", level+1, nLevels);
+    		printf("Target image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", targetImageCopy->nx, targetImageCopy->ny, targetImageCopy->nz, targetImageCopy->dx, targetImageCopy->dy, targetImageCopy->dz);
     		printf("Source image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", sourceImageCopy->nx, sourceImageCopy->ny, sourceImageCopy->nz, sourceImageCopy->dx, sourceImageCopy->dy, sourceImageCopy->dz);
-    		printf("Control point position image name: %s\n", param->outputCPPName);
     		printf("\t%ix%ix%i control points (%i DoF)\n", controlPointImage->nx, controlPointImage->ny, controlPointImage->nz, (int) controlPointImage->nvox);
     		printf("\t%gx%gx%g mm\n", controlPointImage->dx, controlPointImage->dy, controlPointImage->dz);	
             printf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
         }
 
-		float maxStepSize = (targetImage->dx > targetImage->dy) ? targetImage->dx : targetImage->dy;
-		maxStepSize = (targetImage->dz > maxStepSize) ? targetImage->dz : maxStepSize;
+		float maxStepSize = (targetImageCopy->dx > targetImageCopy->dy) ? targetImageCopy->dx : targetImageCopy->dy;
+		maxStepSize = (targetImageCopy->dz > maxStepSize) ? targetImageCopy->dz : maxStepSize;
 
 		float currentSize = maxStepSize;
 		float smallestSize = maxStepSize / 100.0f;
-
-        if(flag->backgroundIndexFlag)
-        {
-            int index[3];
-            index[0]=param->backgroundIndex[0];
-            index[1]=param->backgroundIndex[1];
-            index[2]=param->backgroundIndex[2];
-            if(flag->pyramidFlag)
-            {
-                for(int l = level; l < param->levelNumber-1; l++)
-                {
-                    index[0] /= 2;
-                    index[1] /= 2;
-                    index[2] /= 2;
-                }
-            }
-        }
 
         /* the gradient images are allocated */
         nifti_image *resultGradientImage = NULL;
@@ -741,38 +713,36 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
 		    nodeNMIGradientImage->datatype = NIFTI_TYPE_FLOAT64;
 		nodeNMIGradientImage->nbyper = sizeof(PRECISION_TYPE);
 		nodeNMIGradientImage->data = (void *) calloc(nodeNMIGradientImage->nvox, nodeNMIGradientImage->nbyper);
-		if(!flag->noConjugateGradient)
-		{
-			conjugateG = (PRECISION_TYPE *)calloc(nodeNMIGradientImage->nvox, sizeof(PRECISION_TYPE));
-			conjugateH = (PRECISION_TYPE *)calloc(nodeNMIGradientImage->nvox, sizeof(PRECISION_TYPE));
-		}
+		
+		conjugateG = (PRECISION_TYPE *)calloc(nodeNMIGradientImage->nvox, sizeof(PRECISION_TYPE));
+		conjugateH = (PRECISION_TYPE *)calloc(nodeNMIGradientImage->nvox, sizeof(PRECISION_TYPE));
+		
 		bestControlPointPosition = (PRECISION_TYPE *) malloc(controlPointImage->nvox * sizeof(PRECISION_TYPE));
 
 		memcpy(bestControlPointPosition, controlPointImage->data, controlPointImage->nvox*controlPointImage->nbyper);
 
 		int smoothingRadius[3];
-		smoothingRadius[0] = (int)floor( 2.0*controlPointImage->dx/targetImage->dx );
-		smoothingRadius[1] = (int)floor( 2.0*controlPointImage->dy/targetImage->dy );
-		smoothingRadius[2] = (int)floor( 2.0*controlPointImage->dz/targetImage->dz );
+		smoothingRadius[0] = (int) floor(2.0*controlPointImage->dx/targetImageCopy->dx);
+		smoothingRadius[1] = (int) floor(2.0*controlPointImage->dy/targetImageCopy->dy);
+		smoothingRadius[2] = (int) floor(2.0*controlPointImage->dz/targetImageCopy->dz);
 
 		int iteration = 0;
 
-        while (iteration < param->maxIteration && currentSize > smallestSize)
+        while (iteration < maxIterations && currentSize > smallestSize)
         {
             double currentValue = 0.0;
             double currentWBE = 0.0f;
             double currentWJac = 0.0f;
-            PRECISION_TYPE SSDValue = 0.0;
-
+            
             /* The Jacobian-based penalty term is first computed */
-            if(flag->jacobianWeightFlag && param->jacobianWeight>0)
-                currentWJac = param->jacobianWeight * reg_bspline_jacobian<PRECISION_TYPE>(controlPointImage, targetImage, flag->appJacobianFlag);
+            if (jacobianWeight > 0)
+                currentWJac = jacobianWeight * reg_bspline_jacobian<PRECISION_TYPE>(controlPointImage, targetImageCopy, true);
 
             /* The control point grid is corrected if necessary */
             int initialNegCorrection=0;
             while (currentWJac != currentWJac && initialNegCorrection < FOLDING_CORRECTION_STEP && iteration == 0)
             {
-                currentWJac = param->jacobianWeight * reg_bspline_correctFolding<PRECISION_TYPE>(controlPointImage, targetImage, flag->appJacobianFlag);
+                currentWJac = jacobianWeight * reg_bspline_correctFolding<PRECISION_TYPE>(controlPointImage, targetImageCopy, true);
                 initialNegCorrection++;
                 if (currentWJac != currentWJac)
                 {
@@ -796,27 +766,19 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
             }
 
             /* The bending-energy penalty term is computed */
-            if(flag->bendingEnergyFlag && param->bendingEnergyWeight>0)
-                currentWBE = param->bendingEnergyWeight * reg_bspline_bendingEnergy<PRECISION_TYPE>(controlPointImage, targetImage, flag->appBendingEnergyFlag);
+            if (bendingEnergyWeight > 0)
+                currentWBE = bendingEnergyWeight * reg_bspline_bendingEnergy<PRECISION_TYPE>(controlPointImage, targetImageCopy, true);
 
             /* The source image is resampled and the metric assessed */
 
             /* generate the position field */
-            reg_bspline<PRECISION_TYPE>(controlPointImage, targetImage, positionFieldImage, targetMask, 0);
+            reg_bspline<PRECISION_TYPE>(controlPointImage, targetImageCopy, positionFieldImage, targetMask, 0);
             
             /* Resample the source image */
-            reg_resampleSourceImage<PRECISION_TYPE>(targetImage, sourceImageCopy, resultImage, positionFieldImage, targetMask, 1, param->sourcePaddingValue);
+            reg_resampleSourceImage<PRECISION_TYPE>(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, targetMask, 1, sourcePaddingValue);
             
-            if (flag->useSSDFlag)
-            {
-                SSDValue = reg_getSSD<PRECISION_TYPE>(targetImage, resultImage);
-                currentValue = -(1.0 - param->bendingEnergyWeight - param->jacobianWeight) * log(SSDValue+1.0);
-			}
-			else
-			{
-                reg_getEntropies<double>(targetImage, resultImage, JH_PW_APPROX, nBins, probaJointHistogram, logJointHistogram, entropies, targetMask);
-				currentValue = (1.0 - param->bendingEnergyWeight - param->jacobianWeight) * (entropies[0] + entropies[1]) / entropies[2];
-			}
+            reg_getEntropies<double>(targetImageCopy, resultImage, JH_PW_APPROX, nBins, probaJointHistogram, logJointHistogram, entropies, targetMask);
+			currentValue = (1.0 - bendingEnergyWeight - jacobianWeight) * (entropies[0] + entropies[1]) / entropies[2];
 
             iteration++;
 
@@ -829,14 +791,11 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
             float maxLength;
 
 			/* The NMI Gradient is calculated */
-			reg_getSourceImageGradient<PRECISION_TYPE>(targetImage, sourceImageCopy, resultGradientImage, positionFieldImage, targetMask, 1);
-			if (flag->useSSDFlag)
-				reg_getVoxelBasedSSDGradient<PRECISION_TYPE>(SSDValue, targetImage, resultImage, resultGradientImage, voxelNMIGradientImage);
-			else
-                reg_getVoxelBasedNMIGradientUsingPW<double>(targetImage, resultImage, JH_PW_APPROX, resultGradientImage, nBins, logJointHistogram, entropies, voxelNMIGradientImage, targetMask);
+			reg_getSourceImageGradient<PRECISION_TYPE>(targetImageCopy, sourceImageCopy, resultGradientImage, positionFieldImage, targetMask, 1);
+			reg_getVoxelBasedNMIGradientUsingPW<double>(targetImageCopy, resultImage, JH_PW_APPROX, resultGradientImage, nBins, logJointHistogram, entropies, voxelNMIGradientImage, targetMask);
             
             reg_smoothImageForCubicSpline<PRECISION_TYPE>(voxelNMIGradientImage, smoothingRadius);
-            reg_voxelCentric2NodeCentric(nodeNMIGradientImage, voxelNMIGradientImage, 1.0f - param->bendingEnergyWeight - param->jacobianWeight);
+            reg_voxelCentric2NodeCentric(nodeNMIGradientImage, voxelNMIGradientImage, 1.0f - bendingEnergyWeight - jacobianWeight);
 
             /* The NMI gradient is converted from voxel space to real space */
             if (twoDimRegistration)
@@ -868,117 +827,112 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
                     *gradientValuesZ++ = newGradientValueZ;
                 }
             }
-            if (flag->gradientSmoothingFlag)
-                reg_gaussianSmoothing<PRECISION_TYPE>(nodeNMIGradientImage, param->gradientSmoothingValue, NULL);
-
+            
             /* The other gradients are calculated */
-            if(flag->beGradFlag && flag->bendingEnergyFlag && param->bendingEnergyWeight > 0)
-				reg_bspline_bendingEnergyGradient<PRECISION_TYPE>(controlPointImage, targetImage, nodeNMIGradientImage, param->bendingEnergyWeight);
+            if (bendingEnergyWeight > 0)
+				reg_bspline_bendingEnergyGradient<PRECISION_TYPE>(controlPointImage, targetImageCopy, nodeNMIGradientImage, bendingEnergyWeight);
 				
-			if(flag->jlGradFlag && flag->jacobianWeightFlag && param->jacobianWeight > 0)
-                reg_bspline_jacobianDeterminantGradient<PRECISION_TYPE>(controlPointImage, targetImage, nodeNMIGradientImage, param->jacobianWeight, flag->appJacobianFlag);
+			if(jacobianWeight > 0)
+                reg_bspline_jacobianDeterminantGradient<PRECISION_TYPE>(controlPointImage, targetImageCopy, nodeNMIGradientImage, jacobianWeight, true);
 
 			/* The conjugate gradient is computed */
-			if (!flag->noConjugateGradient)
+			if (iteration==1)
 			{
-				if (iteration==1)
+				// first conjugate gradient iteration
+				if (twoDimRegistration)
 				{
-					// first conjugate gradient iteration
-					if (twoDimRegistration)
+					PRECISION_TYPE *conjGPtrX = &conjugateG[0];
+					PRECISION_TYPE *conjGPtrY = &conjGPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny];
+					PRECISION_TYPE *conjHPtrX = &conjugateH[0];
+					PRECISION_TYPE *conjHPtrY = &conjHPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny];
+					PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
+					PRECISION_TYPE *gradientValuesY = &gradientValuesX[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny];
+					for (int i=0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny; i++)
 					{
-						PRECISION_TYPE *conjGPtrX = &conjugateG[0];
-						PRECISION_TYPE *conjGPtrY = &conjGPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny];
-						PRECISION_TYPE *conjHPtrX = &conjugateH[0];
-						PRECISION_TYPE *conjHPtrY = &conjHPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny];
-						PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
-						PRECISION_TYPE *gradientValuesY = &gradientValuesX[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny];
-						for (int i=0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny; i++)
-						{
-							*conjHPtrX++ = *conjGPtrX++ = - *gradientValuesX++;
-							*conjHPtrY++ = *conjGPtrY++ = - *gradientValuesY++;
-						}
-					}
-					else
-					{
-						PRECISION_TYPE *conjGPtrX = &conjugateG[0];
-						PRECISION_TYPE *conjGPtrY = &conjGPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
-						PRECISION_TYPE *conjGPtrZ = &conjGPtrY[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
-						PRECISION_TYPE *conjHPtrX = &conjugateH[0];
-						PRECISION_TYPE *conjHPtrY = &conjHPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
-						PRECISION_TYPE *conjHPtrZ = &conjHPtrY[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
-						PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
-						PRECISION_TYPE *gradientValuesY = &gradientValuesX[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny*nodeNMIGradientImage->nz];
-						PRECISION_TYPE *gradientValuesZ = &gradientValuesY[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny*nodeNMIGradientImage->nz];
-						for(int i=0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz; i++)
-						{
-							*conjHPtrX++ = *conjGPtrX++ = - *gradientValuesX++;
-							*conjHPtrY++ = *conjGPtrY++ = - *gradientValuesY++;
-							*conjHPtrZ++ = *conjGPtrZ++ = - *gradientValuesZ++;
-						}
+						*conjHPtrX++ = *conjGPtrX++ = - *gradientValuesX++;
+						*conjHPtrY++ = *conjGPtrY++ = - *gradientValuesY++;
 					}
 				}
 				else
 				{
-					double dgg = 0.0, gg = 0.0;
-					if (twoDimRegistration)
+					PRECISION_TYPE *conjGPtrX = &conjugateG[0];
+					PRECISION_TYPE *conjGPtrY = &conjGPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
+					PRECISION_TYPE *conjGPtrZ = &conjGPtrY[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
+					PRECISION_TYPE *conjHPtrX = &conjugateH[0];
+					PRECISION_TYPE *conjHPtrY = &conjHPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
+					PRECISION_TYPE *conjHPtrZ = &conjHPtrY[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
+					PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
+					PRECISION_TYPE *gradientValuesY = &gradientValuesX[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny*nodeNMIGradientImage->nz];
+					PRECISION_TYPE *gradientValuesZ = &gradientValuesY[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny*nodeNMIGradientImage->nz];
+					for(int i=0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz; i++)
 					{
-						PRECISION_TYPE *conjGPtrX = &conjugateG[0];
-						PRECISION_TYPE *conjGPtrY = &conjGPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny];
-						PRECISION_TYPE *conjHPtrX = &conjugateH[0];
-						PRECISION_TYPE *conjHPtrY = &conjHPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny];
-						PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
-						PRECISION_TYPE *gradientValuesY = &gradientValuesX[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny];
-						for(int i=0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny; i++)
-						{
-							gg += conjHPtrX[i] * conjGPtrX[i];
-							gg += conjHPtrY[i] * conjGPtrY[i];
-							dgg += (gradientValuesX[i] + conjGPtrX[i]) * gradientValuesX[i];
-							dgg += (gradientValuesY[i] + conjGPtrY[i]) * gradientValuesY[i];
-						}
-						double gam = dgg/gg;
-						for (int i = 0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny; i++)
-						{
-							conjGPtrX[i] = -gradientValuesX[i];
-							conjGPtrY[i] = -gradientValuesY[i];
-							conjHPtrX[i] = (float)(conjGPtrX[i] + gam * conjHPtrX[i]);
-							conjHPtrY[i] = (float)(conjGPtrY[i] + gam * conjHPtrY[i]);
-							gradientValuesX[i] = -conjHPtrX[i];
-							gradientValuesY[i] = -conjHPtrY[i];
-						}
+						*conjHPtrX++ = *conjGPtrX++ = - *gradientValuesX++;
+						*conjHPtrY++ = *conjGPtrY++ = - *gradientValuesY++;
+						*conjHPtrZ++ = *conjGPtrZ++ = - *gradientValuesZ++;
 					}
-					else
+				}
+			}
+			else
+			{
+				double dgg = 0.0, gg = 0.0;
+				if (twoDimRegistration)
+				{
+					PRECISION_TYPE *conjGPtrX = &conjugateG[0];
+					PRECISION_TYPE *conjGPtrY = &conjGPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny];
+					PRECISION_TYPE *conjHPtrX = &conjugateH[0];
+					PRECISION_TYPE *conjHPtrY = &conjHPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny];
+					PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
+					PRECISION_TYPE *gradientValuesY = &gradientValuesX[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny];
+					for(int i=0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny; i++)
 					{
-						PRECISION_TYPE *conjGPtrX = &conjugateG[0];
-						PRECISION_TYPE *conjGPtrY = &conjGPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
-						PRECISION_TYPE *conjGPtrZ = &conjGPtrY[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
-						PRECISION_TYPE *conjHPtrX = &conjugateH[0];
-						PRECISION_TYPE *conjHPtrY = &conjHPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
-						PRECISION_TYPE *conjHPtrZ = &conjHPtrY[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
-						PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
-						PRECISION_TYPE *gradientValuesY = &gradientValuesX[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny*nodeNMIGradientImage->nz];
-						PRECISION_TYPE *gradientValuesZ = &gradientValuesY[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny*nodeNMIGradientImage->nz];
-						for (int i = 0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz; i++)
-						{
-							gg += conjHPtrX[i] * conjGPtrX[i];
-							gg += conjHPtrY[i] * conjGPtrY[i];
-							gg += conjHPtrZ[i] * conjGPtrZ[i];
-							dgg += (gradientValuesX[i] + conjGPtrX[i]) * gradientValuesX[i];
-							dgg += (gradientValuesY[i] + conjGPtrY[i]) * gradientValuesY[i];
-							dgg += (gradientValuesZ[i] + conjGPtrZ[i]) * gradientValuesZ[i];
-						}
-						double gam = dgg/gg;
-						for (int i = 0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz; i++)
-						{
-							conjGPtrX[i] = -gradientValuesX[i];
-							conjGPtrY[i] = -gradientValuesY[i];
-							conjGPtrZ[i] = -gradientValuesZ[i];
-							conjHPtrX[i] = (float)(conjGPtrX[i] + gam * conjHPtrX[i]);
-							conjHPtrY[i] = (float)(conjGPtrY[i] + gam * conjHPtrY[i]);
-							conjHPtrZ[i] = (float)(conjGPtrZ[i] + gam * conjHPtrZ[i]);
-							gradientValuesX[i] = -conjHPtrX[i];
-							gradientValuesY[i] = -conjHPtrY[i];
-							gradientValuesZ[i] = -conjHPtrZ[i];
-						}
+						gg += conjHPtrX[i] * conjGPtrX[i];
+						gg += conjHPtrY[i] * conjGPtrY[i];
+						dgg += (gradientValuesX[i] + conjGPtrX[i]) * gradientValuesX[i];
+						dgg += (gradientValuesY[i] + conjGPtrY[i]) * gradientValuesY[i];
+					}
+					double gam = dgg/gg;
+					for (int i = 0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny; i++)
+					{
+						conjGPtrX[i] = -gradientValuesX[i];
+						conjGPtrY[i] = -gradientValuesY[i];
+						conjHPtrX[i] = (float)(conjGPtrX[i] + gam * conjHPtrX[i]);
+						conjHPtrY[i] = (float)(conjGPtrY[i] + gam * conjHPtrY[i]);
+						gradientValuesX[i] = -conjHPtrX[i];
+						gradientValuesY[i] = -conjHPtrY[i];
+					}
+				}
+				else
+				{
+					PRECISION_TYPE *conjGPtrX = &conjugateG[0];
+					PRECISION_TYPE *conjGPtrY = &conjGPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
+					PRECISION_TYPE *conjGPtrZ = &conjGPtrY[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
+					PRECISION_TYPE *conjHPtrX = &conjugateH[0];
+					PRECISION_TYPE *conjHPtrY = &conjHPtrX[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
+					PRECISION_TYPE *conjHPtrZ = &conjHPtrY[nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz];
+					PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
+					PRECISION_TYPE *gradientValuesY = &gradientValuesX[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny*nodeNMIGradientImage->nz];
+					PRECISION_TYPE *gradientValuesZ = &gradientValuesY[nodeNMIGradientImage->nx*nodeNMIGradientImage->ny*nodeNMIGradientImage->nz];
+					for (int i = 0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz; i++)
+					{
+						gg += conjHPtrX[i] * conjGPtrX[i];
+						gg += conjHPtrY[i] * conjGPtrY[i];
+						gg += conjHPtrZ[i] * conjGPtrZ[i];
+						dgg += (gradientValuesX[i] + conjGPtrX[i]) * gradientValuesX[i];
+						dgg += (gradientValuesY[i] + conjGPtrY[i]) * gradientValuesY[i];
+						dgg += (gradientValuesZ[i] + conjGPtrZ[i]) * gradientValuesZ[i];
+					}
+					double gam = dgg/gg;
+					for (int i = 0; i < nodeNMIGradientImage->nx * nodeNMIGradientImage->ny * nodeNMIGradientImage->nz; i++)
+					{
+						conjGPtrX[i] = -gradientValuesX[i];
+						conjGPtrY[i] = -gradientValuesY[i];
+						conjGPtrZ[i] = -gradientValuesZ[i];
+						conjHPtrX[i] = (float)(conjGPtrX[i] + gam * conjHPtrX[i]);
+						conjHPtrY[i] = (float)(conjGPtrY[i] + gam * conjHPtrY[i]);
+						conjHPtrZ[i] = (float)(conjGPtrZ[i] + gam * conjHPtrZ[i]);
+						gradientValuesX[i] = -conjHPtrX[i];
+						gradientValuesY[i] = -conjHPtrY[i];
+						gradientValuesZ[i] = -conjHPtrZ[i];
 					}
 				}
 			}
@@ -1001,88 +955,70 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
 
 				float currentLength = -currentSize/maxLength;
 
-                /* Update the control point position */
-                if (flag->useCompositionFlag)
+                // the control point positions are updated using addition
+                if (twoDimRegistration)
                 {
-                    // the control point positions are updated using composition
-                    memcpy(controlPointImage->data,bestControlPointPosition,controlPointImage->nvox*controlPointImage->nbyper);
-                    reg_spline_cppComposition(controlPointImage, nodeNMIGradientImage, (float)currentLength, 1);
+                    PRECISION_TYPE *controlPointValuesX = NULL;
+                    PRECISION_TYPE *controlPointValuesY = NULL;
+                    controlPointValuesX = static_cast<PRECISION_TYPE *>(controlPointImage->data);
+                    controlPointValuesY = &controlPointValuesX[controlPointImage->nx*controlPointImage->ny];
+                    PRECISION_TYPE *bestControlPointValuesX = &bestControlPointPosition[0];
+                    PRECISION_TYPE *bestControlPointValuesY = &bestControlPointValuesX[controlPointImage->nx*controlPointImage->ny];
+                    PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
+                    PRECISION_TYPE *gradientValuesY = &gradientValuesX[controlPointImage->nx*controlPointImage->ny];
+                    for (int i = 0; i < controlPointImage->nx * controlPointImage->ny; i++)
+                    {
+                        *controlPointValuesX++ = *bestControlPointValuesX++ + currentLength * *gradientValuesX++;
+                        *controlPointValuesY++ = *bestControlPointValuesY++ + currentLength * *gradientValuesY++;
+                    }
                 }
                 else
                 {
-                    // the control point positions are updated using addition
-                    if (twoDimRegistration)
+                    PRECISION_TYPE *controlPointValuesX = NULL;
+                    PRECISION_TYPE *controlPointValuesY = NULL;
+                    PRECISION_TYPE *controlPointValuesZ = NULL;
+                    controlPointValuesX = static_cast<PRECISION_TYPE *>(controlPointImage->data);
+                    controlPointValuesY = &controlPointValuesX[controlPointImage->nx*controlPointImage->ny*controlPointImage->nz];
+                    controlPointValuesZ = &controlPointValuesY[controlPointImage->nx*controlPointImage->ny*controlPointImage->nz];
+                    PRECISION_TYPE *bestControlPointValuesX = &bestControlPointPosition[0];
+                    PRECISION_TYPE *bestControlPointValuesY = &bestControlPointValuesX[controlPointImage->nx * controlPointImage->ny * controlPointImage->nz];
+                    PRECISION_TYPE *bestControlPointValuesZ = &bestControlPointValuesY[controlPointImage->nx * controlPointImage->ny * controlPointImage->nz];
+                    PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
+                    PRECISION_TYPE *gradientValuesY = &gradientValuesX[controlPointImage->nx*controlPointImage->ny*controlPointImage->nz];
+                    PRECISION_TYPE *gradientValuesZ = &gradientValuesY[controlPointImage->nx*controlPointImage->ny*controlPointImage->nz];
+                    for(int i=0; i<controlPointImage->nx*controlPointImage->ny*controlPointImage->nz;i++)
                     {
-                        PRECISION_TYPE *controlPointValuesX = NULL;
-                        PRECISION_TYPE *controlPointValuesY = NULL;
-                        controlPointValuesX = static_cast<PRECISION_TYPE *>(controlPointImage->data);
-                        controlPointValuesY = &controlPointValuesX[controlPointImage->nx*controlPointImage->ny];
-                        PRECISION_TYPE *bestControlPointValuesX = &bestControlPointPosition[0];
-                        PRECISION_TYPE *bestControlPointValuesY = &bestControlPointValuesX[controlPointImage->nx*controlPointImage->ny];
-                        PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
-                        PRECISION_TYPE *gradientValuesY = &gradientValuesX[controlPointImage->nx*controlPointImage->ny];
-                        for (int i = 0; i < controlPointImage->nx * controlPointImage->ny; i++)
-                        {
-                            *controlPointValuesX++ = *bestControlPointValuesX++ + currentLength * *gradientValuesX++;
-                            *controlPointValuesY++ = *bestControlPointValuesY++ + currentLength * *gradientValuesY++;
-                        }
-                    }
-                    else
-                    {
-                        PRECISION_TYPE *controlPointValuesX = NULL;
-                        PRECISION_TYPE *controlPointValuesY = NULL;
-                        PRECISION_TYPE *controlPointValuesZ = NULL;
-                        controlPointValuesX = static_cast<PRECISION_TYPE *>(controlPointImage->data);
-                        controlPointValuesY = &controlPointValuesX[controlPointImage->nx*controlPointImage->ny*controlPointImage->nz];
-                        controlPointValuesZ = &controlPointValuesY[controlPointImage->nx*controlPointImage->ny*controlPointImage->nz];
-                        PRECISION_TYPE *bestControlPointValuesX = &bestControlPointPosition[0];
-                        PRECISION_TYPE *bestControlPointValuesY = &bestControlPointValuesX[controlPointImage->nx * controlPointImage->ny * controlPointImage->nz];
-                        PRECISION_TYPE *bestControlPointValuesZ = &bestControlPointValuesY[controlPointImage->nx * controlPointImage->ny * controlPointImage->nz];
-                        PRECISION_TYPE *gradientValuesX = static_cast<PRECISION_TYPE *>(nodeNMIGradientImage->data);
-                        PRECISION_TYPE *gradientValuesY = &gradientValuesX[controlPointImage->nx*controlPointImage->ny*controlPointImage->nz];
-                        PRECISION_TYPE *gradientValuesZ = &gradientValuesY[controlPointImage->nx*controlPointImage->ny*controlPointImage->nz];
-                        for(int i=0; i<controlPointImage->nx*controlPointImage->ny*controlPointImage->nz;i++)
-                        {
-                            *controlPointValuesX++ = *bestControlPointValuesX++ + currentLength * *gradientValuesX++;
-                            *controlPointValuesY++ = *bestControlPointValuesY++ + currentLength * *gradientValuesY++;
-                            *controlPointValuesZ++ = *bestControlPointValuesZ++ + currentLength * *gradientValuesZ++;
-                        }
+                        *controlPointValuesX++ = *bestControlPointValuesX++ + currentLength * *gradientValuesX++;
+                        *controlPointValuesY++ = *bestControlPointValuesY++ + currentLength * *gradientValuesY++;
+                        *controlPointValuesZ++ = *bestControlPointValuesZ++ + currentLength * *gradientValuesZ++;
                     }
                 }
 
                 /* The Jacobian-based penalty term is computed */
-                if (flag->jacobianWeightFlag && param->jacobianWeight > 0)
-                    currentWJac = param->jacobianWeight * reg_bspline_jacobian<PRECISION_TYPE>(controlPointImage, targetImage, flag->appJacobianFlag);
+                if (jacobianWeight > 0)
+                    currentWJac = jacobianWeight * reg_bspline_jacobian<PRECISION_TYPE>(controlPointImage, targetImageCopy, true);
 
                 int negCorrection = 0;
                 while (currentWJac != currentWJac && negCorrection < 5)
                 {
                     printf("*");
-                    currentWJac = param->jacobianWeight * reg_bspline_correctFolding<PRECISION_TYPE>(controlPointImage, targetImage, flag->appJacobianFlag);
+                    currentWJac = jacobianWeight * reg_bspline_correctFolding<PRECISION_TYPE>(controlPointImage, targetImageCopy, true);
                     negCorrection++;
                 }
 
                 /* The bending energy is computed */
-                if (flag->bendingEnergyFlag && param->bendingEnergyWeight>0)
-                    currentWBE = param->bendingEnergyWeight * reg_bspline_bendingEnergy<PRECISION_TYPE>(controlPointImage, targetImage, flag->appBendingEnergyFlag);
+                if (bendingEnergyWeight > 0)
+                    currentWBE = bendingEnergyWeight * reg_bspline_bendingEnergy<PRECISION_TYPE>(controlPointImage, targetImageCopy, true);
 
                 /* The source image is resampled and the metric evaluated */
-				reg_bspline<PRECISION_TYPE>(controlPointImage, targetImage, positionFieldImage, targetMask, 0);
+				reg_bspline<PRECISION_TYPE>(controlPointImage, targetImageCopy, positionFieldImage, targetMask, 0);
 
 				/* Resample the source image */
-				reg_resampleSourceImage<PRECISION_TYPE>(targetImage, sourceImageCopy, resultImage, positionFieldImage, NULL, 1, param->sourcePaddingValue);
+				reg_resampleSourceImage<PRECISION_TYPE>(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, NULL, 1, sourcePaddingValue);
 				
 				/* Computation of the Metric Value */
-				if (flag->useSSDFlag)
-				{
-					SSDValue = reg_getSSD<PRECISION_TYPE>(targetImage, resultImage);
-                    currentValue = -(1.0 - param->bendingEnergyWeight - param->jacobianWeight) * log(SSDValue+1.0);
-				}
-				else
-				{
-                    reg_getEntropies<double>(targetImage, resultImage, JH_PW_APPROX, nBins, probaJointHistogram, logJointHistogram, entropies, targetMask);
-                    currentValue = (1.0 - param->bendingEnergyWeight - param->jacobianWeight) * (entropies[0] + entropies[1]) / entropies[2];
-                }
+				reg_getEntropies<double>(targetImageCopy, resultImage, JH_PW_APPROX, nBins, probaJointHistogram, logJointHistogram, entropies, targetMask);
+                currentValue = (1.0 - bendingEnergyWeight - jacobianWeight) * (entropies[0] + entropies[1]) / entropies[2];
 
                 currentValue -= currentWBE + currentWJac;
 
@@ -1107,21 +1043,23 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
 			memcpy(controlPointImage->data, bestControlPointPosition, controlPointImage->nvox * controlPointImage->nbyper);
 			currentSize = addedStep;
 			printf("[%i] Objective function value=%g | max. added disp. = %g mm", iteration, bestValue, addedStep);
-			if (flag->bendingEnergyFlag && param->bendingEnergyWeight > 0)
+			if (bendingEnergyWeight > 0)
 			    printf(" | wBE=%g", bestWBE);
-			if (flag->jacobianWeightFlag && param->jacobianWeight > 0)
+			if (jacobianWeight > 0)
 			    printf(" | wJacLog=%g", bestWJac);
 			printf("\n");
 		}  // end of interation loop
+		
+		completedIterations[level] = iteration;
 
         /* The deformation model is unfolded if the Jacobian determinant-based penalty term is used */
-        if (flag->jacobianWeightFlag && param->jacobianWeight > 0)
+        if (jacobianWeight > 0)
         {
             int finalNegCorrection = 0;
             PRECISION_TYPE finalWJac = 0;
             do
             {
-                finalWJac = param->jacobianWeight * reg_bspline_correctFolding<PRECISION_TYPE>(controlPointImage, targetImage, false); 
+                finalWJac = jacobianWeight * reg_bspline_correctFolding<PRECISION_TYPE>(controlPointImage, targetImageCopy, false); 
                 finalNegCorrection++;
                 if (finalWJac != finalWJac)
                     printf( "*** Final folding correction [%i/%i] ***\n", finalNegCorrection, FOLDING_CORRECTION_STEP);
@@ -1144,94 +1082,48 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int t
 		free(entropies);
 		free(probaJointHistogram);
 		free(logJointHistogram);
+		
 		nifti_image_free(resultGradientImage);
 		nifti_image_free(voxelNMIGradientImage);
 		nifti_image_free(nodeNMIGradientImage);
-		if(!flag->noConjugateGradient)
-		{
-			free(conjugateG);
-			free(conjugateH);
-        }
+		
+		free(conjugateG);
+		free(conjugateH);
         free(bestControlPointPosition);
-
+        
         nifti_image_free(resultImage);
-
-        // Output the results
-        if (level == (param->level2Perform-1))
-        {
-            if (param->level2Perform != param->levelNumber)
-            {
-                if(positionFieldImage->data)
-                    free(positionFieldImage->data);
-                positionFieldImage->dim[1] = positionFieldImage->nx = targetHeader->nx;
-                positionFieldImage->dim[2] = positionFieldImage->ny = targetHeader->ny;
-                positionFieldImage->dim[3] = positionFieldImage->nz = targetHeader->nz;
-                positionFieldImage->dim[4] = positionFieldImage->nt = 1;
-                positionFieldImage->pixdim[4] = positionFieldImage->dt = 1.0;
-                if (twoDimRegistration)
-                    positionFieldImage->dim[5] = positionFieldImage->nu = 2;
-                else
-                    positionFieldImage->dim[5] = positionFieldImage->nu = 3;
-                positionFieldImage->pixdim[5] = positionFieldImage->du = 1.0;
-                positionFieldImage->dim[6] = positionFieldImage->nv = 1;
-                positionFieldImage->pixdim[6] = positionFieldImage->dv = 1.0;
-                positionFieldImage->dim[7] = positionFieldImage->nw = 1;
-                positionFieldImage->pixdim[7] = positionFieldImage->dw = 1.0;
-                positionFieldImage->nvox = positionFieldImage->nx * positionFieldImage->ny * positionFieldImage->nz * positionFieldImage->nt * positionFieldImage->nu;
-                positionFieldImage->data = (void *)calloc(positionFieldImage->nvox, positionFieldImage->nbyper);
-            }
-
-			/* The corresponding deformation field is evaluated and saved */
-			/* The best result is returned */
-            nifti_set_filenames(controlPointImage, param->outputCPPName, 0, 0);
-			nifti_image_write(controlPointImage);
-
-			reg_bspline<PRECISION_TYPE>(controlPointImage, targetHeader, positionFieldImage, NULL, 0);
-
-            nifti_image_free(sourceImageCopy);
-            sourceImage = nifti_image_read(param->sourceImageName, true); // reload the source image with the correct intensity values
-
-			resultImage = nifti_copy_nim_info(targetHeader);
-			resultImage->cal_min = sourceImage->cal_min;
-			resultImage->cal_max = sourceImage->cal_max;
-			resultImage->scl_slope = sourceImage->scl_slope;
-			resultImage->scl_inter = sourceImage->scl_inter;
-			resultImage->datatype = sourceImage->datatype;
-			resultImage->nbyper = sourceImage->nbyper;
-			resultImage->data = (void *) calloc(resultImage->nvox, resultImage->nbyper);
-			reg_resampleSourceImage<double>(targetHeader, sourceImage, resultImage, positionFieldImage, NULL, 3, param->sourcePaddingValue);
-			if (!flag->outputResultFlag)
-			    param->outputResultName = (char *)"outputResult.nii";
-			nifti_set_filenames(resultImage, param->outputResultName, 0, 0);
-			nifti_image_write(resultImage);
-			nifti_image_free(resultImage);
-
-		}
-
-		nifti_image_free(positionFieldImage);
-		nifti_image_free(sourceImage);
-		nifti_image_free(targetImage);
-
-		printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n");
+        nifti_image_free(targetImageCopy);
+        nifti_image_free(sourceImageCopy);
+        
+        if (level < (nLevels - 1))
+            nifti_image_free(positionFieldImage);
+        
+        if (verbose)
+    		printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n");
 	} // end of level loop
-
-	/* Mr Clean */
-	//nifti_image_free(controlPointImage);
-	nifti_image_free(targetHeader);
-	nifti_image_free(sourceHeader);
-    if(flag->targetMaskFlag)
-		nifti_image_free(targetMaskImage);
-
-	free(flag);
-	free(param);
-
-	time_t end;
-	time(&end);
-	int minutes = (int) floorf(float(end-start)/60.0f);
-	int seconds = (int) (end-start - 60*minutes);
-	printf("Registration Performed in %i min %i sec\n", minutes, seconds);
-	printf("Have a good day !\n");
-
+	
+	if (nLevels == 0)
+        positionFieldImage = create_position_field(targetImage, twoDimRegistration);
+	
+	reg_bspline<PRECISION_TYPE>(controlPointImage, targetImage, positionFieldImage, NULL, 0);
+	
+	// The source data type is changed for precision if requested
+    if (finalPrecision == INTERP_PREC_DOUBLE)
+        reg_changeDatatype<double>(sourceImage);
+    
+    // The result image is resampled using a cubic spline interpolation
+    resultImage = nifti_copy_nim_info(targetImage);
+    resultImage->cal_min = sourceImage->cal_min;
+    resultImage->cal_max = sourceImage->cal_max;
+    resultImage->scl_slope = sourceImage->scl_slope;
+    resultImage->scl_inter = sourceImage->scl_inter;
+    resultImage->datatype = sourceImage->datatype;
+    resultImage->nbyper = sourceImage->nbyper;
+    resultImage->data = calloc(resultImage->nvox, resultImage->nbyper);
+    reg_resampleSourceImage<PRECISION_TYPE>(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourcePaddingValue);
+    
+    nifti_image_free(positionFieldImage);
+    
 	f3d_result result;
     result.image = resultImage;
     result.controlPoints = controlPointImage;
