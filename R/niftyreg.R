@@ -28,7 +28,19 @@
     }
 }
 
-niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE, interpolationPrecision = NULL)
+niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid","nonlinear"), ...)
+{
+    if (missing(source) || missing(target))
+        report(OL$Error, "Source and target images must be given")
+    
+    scope <- match.arg(scope)
+    if (scope == "nonlinear")
+        niftyreg.nonlinear(source, target, targetMask, initAffine, ...)
+    else
+        niftyreg.linear(source, target, targetMask, initAffine, scope, ...)
+}
+
+niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE, interpolationPrecision = NULL)
 {
     if (!require("oro.nifti"))
         report(OL$Error, "The \"oro.nifti\" package is required")
@@ -128,6 +140,125 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
     return (result)
 }
 
+niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = NULL, initControl = NULL, nLevels = 3, maxIterations = 300, nBins = 64, bendingEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"), finalInterpolation = 3, verbose = FALSE, interpolationPrecision = NULL)
+{
+    if (!require("oro.nifti"))
+        report(OL$Error, "The \"oro.nifti\" package is required")
+    if (missing(source) || missing(target))
+        report(OL$Error, "Source and target images must be given")
+    if (!is.nifti(source) || !is.nifti(target))
+        report(OL$Error, "Source and target images must be \"nifti\" objects")
+    if (!(source@dim_[1] %in% c(2,3,4)))
+        report(OL$Error, "Only 2D, 3D or 4D source images may be used")
+    if (!(target@dim_[1] %in% c(2,3)))
+        report(OL$Error, "Only 2D or 3D target images may be used")
+    if (length(dim(source)) - length(dim(target)) > 1)
+        report(OL$Error, "The source image may not have more than one extra dimension")
+    if (!is.null(targetMask) && !is.nifti(targetMask))
+        report(OL$Error, "Target mask must be NULL or a \"nifti\" object")
+    if (!is.null(initControl) && !is.nifti(initControl))
+        report(OL$Error, "Initial control point image must be NULL or a \"nifti\" object")
+    if (any(sapply(list(nLevels,maxIterations,nBins,bendingEnergyWeight,jacobianWeight,finalInterpolation,verbose), length) != 1))
+        report(OL$Error, "Control parameters must all be of unit length")
+    if (any(c(bendingEnergyWeight,jacobianWeight) < 0))
+        output(OL$Error, "Penalty term weights must be nonnegative")
+    if (bendingEnergyWeight + jacobianWeight > 1)
+        output(OL$Error, "Penalty term weights cannot add up to more than 1")
+    if (length(finalSpacing) != 3)
+        output(OL$Error, "Final spacing must be specified as a numeric 3-vector")
+    if (!(finalInterpolation %in% c(0,1,3)))
+        report(OL$Error, "Final interpolation specifier must be 0, 1 or 3")
+    
+    # This takes priority over any affine initialisation, if present
+    if (!is.null(initControl))
+    {
+        initControl <- .fixTypes(initControl)
+        initAffine <- NULL
+    }
+    
+    if (!is.null(initAffine))
+    {
+        if (!is.matrix(initAffine) || !isTRUE(all.equal(dim(initAffine), c(4,4))))
+            report(OL$Error, "Specified affine matrix is not valid")
+        else if (!is.null(attr(initAffine,"affineType")) && attr(initAffine,"affineType") != "niftyreg")
+            initAffine <- convertAffine(initAffine, source, target, newType="niftyreg")
+        
+        initAffine <- as.vector(initAffine, "numeric")
+    }
+    
+    spacingUnit <- match.arg(spacingUnit)
+    if (spacingUnit == "vox")
+        finalSpacing <- (-abs(finalSpacing))
+    else
+        finalSpacing <- abs(finalSpacing)
+    
+    if (!is.null(interpolationPrecision))
+        interpolationPrecision <- match.arg(interpolationPrecision, c("source","single","double"))
+    else if (finalInterpolation == 0)
+        interpolationPrecision <- "source"
+    else
+        interpolationPrecision <- "single"
+    
+    if (source@dim_[1] == target@dim_[1])
+    {
+        returnValue <- .Call("reg_f3d", .fixTypes(source), .fixTypes(target), interpolationPrecision, as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(finalSpacing), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, initControl, as.integer(verbose), PACKAGE="RNiftyReg")
+        
+        dim(returnValue[[1]]) <- dim(target)
+        print(length(returnValue[[2]]))
+        output(OL$Error, "Stop")
+        dim(returnValue[[2]]) <- c(4,4)
+        attr(returnValue[[2]], "affineType") <- "niftyreg"
+
+        resultImage <- as.nifti(returnValue[[1]], target)
+        affine <- list(returnValue[[2]])
+        iterations <- list(returnValue[[3]])
+    }
+    else
+    {
+        nSourceDims <- source@dim_[1]
+        finalDims <- c(dim(target), dim(source)[nSourceDims])
+        nReps <- finalDims[length(finalDims)]
+        finalArray <- array(0, dim=finalDims)
+        affine <- iterations <- vector("list", nReps)
+
+        for (i in seq_len(nReps))
+        {
+            if (nSourceDims == 3)
+            {
+                returnValue <- .Call("reg_aladin", .fixTypes(as.nifti(source[,,i],source)), .fixTypes(target), scope, interpolationPrecision, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+                finalArray[,,i] <- returnValue[[1]]
+            }
+            else if (nSourceDims == 4)
+            {
+                returnValue <- .Call("reg_aladin", .fixTypes(as.nifti(source[,,,i],source)), .fixTypes(target), scope, interpolationPrecision, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, as.integer(verbose), PACKAGE="RNiftyReg")
+                finalArray[,,,i] <- returnValue[[1]]
+            }
+            
+            dim(returnValue[[2]]) <- c(4,4)
+            attr(returnValue[[2]], "affineType") <- "niftyreg"
+            affine[[i]] <- returnValue[[2]]
+            iterations[[i]] <- returnValue[[3]]
+        }
+        
+        resultImage <- as.nifti(finalArray, target)
+        resultImage@dim_[nSourceDims+1] <- nReps
+    }
+    
+    resultImage@cal_min <- min(resultImage@.Data)
+    resultImage@cal_max <- max(resultImage@.Data)
+    resultImage@scl_slope <- source@scl_slope
+    resultImage@scl_inter <- source@scl_inter
+    
+    resultImage@datatype <- switch(interpolationPrecision, source=source@datatype, single=16L, double=64L)
+    resultImage@data_type <- convert.datatype(resultImage@datatype)
+    resultImage@bitpix <- switch(interpolationPrecision, source=as.numeric(source@bitpix), single=32, double=64)
+    
+    result <- list(image=resultImage, affine=affine, iterations=iterations, scope=scope)
+    class(result) <- "niftyreg"
+    
+    return (result)
+}
+
 applyAffine <- function (affine, source, target, affineType = NULL, finalInterpolation = 3, interpolationPrecision = NULL)
 {
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
@@ -142,5 +273,5 @@ applyAffine <- function (affine, source, target, affineType = NULL, finalInterpo
     else
         attr(affine, "affineType") <- affineType
     
-    return (niftyreg(source, target, targetMask=NULL, initAffine=affine, scope="affine", nLevels=0, finalInterpolation=finalInterpolation, interpolationPrecision=interpolationPrecision, verbose=FALSE))
+    return (niftyreg.linear(source, target, targetMask=NULL, initAffine=affine, scope="affine", nLevels=0, finalInterpolation=finalInterpolation, interpolationPrecision=interpolationPrecision, verbose=FALSE))
 }
