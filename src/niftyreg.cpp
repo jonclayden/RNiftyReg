@@ -111,6 +111,88 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP 
     return returnValue;
 }
 
+extern "C"
+SEXP reg_f3d (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP initControl, SEXP verbose)
+{
+    int i, j, levels = *(INTEGER(nLevels));
+    SEXP returnValue, data, controlPoints, completedIterations;
+    
+    bool affineProvided = !isNull(affineComponents);
+    
+    nifti_image *sourceImage = s4_image_to_struct(source);
+    nifti_image *targetImage = s4_image_to_struct(target);
+    nifti_image *targetMaskImage = NULL;
+    nifti_image *controlPointImage = NULL;
+    mat44 *affineTransformation = NULL;
+    
+    if (!isNull(targetMask))
+        targetMaskImage = s4_image_to_struct(targetMask);
+    if (!isNull(initControl))
+        controlPointImage = s4_image_to_struct(initControl);
+    
+    if (affineProvided)
+    {
+        affineTransformation = (mat44 *) calloc(1, sizeof(mat44));
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+                affineTransformation->m[i][j] = (float) REAL(affineComponents)[(j*4)+i];
+        }
+    }
+    
+    float spacing[3];
+    for (i = 0; i < 3; i++)
+        spacing[i] = (float) REAL(finalSpacing)[i];
+    
+    int precisionType = (strcmp(CHAR(STRING_ELT(finalPrecision,0)),"source")==0 ? INTERP_PREC_SOURCE : INTERP_PREC_DOUBLE);
+    
+    f3d_result result = do_reg_f3d(sourceImage, targetImage, precisionType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(finalInterpolation)), targetMaskImage, controlPointImage, affineTransformation, *(INTEGER(nBins)), spacing, (float) *(REAL(bendingEnergyWeight)), (float) *(REAL(jacobianWeight)), (*(INTEGER(verbose)) == 1));
+    
+    PROTECT(returnValue = NEW_LIST(3));
+    
+    if (result.image->datatype == DT_INT32)
+    {
+        // Integer-valued data went in, and precision must be "source"
+        PROTECT(data = NEW_INTEGER((R_len_t) result.image->nvox));
+        for (size_t i = 0; i < result.image->nvox; i++)
+            INTEGER(data)[i] = ((int *) result.image->data)[i];
+    }
+    else
+    {
+        // All other cases
+        PROTECT(data = NEW_NUMERIC((R_len_t) result.image->nvox));
+        for (size_t i = 0; i < result.image->nvox; i++)
+            REAL(data)[i] = ((double *) result.image->data)[i];
+    }
+    
+    SET_ELEMENT(returnValue, 0, data);
+    
+    PROTECT(controlPoints = NEW_NUMERIC((R_len_t) result.controlPoints->nvox));
+    for (size_t i = 0; i < result.controlPoints->nvox; i++)
+        REAL(controlPoints)[i] = ((double *) result.controlPoints->data)[i];
+    
+    SET_ELEMENT(returnValue, 1, controlPoints);
+    
+    PROTECT(completedIterations = NEW_INTEGER(levels));
+    for (i = 0; i < levels; i++)
+        INTEGER(completedIterations)[i] = result.completedIterations[i];
+    
+    SET_ELEMENT(returnValue, 2, completedIterations);
+    
+    nifti_image_free(sourceImage);
+    nifti_image_free(targetImage);
+    if (targetMaskImage != NULL)
+        nifti_image_free(targetMaskImage);
+    nifti_image_free(result.image);
+    nifti_image_free(result.controlPoints);
+    if (affineProvided)
+        free(affineTransformation);
+    
+    UNPROTECT(4);
+    
+    return returnValue;
+}
+
 // Convert an S4 "nifti" object, as defined in the oro.nifti package, to a "nifti_image" struct
 nifti_image * s4_image_to_struct (SEXP object)
 {
