@@ -333,7 +333,7 @@ nifti_image * create_position_field (nifti_image *templateImage, bool twoDimRegi
 mat44 * create_init_affine (nifti_image *sourceImage, nifti_image *targetImage)
 {
     mat44 *affineTransformation = (mat44 *) calloc(1, sizeof(mat44));
-    for (i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++)
         affineTransformation->m[i][i] = 1.0;
 
     mat44 *sourceMatrix, *targetMatrix;
