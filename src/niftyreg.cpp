@@ -139,6 +139,15 @@ SEXP reg_f3d (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEXP 
                 affineTransformation->m[i][j] = (float) REAL(affineComponents)[(j*4)+i];
         }
     }
+    else if (isNull(initControl))
+    {
+        affineTransformation = (mat44 *) calloc(1, sizeof(mat44));
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+                affineTransformation->m[i][j] = (i == j ? 1.0 : 0.0);
+        }
+    }
     
     float spacing[3];
     for (i = 0; i < 3; i++)
@@ -185,7 +194,7 @@ SEXP reg_f3d (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEXP 
         nifti_image_free(targetMaskImage);
     nifti_image_free(result.image);
     nifti_image_free(result.controlPoints);
-    if (affineProvided)
+    if (affineProvided || isNull(initControl))
         free(affineTransformation);
     
     UNPROTECT(4);
@@ -622,14 +631,14 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
                 if (twoDimRegistration)
                 {
                     gridSpacing[2] = 1.0f;
-                	dim_cpp[3]=1;
-                	dim_cpp[5]=2;
+                	dim_cpp[3] = 1;
+                	dim_cpp[5] = 2;
                 }
                 else
                 {
                     gridSpacing[2] = spacing[2] * powf(2.0f, (float)(nLevels-1));
-                    dim_cpp[3]=(int)floor(targetImageCopy->nz*targetImageCopy->dz/gridSpacing[2])+5;
-                	dim_cpp[5]=3;
+                    dim_cpp[3] = (int) floor(targetImageCopy->nz*targetImageCopy->dz/gridSpacing[2]) + 5;
+                	dim_cpp[5] = 3;
                 }
                 dim_cpp[4] = dim_cpp[6] = dim_cpp[7] = 1;
                 
@@ -641,8 +650,8 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
                 controlPointImage->cal_min = 0;
                 controlPointImage->cal_max = 0;
                 controlPointImage->pixdim[0] = 1.0f;
-                controlPointImage->pixdim[1] = controlPointImage->dx=gridSpacing[0];
-                controlPointImage->pixdim[2] = controlPointImage->dy=gridSpacing[1];
+                controlPointImage->pixdim[1] = controlPointImage->dx = gridSpacing[0];
+                controlPointImage->pixdim[2] = controlPointImage->dy = gridSpacing[1];
                 if (twoDimRegistration)
                     controlPointImage->pixdim[3] = controlPointImage->dz = 1.0f;
                 else
@@ -843,7 +852,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
                 fprintf(stderr, "[WARNING] The initial folding correction failed.\n");
                 fprintf(stderr, "[WARNING] You might want to increase the penalty term weights.\n");
                 {
-                    memcpy(controlPointImage->data,bestControlPointPosition,controlPointImage->nvox*controlPointImage->nbyper);
+                    memcpy(controlPointImage->data, bestControlPointPosition, controlPointImage->nvox*controlPointImage->nbyper);
                 }
             }
 
@@ -1206,7 +1215,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
     
     nifti_image_free(positionFieldImage);
     
-	f3d_result result;
+    f3d_result result;
     result.image = resultImage;
     result.controlPoints = controlPointImage;
     result.completedIterations = completedIterations;
