@@ -139,15 +139,6 @@ SEXP reg_f3d (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEXP 
                 affineTransformation->m[i][j] = (float) REAL(affineComponents)[(j*4)+i];
         }
     }
-    else if (isNull(initControl))
-    {
-        affineTransformation = (mat44 *) calloc(1, sizeof(mat44));
-        for (i = 0; i < 4; i++)
-        {
-            for (j = 0; j < 4; j++)
-                affineTransformation->m[i][j] = (i == j ? 1.0 : 0.0);
-        }
-    }
     
     float spacing[3];
     for (i = 0; i < 3; i++)
@@ -339,6 +330,43 @@ nifti_image * create_position_field (nifti_image *templateImage, bool twoDimRegi
     return positionFieldImage;
 }
 
+mat44 * create_init_affine (nifti_image *sourceImage, nifti_image *targetImage)
+{
+    mat44 *affineTransformation = (mat44 *) calloc(1, sizeof(mat44));
+    for (i = 0; i < 4; i++)
+        affineTransformation->m[i][i] = 1.0;
+
+    mat44 *sourceMatrix, *targetMatrix;
+    float sourceCentre[3], targetCentre[3], sourceRealPosition[3], targetRealPosition[3];
+
+	if (sourceImage->sform_code>0)
+		sourceMatrix = &(sourceImage->sto_xyz);
+	else
+	    sourceMatrix = &(sourceImage->qto_xyz);
+	if (targetImage->sform_code>0)
+		targetMatrix = &(targetImage->sto_xyz);
+	else
+	    targetMatrix = &(targetImage->qto_xyz);
+
+	sourceCentre[0] = (float) (sourceImage->nx) / 2.0f;
+	sourceCentre[1] = (float) (sourceImage->ny) / 2.0f;
+	sourceCentre[2] = (float) (sourceImage->nz) / 2.0f;
+
+	targetCentre[0] = (float) (targetImage->nx) / 2.0f;
+	targetCentre[1] = (float) (targetImage->ny) / 2.0f;
+	targetCentre[2] = (float) (targetImage->nz) / 2.0f;
+
+	reg_mat44_mul(sourceMatrix, sourceCentre, sourceRealPosition);
+	reg_mat44_mul(targetMatrix, targetCentre, targetRealPosition);
+
+	// Use origins to initialise translation elements
+	affineTransformation->m[0][3] = sourceRealPosition[0] - targetRealPosition[0];
+	affineTransformation->m[1][3] = sourceRealPosition[1] - targetRealPosition[1];
+	affineTransformation->m[2][3] = sourceRealPosition[2] - targetRealPosition[2];
+	
+    return affineTransformation;
+}
+
 // Run the "aladin" registration algorithm
 aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
 {
@@ -352,39 +380,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     
     // Initial affine matrix is the identity
     if (affineTransformation == NULL)
-    {
-        affineTransformation = (mat44 *) calloc(1, sizeof(mat44));
-        for (i = 0; i < 4; i++)
-            affineTransformation->m[i][i] = 1.0;
-
-        mat44 *sourceMatrix, *targetMatrix;
-        float sourceCentre[3], targetCentre[3], sourceRealPosition[3], targetRealPosition[3];
-
-    	if (sourceImage->sform_code>0)
-    		sourceMatrix = &(sourceImage->sto_xyz);
-    	else
-    	    sourceMatrix = &(sourceImage->qto_xyz);
-    	if (targetImage->sform_code>0)
-    		targetMatrix = &(targetImage->sto_xyz);
-    	else
-    	    targetMatrix = &(targetImage->qto_xyz);
-
-    	sourceCentre[0] = (float) (sourceImage->nx) / 2.0f;
-    	sourceCentre[1] = (float) (sourceImage->ny) / 2.0f;
-    	sourceCentre[2] = (float) (sourceImage->nz) / 2.0f;
-
-    	targetCentre[0] = (float) (targetImage->nx) / 2.0f;
-    	targetCentre[1] = (float) (targetImage->ny) / 2.0f;
-    	targetCentre[2] = (float) (targetImage->nz) / 2.0f;
-
-    	reg_mat44_mul(sourceMatrix, sourceCentre, sourceRealPosition);
-    	reg_mat44_mul(targetMatrix, targetCentre, targetRealPosition);
-
-    	// Use origins to initialise translation elements
-    	affineTransformation->m[0][3] = sourceRealPosition[0] - targetRealPosition[0];
-    	affineTransformation->m[1][3] = sourceRealPosition[1] - targetRealPosition[1];
-    	affineTransformation->m[2][3] = sourceRealPosition[2] - targetRealPosition[2];
-    }
+        affineTransformation = create_init_affine(sourceImage, targetImage);
     
     // Binarise the mask image
     if (usingTargetMask)
@@ -565,6 +561,9 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
         spacing[1] *= -1.0f * targetImage->dy;
     if (spacing[2] < 2)
         spacing[2] *= -1.0f * targetImage->dz;
+    
+    if (!controlPointImageProvided && affineTransformation == NULL)
+        affineTransformation = create_init_affine(sourceImage, targetImage);
     
     for (int level = 0; level < nLevels; level++)
     {

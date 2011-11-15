@@ -27,6 +27,8 @@ nifti_image * copy_complete_nifti_image (nifti_image *source);
 
 nifti_image * create_position_field (nifti_image *templateImage, bool twoDimRegistration);
 
+mat44 * create_init_affine (nifti_image *sourceImage, nifti_image *targetImage);
+
 aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose);
 
 f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int finalPrecision, int nLevels, int maxIterations, int finalInterpolation, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, float *spacing, float bendingEnergyWeight, float jacobianWeight, bool verbose);
