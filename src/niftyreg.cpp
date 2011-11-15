@@ -755,12 +755,12 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
 
         if (verbose)
         {
-    		printf("Current level %i / %i\n", level+1, nLevels);
-    		printf("Target image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", targetImageCopy->nx, targetImageCopy->ny, targetImageCopy->nz, targetImageCopy->dx, targetImageCopy->dy, targetImageCopy->dz);
-    		printf("Source image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", sourceImageCopy->nx, sourceImageCopy->ny, sourceImageCopy->nz, sourceImageCopy->dx, sourceImageCopy->dy, sourceImageCopy->dz);
-    		printf("\t%ix%ix%i control points (%i DoF)\n", controlPointImage->nx, controlPointImage->ny, controlPointImage->nz, (int) controlPointImage->nvox);
-    		printf("\t%gx%gx%g mm\n", controlPointImage->dx, controlPointImage->dy, controlPointImage->dz);	
-            printf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
+    		Rprintf("Current level %i / %i\n", level+1, nLevels);
+    		Rprintf("Target image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", targetImageCopy->nx, targetImageCopy->ny, targetImageCopy->nz, targetImageCopy->dx, targetImageCopy->dy, targetImageCopy->dz);
+    		Rprintf("Source image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", sourceImageCopy->nx, sourceImageCopy->ny, sourceImageCopy->nz, sourceImageCopy->dx, sourceImageCopy->dy, sourceImageCopy->dz);
+    		Rprintf("\t%ix%ix%i control points (%i DoF)\n", controlPointImage->nx, controlPointImage->ny, controlPointImage->nz, (int) controlPointImage->nvox);
+    		Rprintf("\t%gx%gx%g mm\n", controlPointImage->dx, controlPointImage->dy, controlPointImage->dz);	
+            Rprintf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
         }
 
 		float maxStepSize = (targetImageCopy->dx > targetImageCopy->dy) ? targetImageCopy->dx : targetImageCopy->dy;
@@ -838,13 +838,13 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
                 if (currentWJac != currentWJac)
                 {
                     if (verbose)
-                        printf("*** Initial folding correction [%i/%i] ***\n", initialNegCorrection, FOLDING_CORRECTION_STEP);
+                        Rprintf("*** Initial folding correction [%i/%i] ***\n", initialNegCorrection, FOLDING_CORRECTION_STEP);
                 }
                 else
                 {
                     memcpy(bestControlPointPosition, controlPointImage->data, controlPointImage->nvox * controlPointImage->nbyper);
                     if (verbose)
-                        printf(">>> Initial Jacobian based penalty term value = %g\n", currentWJac);
+                        Rprintf(">>> Initial Jacobian based penalty term value = %g\n", currentWJac);
                 }
             }
             if (currentWJac != currentWJac)
@@ -876,8 +876,8 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
             double bestWBE = currentWBE;
             double bestWJac = currentWJac;
             double bestValue = currentValue - bestWBE - currentWJac;
-            if (iteration==1)
-                printf("Initial objective function value = %g\n", bestValue);
+            if (verbose && iteration == 1)
+                Rprintf("Initial objective function value = %g\n", bestValue);
 
             float maxLength;
 
@@ -1030,9 +1030,9 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
 			maxLength = reg_getMaximalLength<PRECISION_TYPE>(nodeNMIGradientImage);
 
 			/* The gradient is applied to the control point positions */
-			if (maxLength==0)
+			if (maxLength == 0)
 			{
-				printf("No Gradient ... exit\n");
+				Rprintf("No Gradient ... exit\n");
 				break;	
 			}
 
@@ -1092,7 +1092,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
                 int negCorrection = 0;
                 while (currentWJac != currentWJac && negCorrection < 5)
                 {
-                    printf("*");
+                    Rprintf("*");
                     currentWJac = jacobianWeight * reg_bspline_correctFolding<PRECISION_TYPE>(controlPointImage, targetImageCopy, true);
                     negCorrection++;
                 }
@@ -1133,12 +1133,16 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
 			
 			memcpy(controlPointImage->data, bestControlPointPosition, controlPointImage->nvox * controlPointImage->nbyper);
 			currentSize = addedStep;
-			printf("[%i] Objective function value=%g | max. added disp. = %g mm", iteration, bestValue, addedStep);
-			if (bendingEnergyWeight > 0)
-			    printf(" | wBE=%g", bestWBE);
-			if (jacobianWeight > 0)
-			    printf(" | wJacLog=%g", bestWJac);
-			printf("\n");
+			
+			if (verbose)
+			{
+			    Rprintf("[%i] Objective function value=%g | max. added disp. = %g mm", iteration, bestValue, addedStep);
+    			if (bendingEnergyWeight > 0)
+    			    Rprintf(" | wBE=%g", bestWBE);
+    			if (jacobianWeight > 0)
+    			    Rprintf(" | wJacLog=%g", bestWJac);
+    			Rprintf("\n");
+			}
 		}  // end of interation loop
 		
 		completedIterations[level] = iteration;
@@ -1153,9 +1157,9 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
                 finalWJac = jacobianWeight * reg_bspline_correctFolding<PRECISION_TYPE>(controlPointImage, targetImageCopy, false); 
                 finalNegCorrection++;
                 if (finalWJac != finalWJac)
-                    printf( "*** Final folding correction [%i/%i] ***\n", finalNegCorrection, FOLDING_CORRECTION_STEP);
+                    Rprintf( "*** Final folding correction [%i/%i] ***\n", finalNegCorrection, FOLDING_CORRECTION_STEP);
                 else
-                    printf(">>> Final Jacobian based penalty term value = %g\n", finalWJac);
+                    Rprintf(">>> Final Jacobian based penalty term value = %g\n", finalWJac);
             }
             while (finalWJac != finalWJac && finalNegCorrection < FOLDING_CORRECTION_STEP);
 
@@ -1190,7 +1194,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
             nifti_image_free(positionFieldImage);
         
         if (verbose)
-    		printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n");
+    		Rprintf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n");
 	} // end of level loop
 	
 	if (nLevels == 0)
