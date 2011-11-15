@@ -161,11 +161,11 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
     if (any(sapply(list(nLevels,maxIterations,nBins,bendingEnergyWeight,jacobianWeight,finalInterpolation,verbose), length) != 1))
         report(OL$Error, "Control parameters must all be of unit length")
     if (any(c(bendingEnergyWeight,jacobianWeight) < 0))
-        output(OL$Error, "Penalty term weights must be nonnegative")
+        report(OL$Error, "Penalty term weights must be nonnegative")
     if (bendingEnergyWeight + jacobianWeight > 1)
-        output(OL$Error, "Penalty term weights cannot add up to more than 1")
+        report(OL$Error, "Penalty term weights cannot add up to more than 1")
     if (length(finalSpacing) != 3)
-        output(OL$Error, "Final spacing must be specified as a numeric 3-vector")
+        report(OL$Error, "Final spacing must be specified as a numeric 3-vector")
     if (!(finalInterpolation %in% c(0,1,3)))
         report(OL$Error, "Final interpolation specifier must be 0, 1 or 3")
     
@@ -205,7 +205,7 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         
         dim(returnValue[[1]]) <- dim(target)
         print(length(returnValue[[2]]))
-        output(OL$Error, "Stop")
+        report(OL$Error, "Stop")
         dim(returnValue[[2]]) <- c(4,4)
         attr(returnValue[[2]], "affineType") <- "niftyreg"
 
