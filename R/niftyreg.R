@@ -134,7 +134,7 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
     resultImage@data_type <- convert.datatype(resultImage@datatype)
     resultImage@bitpix <- switch(interpolationPrecision, source=as.numeric(source@bitpix), single=32, double=64)
     
-    result <- list(image=resultImage, affine=affine, iterations=iterations, scope=scope)
+    result <- list(image=resultImage, affine=affine, control=NULL, iterations=iterations, scope=scope)
     class(result) <- "niftyreg"
     
     return (result)
@@ -188,9 +188,8 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
     
     spacingUnit <- match.arg(spacingUnit)
     if (spacingUnit == "vox")
-        finalSpacing <- (-abs(finalSpacing))
-    else
-        finalSpacing <- abs(finalSpacing)
+        finalSpacing <- finalSpacing * target@pixdim[2:4]
+    controlPointDims <- floor(abs(target@dim_[2:4] * target@pixdim[2:4] / finalSpacing)) + 5
     
     if (!is.null(interpolationPrecision))
         interpolationPrecision <- match.arg(interpolationPrecision, c("source","single","double"))
@@ -201,16 +200,20 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
     
     if (source@dim_[1] == target@dim_[1])
     {
-        returnValue <- .Call("reg_f3d", .fixTypes(source), .fixTypes(target), interpolationPrecision, as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(finalSpacing), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, initControl, as.integer(verbose), PACKAGE="RNiftyReg")
+        returnValue <- .Call("reg_f3d", .fixTypes(source), .fixTypes(target), interpolationPrecision, as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(abs(finalSpacing)), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, initControl, as.integer(verbose), PACKAGE="RNiftyReg")
         
         dim(returnValue[[1]]) <- dim(target)
-        print(length(returnValue[[2]]))
-        report(OL$Error, "Stop")
-        dim(returnValue[[2]]) <- c(4,4)
-        attr(returnValue[[2]], "affineType") <- "niftyreg"
+        
+        dim(returnValue[[2]]) <- c(controlPointDims,1,3)
+        returnValue[[2]] <- as.nifti(returnValue[[2]], target)
+        returnValue[[2]]@cal_min <- min(returnValue[[2]]@.Data)
+        returnValue[[2]]@cal_max <- max(returnValue[[2]]@.Data)
+        returnValue[[2]]@datatype <- 64L
+        returnValue[[2]]@data_type <- convert.datatype(returnValue[[2]]@datatype)
+        returnValue[[2]]@bitpix <- 64
 
         resultImage <- as.nifti(returnValue[[1]], target)
-        affine <- list(returnValue[[2]])
+        control <- list(returnValue[[2]])
         iterations <- list(returnValue[[3]])
     }
     else
@@ -253,7 +256,7 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
     resultImage@data_type <- convert.datatype(resultImage@datatype)
     resultImage@bitpix <- switch(interpolationPrecision, source=as.numeric(source@bitpix), single=32, double=64)
     
-    result <- list(image=resultImage, affine=affine, iterations=iterations, scope=scope)
+    result <- list(image=resultImage, affine=NULL, control=control, iterations=iterations, scope="nonlinear")
     class(result) <- "niftyreg"
     
     return (result)
