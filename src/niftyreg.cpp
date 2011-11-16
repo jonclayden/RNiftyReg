@@ -557,9 +557,9 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
     
     if (spacing[0] < 0)
         spacing[0] *= -1.0f * targetImage->dx;
-    if (spacing[1] < 1)
+    if (spacing[1] < 0)
         spacing[1] *= -1.0f * targetImage->dy;
-    if (spacing[2] < 2)
+    if (spacing[2] < 0)
         spacing[2] *= -1.0f * targetImage->dz;
     
     if (!controlPointImageProvided && affineTransformation == NULL)
