@@ -102,6 +102,7 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEX
         nifti_image_free(targetMaskImage);
     nifti_image_free(result.image);
     free(result.affine);
+    free(result.completedIterations);
     
     UNPROTECT(affineProvided ? 3 : 4);
     
@@ -182,6 +183,7 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEX
         nifti_image_free(targetMaskImage);
     nifti_image_free(result.image);
     nifti_image_free(result.controlPoints);
+    free(result.completedIterations);
     if (affineProvided || isNull(initControl))
         free(affineTransformation);
     
@@ -540,216 +542,93 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
 }
 
 f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int finalPrecision, int nLevels, int maxIterations, int finalInterpolation, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, float *spacing, float bendingEnergyWeight, float jacobianWeight, bool verbose)
-{
-    bool usingTargetMask = (targetMaskImage != NULL);
-    bool controlPointImageProvided = (controlPointImage != NULL);
-    bool twoDimRegistration = (sourceImage->nz == 1 || targetImage->nz == 1);
-    PRECISION_TYPE sourcePaddingValue = std::numeric_limits<float>::quiet_NaN();
-    nifti_image *resultImage, *positionFieldImage = NULL;
-    
+{    
     int *completedIterations = (int *) calloc(nLevels, sizeof(int));
     
-    // This is due to the extrapolation of the joint histogram using the Parzen window
-    nBins += 4;
-    
-    if (spacing[0] < 0)
-        spacing[0] *= -1.0f * targetImage->dx;
-    if (spacing[1] < 0)
-        spacing[1] *= -1.0f * targetImage->dy;
-    if (spacing[2] < 0)
-        spacing[2] *= -1.0f * targetImage->dz;
-    
-    if (!controlPointImageProvided && affineTransformation == NULL)
+    if (controlPointImage != NULL && affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
     
     // Binarise the mask image
-    if (usingTargetMask)
+    if (targetMaskImage != NULL)
         reg_tool_binarise_image(targetMaskImage);
     
-    reg_f3d<PrecisionTYPE> *REG=NULL;
-    {
-
-        {
-            REG = new reg_f3d<PrecisionTYPE>(referenceImage->nt, floatingImage->nt);
-            if(verbose==true){
-                printf("\n[NiftyReg F3D] CPU implementation is used\n");
-            }
-        }
-    }
+    // The source data type is changed for precision if requested
+    if (finalPrecision == INTERP_PREC_DOUBLE)
+        reg_changeDatatype<double>(sourceImage);
+    
+    // Create the object encapsulating the registration
+    reg_f3d<PRECISION_TYPE> *reg = new reg_f3d<PRECISION_TYPE>(targetImage->nt, sourceImage->nt);
 
 #ifdef _OPENMP
     int maxThreadNumber = omp_get_max_threads();
     if (verbose)
-        printf("[NiftyReg F3D] OpenMP is used with %i thread(s)\n", maxThreadNumber);
+        Rprintf("[NiftyReg F3D] OpenMP is used with %i thread(s)\n", maxThreadNumber);
 #endif
 
     // Set the reg_f3d parameters
-    REG->SetReferenceImage(referenceImage);
-    REG->SetFloatingImage(floatingImage);
+    reg->SetReferenceImage(targetImage);
+    reg->SetFloatingImage(sourceImage);
 
-    if(verbose==false) REG->DoNotPrintOutInformation();
-    else REG->PrintOutInformation();
+    if (verbose)
+        reg->PrintOutInformation();
+    else
+        reg->DoNotPrintOutInformation();
 
-    if(referenceMaskImage!=NULL)
-       REG->SetReferenceMask(referenceMaskImage);
+    if (targetMaskImage != NULL)
+       reg->SetReferenceMask(targetMaskImage);
 
-    if(controlPointGridImage!=NULL)
-       REG->SetControlPointGridImage(controlPointGridImage);
+    if (controlPointImage != NULL)
+       reg->SetControlPointGridImage(controlPointImage);
 
-    if(affineTransformation!=NULL)
-       REG->SetAffineTransformation(affineTransformation);
+    if (affineTransformation != NULL)
+       reg->SetAffineTransformation(affineTransformation);
 
-    if(bendingEnergyWeight==bendingEnergyWeight)
-        REG->SetBendingEnergyWeight(bendingEnergyWeight);
+    reg->SetBendingEnergyWeight(bendingEnergyWeight);
 
-    if(linearEnergyWeight0==linearEnergyWeight0 || linearEnergyWeight1==linearEnergyWeight1 || linearEnergyWeight2==linearEnergyWeight2){
-        if(linearEnergyWeight0!=linearEnergyWeight0) linearEnergyWeight0=0.0;
-        if(linearEnergyWeight1!=linearEnergyWeight1) linearEnergyWeight1=0.0;
-        if(linearEnergyWeight2!=linearEnergyWeight2) linearEnergyWeight2=0.0;
-        REG->SetLinearEnergyWeights(linearEnergyWeight0,linearEnergyWeight1,linearEnergyWeight2);
+    // if (linearEnergyWeight0==linearEnergyWeight0 || linearEnergyWeight1==linearEnergyWeight1 || linearEnergyWeight2==linearEnergyWeight2)
+    // {
+    //     if(linearEnergyWeight0!=linearEnergyWeight0) linearEnergyWeight0=0.0;
+    //     if(linearEnergyWeight1!=linearEnergyWeight1) linearEnergyWeight1=0.0;
+    //     if(linearEnergyWeight2!=linearEnergyWeight2) linearEnergyWeight2=0.0;
+    //     reg->SetLinearEnergyWeights(linearEnergyWeight0,linearEnergyWeight1,linearEnergyWeight2);
+    // }
+    
+    reg->SetJacobianLogWeight(jacobianWeight);
+
+    reg->SetMaximalIterationNumber(maxIterations);
+
+    if (nBins > 0)
+    {
+        for (int i = 0; i < targetImage->nt; i++)
+        {
+            reg->SetReferenceBinNumber(i, (unsigned) nBins);
+            reg->SetFloatingBinNumber(i, (unsigned) nBins);
+        }
     }
 
-    if(jacobianLogWeight==jacobianLogWeight)
-        REG->SetJacobianLogWeight(jacobianLogWeight);
+    for (int i = 0; i < 3; i++)
+        reg->SetSpacing((unsigned) i, (PRECISION_TYPE) spacing[i]);
 
-    if(jacobianLogApproximation)
-        REG->ApproximateJacobianLog();
-    else REG->DoNotApproximateJacobianLog();
+    reg->SetLevelNumber(nLevels);
+    reg->SetLevelToPerform(nLevels);
 
-    if(maxiterationNumber>-1)
-        REG->SetMaximalIterationNumber(maxiterationNumber);
-
-    if(referenceSmoothingSigma==referenceSmoothingSigma)
-        REG->SetReferenceSmoothingSigma(referenceSmoothingSigma);
-
-    if(floatingSmoothingSigma==floatingSmoothingSigma)
-        REG->SetFloatingSmoothingSigma(floatingSmoothingSigma);
-
-    for(unsigned int t=0;t<(unsigned int)referenceImage->nt;t++)
-        if(referenceThresholdUp[t]==referenceThresholdUp[t])
-            REG->SetReferenceThresholdUp(t,referenceThresholdUp[t]);
-
-    for(unsigned int t=0;t<(unsigned int)referenceImage->nt;t++)
-        if(referenceThresholdLow[t]==referenceThresholdLow[t])
-            REG->SetReferenceThresholdLow(t,referenceThresholdLow[t]);
-
-    for(unsigned int t=0;t<(unsigned int)floatingImage->nt;t++)
-        if(floatingThresholdUp[t]==floatingThresholdUp[t])
-            REG->SetFloatingThresholdUp(t,floatingThresholdUp[t]);
-
-    for(unsigned int t=0;t<(unsigned int)floatingImage->nt;t++)
-        if(floatingThresholdLow[t]==floatingThresholdLow[t])
-            REG->SetFloatingThresholdLow(t,floatingThresholdLow[t]);
-
-    for(unsigned int t=0;t<(unsigned int)referenceImage->nt;t++)
-        if(referenceBinNumber[t]>0)
-            REG->SetReferenceBinNumber(t,referenceBinNumber[t]);
-
-    for(unsigned int t=0;t<(unsigned int)floatingImage->nt;t++)
-        if(floatingBinNumber[t]>0)
-            REG->SetFloatingBinNumber(t,floatingBinNumber[t]);
-
-    if(warpedPaddingValue==warpedPaddingValue)
-        REG->SetWarpedPaddingValue(warpedPaddingValue);
-
-    for(unsigned int s=0;s<3;s++)
-        if(spacing[s]==spacing[s])
-            REG->SetSpacing(s,spacing[s]);
-
-    if(levelNumber>0)
-        REG->SetLevelNumber(levelNumber);
-
-    if(levelToPerform>0)
-        REG->SetLevelToPerform(levelToPerform);
-
-    if(gradientSmoothingSigma==gradientSmoothingSigma)
-        REG->SetGradientSmoothingSigma(gradientSmoothingSigma);
-	
-    if(useSSD)
-        REG->UseSSD();
-    else REG->DoNotUseSSD();
-
-    if(useConjugate==true)
-        REG->UseConjugateGradient();
-    else REG->DoNotUseConjugateGradient();
-
-    if(noPyramid==1)
-        REG->DoNotUsePyramidalApproach();
-
-    if(useCubicSplineInterpolation)
-        REG->UseCubicSplineInterpolation();
-
-    if(useLinearInterpolation)
-        REG->UseLinearInterpolation();
-
-    if(useNearestNeighorInterpolation)
-        REG->UseNeareatNeighborInterpolation();
-
+    if (finalInterpolation == 3)
+        reg->UseCubicSplineInterpolation();
+    else if (finalInterpolation == 1)
+        reg->UseLinearInterpolation();
+    else
+        reg->UseNeareatNeighborInterpolation();
+    
     // Run the registration
-        REG->Run_f3d();
+    reg->Run_f3d();
 
-        // Save the control point result
-        nifti_image *outputControlPointGridImage = REG->GetControlPointPositionImage();
-        if(outputControlPointGridName==NULL) outputControlPointGridName=(char *)"outputCPP.nii";
-        nifti_set_filenames(outputControlPointGridImage, outputControlPointGridName, 0, 0);
-        memset(outputControlPointGridImage->descrip, 0, 80);
-        strcpy (outputControlPointGridImage->descrip,"Control point position from NiftyReg (reg_f3d)");
-        nifti_image_write(outputControlPointGridImage);
-        nifti_image_free(outputControlPointGridImage);outputControlPointGridImage=NULL;
-
-        // Save the warped image result
-        nifti_image *outputWarpedImage = REG->GetWarpedImage();
-        if(outputWarpedName==NULL) outputWarpedName=(char *)"outputResult.nii";
-        nifti_set_filenames(outputWarpedImage, outputWarpedName, 0, 0);
-        memset(outputWarpedImage->descrip, 0, 80);
-        strcpy (outputWarpedImage->descrip,"Warped image using NiftyReg (reg_f3d)");
-        nifti_image_write(outputWarpedImage);
-        nifti_image_free(outputWarpedImage);outputWarpedImage=NULL;
-    // Erase the registration object
-    delete REG;
-
-    // Clean the allocated images
-    if(referenceImage!=NULL) nifti_image_free(referenceImage);
-    if(floatingImage!=NULL) nifti_image_free(floatingImage);
-    if(controlPointGridImage!=NULL) nifti_image_free(controlPointGridImage);
-    if(affineTransformation!=NULL) free(affineTransformation);
-    if(referenceMaskImage!=NULL) nifti_image_free(referenceMaskImage);
-
-    if(verbose){
-        time_t end; time( &end );
-        int minutes = (int)floorf(float(end-start)/60.0f);
-        int seconds = (int)(end-start - 60*minutes);
-
-            printf("[NiftyReg F3D] Registration Performed in %i min %i sec\n", minutes, seconds);
-            printf("[NiftyReg F3D] Have a good day !\n");
-    }
-	
-	if (nLevels == 0)
-        positionFieldImage = create_position_field(targetImage, twoDimRegistration);
-	
-	reg_bspline<PRECISION_TYPE>(controlPointImage, targetImage, positionFieldImage, NULL, 0);
-	
-	// The source data type is changed for precision if requested
-    if (finalPrecision == INTERP_PREC_DOUBLE)
-        reg_changeDatatype<double>(sourceImage);
-    
-    // The result image is resampled using a cubic spline interpolation
-    resultImage = nifti_copy_nim_info(targetImage);
-    resultImage->cal_min = sourceImage->cal_min;
-    resultImage->cal_max = sourceImage->cal_max;
-    resultImage->scl_slope = sourceImage->scl_slope;
-    resultImage->scl_inter = sourceImage->scl_inter;
-    resultImage->datatype = sourceImage->datatype;
-    resultImage->nbyper = sourceImage->nbyper;
-    resultImage->data = calloc(resultImage->nvox, resultImage->nbyper);
-    reg_resampleSourceImage(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourcePaddingValue);
-    
-    nifti_image_free(positionFieldImage);
-    
     f3d_result result;
-    result.image = resultImage;
-    result.controlPoints = controlPointImage;
+    result.image = reg->GetWarpedImage();
+    result.controlPoints = reg->GetControlPointPositionImage();
     result.completedIterations = completedIterations;
+    
+    // Erase the registration object
+    delete reg;
     
     return result;
 }
