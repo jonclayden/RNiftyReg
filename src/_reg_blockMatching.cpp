@@ -10,15 +10,15 @@
  */
 
 #include "_reg_blockMatching.h"
-#include "_reg_affineTransformation.h"
+#include "_reg_globalTransformation.h"
 #include <map>
 #include <iostream>
 #include <limits>
 
-#ifdef RNIFTYREG
-#include <R.h>
-#endif
 
+
+/* *************************************************************** */
+/* *************************************************************** */
 void copy_transformation_4x4(const mat44 & source, mat44 & dest)
 {
     dest.m[0][0] = source.m[0][0];
@@ -41,7 +41,7 @@ void copy_transformation_4x4(const mat44 & source, mat44 & dest)
     dest.m[3][2] = source.m[3][2];
     dest.m[3][3] = source.m[3][3];
 }
-
+/* *************************************************************** */
 /* *************************************************************** */
 // Helper function: Get the square of the Euclidean distance
 double get_square_distance(float * first_point3D, float * second_point3D)
@@ -54,49 +54,6 @@ double get_square_distance2D(float * first_point2D, float * second_point2D)
 {
     return  sqrt((first_point2D[0]-second_point2D[0])*(first_point2D[0]-second_point2D[0]) +
                  (first_point2D[1]-second_point2D[1])*(first_point2D[1]-second_point2D[1]));
-}
-
-/* *************************************************************** */
-// Heap sort
-void reg_heapSort(float *array_tmp, int *index_tmp, int blockNum)
-{
-    float *array = &array_tmp[-1];
-    int *index = &index_tmp[-1];
-    int l=(blockNum >> 1)+1;
-    int ir=blockNum;
-    float val;
-    int iVal;
-    for(;;){
-        if(l>1){
-            val=array[--l];
-            iVal=index[l];
-        }
-        else{
-            val=array[ir];
-            iVal=index[ir];
-            array[ir]=array[1];
-            index[ir]=index[1];
-            if(--ir == 1){
-                array[1]=val;
-                index[1]=iVal;
-                break;
-            }
-        }
-        int i=l;
-        int j=l+l;
-        while(j<=ir){
-            if(j<ir && array[j]<array[j+1]) j++;
-            if(val<array[j]){
-                array[i]=array[j];
-                index[i]=index[j];
-                i=j;
-                j<<=1;
-            }
-            else break;
-        }
-        array[i]=val;
-        index[i]=iVal;
-    }
 }
 /* *************************************************************** */
 /* *************************************************************** */
@@ -139,7 +96,7 @@ template <class DTYPE>
                                     for(int x=i*BLOCK_WIDTH; x<(i+1)*BLOCK_WIDTH; x++){
                                         if(x<targetImage->nx){
                                             targetValues[coord] = *targetPtrXYZ;
-                                            if(targetValues[coord]==targetValues[coord] && *maskPtrXYZ>-1){
+                                            if(targetValues[coord]==targetValues[coord] && targetValues[coord]!=0. && *maskPtrXYZ>-1){
                                                 mean += (float)targetValues[coord];
                                                 voxelNumber++;
                                             }
@@ -192,7 +149,7 @@ template <class DTYPE>
                         for(int x=i*BLOCK_WIDTH; x<(i+1)*BLOCK_WIDTH; x++){
                             if(x<targetImage->nx){
                                 targetValues[coord] = *targetPtrXY;
-                                if(targetValues[coord]==targetValues[coord] && *maskPtrXY>-1){
+                                if(targetValues[coord]==targetValues[coord] && targetValues[coord]!=0. && *maskPtrXY>-1){
                                     mean += (float)targetValues[coord];
                                     voxelNumber++;
                                 }
@@ -272,41 +229,21 @@ void initialise_block_matching_method(  nifti_image * target,
 
     params->activeBlock = (int *)malloc(params->blockNumber[0]*params->blockNumber[1]*params->blockNumber[2] * sizeof(int));
     switch(target->datatype){
-                case NIFTI_TYPE_UINT8:
-        _reg_set_active_blocks<unsigned char>(target, params, mask, runningOnGPU);break;
-                case NIFTI_TYPE_INT8:
-        _reg_set_active_blocks<char>(target, params, mask, runningOnGPU);break;
-                case NIFTI_TYPE_UINT16:
-        _reg_set_active_blocks<unsigned short>(target, params, mask, runningOnGPU);break;
-                case NIFTI_TYPE_INT16:
-        _reg_set_active_blocks<short>(target, params, mask, runningOnGPU);break;
-                case NIFTI_TYPE_UINT32:
-        _reg_set_active_blocks<unsigned int>(target, params, mask, runningOnGPU);break;
-                case NIFTI_TYPE_INT32:
-        _reg_set_active_blocks<int>(target, params, mask, runningOnGPU);break;
-                case NIFTI_TYPE_FLOAT32:
-        _reg_set_active_blocks<float>(target, params, mask, runningOnGPU);break;
-                case NIFTI_TYPE_FLOAT64:
-        _reg_set_active_blocks<double>(target, params, mask, runningOnGPU);break;
-                default:
-#ifdef RNIFTYREG
-        error("The target image data type is not supported");
-#else
-        fprintf(stderr,"ERROR\tinitialise_block_matching_method\tThe target image data type is not supported\n");
-        exit(1);
-#endif
+        case NIFTI_TYPE_FLOAT32:
+            _reg_set_active_blocks<float>(target, params, mask, runningOnGPU);break;
+        case NIFTI_TYPE_FLOAT64:
+            _reg_set_active_blocks<double>(target, params, mask, runningOnGPU);break;
+        default:
+            fprintf(stderr,"[NiftyReg ERROR] initialise_block_matching_method\tThe target image data type is not supported\n");
+            exit(1);
     }
     if(params->activeBlockNumber<2){
-#ifdef RNIFTYREG
-        error("There are no active blocks");
-#else
-        fprintf(stderr,"There are no active blocks\n");
-        fprintf(stderr,"... Exit ...\n");
+        fprintf(stderr,"[NiftyReg ERROR] There are no active blocks\n");
+        fprintf(stderr,"[NiftyReg ERROR] ... Exit ...\n");
         exit(1);
-#endif
     }
 #ifndef NDEBUG
-    printf("[DEBUG]: There are %i active block(s) out of %i.\n", params->activeBlockNumber, params->blockNumber[0]*params->blockNumber[1]*params->blockNumber[2]);
+    printf("[NiftyReg DEBUG]: There are %i active block(s) out of %i.\n", params->activeBlockNumber, params->blockNumber[0]*params->blockNumber[1]*params->blockNumber[2]);
 #endif
     if(target->nz>1){
         params->targetPosition = (float *)malloc(params->activeBlockNumber*3*sizeof(float));
@@ -317,7 +254,7 @@ void initialise_block_matching_method(  nifti_image * target,
         params->resultPosition = (float *)malloc(params->activeBlockNumber*2*sizeof(float));
     }
 #ifndef NDEBUG
-    printf("[DEBUG]: block matching initialisation done.\n");
+    printf("[NiftyReg DEBUG] block matching initialisation done.\n");
 #endif
 }
 /* *************************************************************** */
@@ -355,6 +292,7 @@ template<typename PrecisionTYPE, typename TargetImageType, typename ResultImageT
 
     unsigned int blockIndex=0;
     unsigned int activeBlockIndex=0;
+    params->definedActiveBlock=0;
     int index;
 
     for(int j=0; j<params->blockNumber[1]; j++){
@@ -378,7 +316,7 @@ template<typename PrecisionTYPE, typename TargetImageType, typename ResultImageT
                         for(int x=targetIndex_start_x; x<targetIndex_end_x; x++){
                             if(-1<x && x<target->nx){
                                 TargetImageType value = *targetPtr_XY;
-                                if(value==value && *maskPtr_XY>-1){
+                                if(value==value && value!=0. && *maskPtr_XY>-1){
                                     targetValues[targetIndex]=value;
                                     targetOverlap[targetIndex]=1;
                                 }
@@ -391,7 +329,8 @@ template<typename PrecisionTYPE, typename TargetImageType, typename ResultImageT
                     else targetIndex+=BLOCK_WIDTH;
                 }
                 PrecisionTYPE bestCC=0.0;
-                float bestDisplacement[3] = {0.0f, 0.0f, 0.0f};
+                float bestDisplacement[3] = {std::numeric_limits<float>::quiet_NaN(),
+                                             0.f, 0.f};
 
                 // iteration over the result blocks
                 for(int m=-OVERLAP_SIZE; m<=OVERLAP_SIZE; m+=STEP_SIZE){
@@ -412,7 +351,7 @@ template<typename PrecisionTYPE, typename TargetImageType, typename ResultImageT
                                 for(int x=resultIndex_start_x; x<resultIndex_end_x; x++){
                                     if(-1<x && x<result->nx){
                                         ResultImageType value = *resultPtr_XY;
-                                        if(value==value && *maskPtr_XY>-1){
+                                        if(value==value && value!=0. && *maskPtr_XY>-1){
                                             resultValues[resultIndex]=value;
                                             resultOverlap[resultIndex]=1;
                                         }
@@ -464,23 +403,26 @@ template<typename PrecisionTYPE, typename TargetImageType, typename ResultImageT
                     }
                 }
 
-                float targetPosition_temp[3];
-                targetPosition_temp[0] = (float)(i*BLOCK_WIDTH);
-                targetPosition_temp[1] = (float)(j*BLOCK_WIDTH);
-                targetPosition_temp[2] = 0.0f;
+                if(bestDisplacement[0]==bestDisplacement[0]){
+                    float targetPosition_temp[3];
+                    targetPosition_temp[0] = (float)(i*BLOCK_WIDTH);
+                    targetPosition_temp[1] = (float)(j*BLOCK_WIDTH);
+                    targetPosition_temp[2] = 0.0f;
 
-                bestDisplacement[0] += targetPosition_temp[0];
-                bestDisplacement[1] += targetPosition_temp[1];
-                bestDisplacement[2] = 0.0f;
+                    bestDisplacement[0] += targetPosition_temp[0];
+                    bestDisplacement[1] += targetPosition_temp[1];
+                    bestDisplacement[2] = 0.0f;
 
-                float tempPosition[3];
-                apply_affine(targetMatrix_xyz, targetPosition_temp, tempPosition);
-                params->targetPosition[activeBlockIndex] = tempPosition[0];
-                params->targetPosition[activeBlockIndex+1] = tempPosition[1];
-                apply_affine(targetMatrix_xyz, bestDisplacement, tempPosition);
-                params->resultPosition[activeBlockIndex] = tempPosition[0];
-                params->resultPosition[activeBlockIndex+1] = tempPosition[1];
-                activeBlockIndex += 2;
+                    float tempPosition[3];
+                    apply_affine(targetMatrix_xyz, targetPosition_temp, tempPosition);
+                    params->targetPosition[activeBlockIndex] = tempPosition[0];
+                    params->targetPosition[activeBlockIndex+1] = tempPosition[1];
+                    apply_affine(targetMatrix_xyz, bestDisplacement, tempPosition);
+                    params->resultPosition[activeBlockIndex] = tempPosition[0];
+                    params->resultPosition[activeBlockIndex+1] = tempPosition[1];
+                    activeBlockIndex += 2;
+                    params->definedActiveBlock++;
+                }
             }
             blockIndex++;
         }
@@ -529,6 +471,7 @@ template<typename PrecisionTYPE, typename TargetImageType, typename ResultImageT
     unsigned int blockIndex=0;
     unsigned int activeBlockIndex=0;
     int index;
+    params->definedActiveBlock=0;
 
     for(int k=0; k<params->blockNumber[2]; k++){
         targetIndex_start_z=k*BLOCK_WIDTH;
@@ -574,7 +517,8 @@ template<typename PrecisionTYPE, typename TargetImageType, typename ResultImageT
                         else targetIndex+=BLOCK_WIDTH*BLOCK_WIDTH;
                     }
                     PrecisionTYPE bestCC=0.0;
-                    float bestDisplacement[3] = {0.0f, 0.0f, 0.0f};
+                    float bestDisplacement[3] = {std::numeric_limits<float>::quiet_NaN(),
+                                                 0.f, 0.f};
 
                     // iteration over the result blocks
                     for(int n=-OVERLAP_SIZE; n<=OVERLAP_SIZE; n+=STEP_SIZE){
@@ -659,26 +603,28 @@ template<typename PrecisionTYPE, typename TargetImageType, typename ResultImageT
                             }
                         }
                     }
+                    if(bestDisplacement[0]==bestDisplacement[0]){
+                        float targetPosition_temp[3];
+                        targetPosition_temp[0] = (float)(i*BLOCK_WIDTH);
+                        targetPosition_temp[1] = (float)(j*BLOCK_WIDTH);
+                        targetPosition_temp[2] = (float)(k*BLOCK_WIDTH);
 
-                    float targetPosition_temp[3];
-                    targetPosition_temp[0] = (float)(i*BLOCK_WIDTH);
-                    targetPosition_temp[1] = (float)(j*BLOCK_WIDTH);
-                    targetPosition_temp[2] = (float)(k*BLOCK_WIDTH);
+                        bestDisplacement[0] += targetPosition_temp[0];
+                        bestDisplacement[1] += targetPosition_temp[1];
+                        bestDisplacement[2] += targetPosition_temp[2];
 
-                    bestDisplacement[0] += targetPosition_temp[0];
-                    bestDisplacement[1] += targetPosition_temp[1];
-                    bestDisplacement[2] += targetPosition_temp[2];
-
-                    float tempPosition[3];
-                    apply_affine(targetMatrix_xyz, targetPosition_temp, tempPosition);
-                    params->targetPosition[activeBlockIndex] = tempPosition[0];
-                    params->targetPosition[activeBlockIndex+1] = tempPosition[1];
-                    params->targetPosition[activeBlockIndex+2] = tempPosition[2];
-                    apply_affine(targetMatrix_xyz, bestDisplacement, tempPosition);
-                    params->resultPosition[activeBlockIndex] = tempPosition[0];
-                    params->resultPosition[activeBlockIndex+1] = tempPosition[1];
-                    params->resultPosition[activeBlockIndex+2] = tempPosition[2];
-                    activeBlockIndex += 3;
+                        float tempPosition[3];
+                        apply_affine(targetMatrix_xyz, targetPosition_temp, tempPosition);
+                        params->targetPosition[activeBlockIndex] = tempPosition[0];
+                        params->targetPosition[activeBlockIndex+1] = tempPosition[1];
+                        params->targetPosition[activeBlockIndex+2] = tempPosition[2];
+                        apply_affine(targetMatrix_xyz, bestDisplacement, tempPosition);
+                        params->resultPosition[activeBlockIndex] = tempPosition[0];
+                        params->resultPosition[activeBlockIndex+1] = tempPosition[1];
+                        params->resultPosition[activeBlockIndex+2] = tempPosition[2];
+                        activeBlockIndex += 3;
+                        params->definedActiveBlock++;
+                    }
                 }
                 blockIndex++;
             }
@@ -699,82 +645,33 @@ template<typename PrecisionTYPE, typename TargetImageType>
 {
     if(target->nz==1){
         switch(result->datatype){
-        case NIFTI_TYPE_UINT8:
-            block_matching_method2D<PrecisionTYPE, TargetImageType, unsigned char>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_INT8:
-            block_matching_method2D<PrecisionTYPE, TargetImageType, char>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_UINT16:
-            block_matching_method2D<PrecisionTYPE, TargetImageType, unsigned short>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_INT16:
-            block_matching_method2D<PrecisionTYPE, TargetImageType, short>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_UINT32:
-            block_matching_method2D<PrecisionTYPE, TargetImageType, unsigned int>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_INT32:
-            block_matching_method2D<PrecisionTYPE, TargetImageType, int>
+        case NIFTI_TYPE_FLOAT64:
+            block_matching_method2D<PrecisionTYPE, TargetImageType, double>
                     (target, result, params, mask);
             break;
         case NIFTI_TYPE_FLOAT32:
             block_matching_method2D<PrecisionTYPE, TargetImageType, float>
                     (target, result, params, mask);
             break;
-        case NIFTI_TYPE_FLOAT64:
-            block_matching_method2D<PrecisionTYPE, TargetImageType, double>
-                    (target, result, params, mask);
-            break;
         default:
-            printf("err\tblock_match\tThe target image data type is not "
-                   "supported\n");
+            printf("[NiftyReg ERROR] block_match\tThe target image data type is not supported\n");
             return;
         }
     }
     else{
         switch(result->datatype){
-        case NIFTI_TYPE_UINT8:
-            block_matching_method3D<PrecisionTYPE, TargetImageType, unsigned char>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_INT8:
-            block_matching_method3D<PrecisionTYPE, TargetImageType, char>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_UINT16:
-            block_matching_method3D<PrecisionTYPE, TargetImageType, unsigned short>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_INT16:
-            block_matching_method3D<PrecisionTYPE, TargetImageType, short>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_UINT32:
-            block_matching_method3D<PrecisionTYPE, TargetImageType, unsigned int>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_INT32:
-            block_matching_method3D<PrecisionTYPE, TargetImageType, int>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_FLOAT32:
-            block_matching_method3D<PrecisionTYPE, TargetImageType, float>
-                    (target, result, params, mask);
-            break;
-        case NIFTI_TYPE_FLOAT64:
-            block_matching_method3D<PrecisionTYPE, TargetImageType, double>
-                    (target, result, params, mask);
-            break;
-        default:
-            printf("err\tblock_match\tThe target image data type is not "
-                   "supported\n");
-            return;
+            case NIFTI_TYPE_FLOAT64:
+                block_matching_method3D<PrecisionTYPE, TargetImageType, double>
+                        (target, result, params, mask);
+                break;
+            case NIFTI_TYPE_FLOAT32:
+                block_matching_method3D<PrecisionTYPE, TargetImageType, float>
+                        (target, result, params, mask);
+                break;
+            default:
+                printf("[NiftyReg ERROR] block_match\tThe target image data type is not "
+                       "supported\n");
+                return;
         }
     }
 }
@@ -787,40 +684,16 @@ template<typename PrecisionTYPE>
                                         int *mask)
 {
     switch(target->datatype){
-                case NIFTI_TYPE_UINT8:
-        block_matching_method2<PrecisionTYPE, unsigned char>
-                (target, result, params, mask);
-        break;
-                case NIFTI_TYPE_INT8:
-        block_matching_method2<PrecisionTYPE, char>
-                (target, result, params, mask);
-        break;
-                case NIFTI_TYPE_UINT16:
-        block_matching_method2<PrecisionTYPE, unsigned short>
-                (target, result, params, mask);
-        break;
-                case NIFTI_TYPE_INT16:
-        block_matching_method2<PrecisionTYPE, short>
-                (target, result, params, mask);
-        break;
-                case NIFTI_TYPE_UINT32:
-        block_matching_method2<PrecisionTYPE, unsigned int>
-                (target, result, params, mask);
-        break;
-                case NIFTI_TYPE_INT32:
-        block_matching_method2<PrecisionTYPE, int>
-                (target, result, params, mask);
-        break;
-                case NIFTI_TYPE_FLOAT32:
-        block_matching_method2<PrecisionTYPE, float>
-                (target, result, params, mask);
-        break;
                 case NIFTI_TYPE_FLOAT64:
         block_matching_method2<PrecisionTYPE, double>
                 (target, result, params, mask);
         break;
+            case NIFTI_TYPE_FLOAT32:
+        block_matching_method2<PrecisionTYPE, float>
+            (target, result, params, mask);
+        break;
                 default:
-        printf("err\tblock_match\tThe target image data type is not"
+        printf("[NiftyReg ERROR] block_match\tThe target image data type is not"
                "supported\n");
         return;
     }
@@ -829,7 +702,6 @@ template void block_matching_method<float>(nifti_image *, nifti_image *, _reg_bl
 template void block_matching_method<double>(nifti_image *, nifti_image *, _reg_blockMatchingParam *, int *);
 /* *************************************************************** */
 /* *************************************************************** */
-
 // Apply the suppled affine transformation to a 3D point
 void apply_affine(mat44 * mat, float *pt, float *result)
 {
@@ -837,12 +709,13 @@ void apply_affine(mat44 * mat, float *pt, float *result)
     result[1] = (mat->m[1][0] * pt[0]) + (mat->m[1][1]*pt[1]) + (mat->m[1][2]*pt[2]) + (mat->m[1][3]);
     result[2] = (mat->m[2][0] * pt[0]) + (mat->m[2][1]*pt[1]) + (mat->m[2][2]*pt[2]) + (mat->m[2][3]);
 }
+/* *************************************************************** */
 void apply_affine2D(mat44 * mat, float *pt, float *result)
 {
     result[0] = (mat->m[0][0] * pt[0]) + (mat->m[0][1]*pt[1]) + (mat->m[0][3]);
     result[1] = (mat->m[1][0] * pt[0]) + (mat->m[1][1]*pt[1]) + (mat->m[1][3]);
 }
-
+/* *************************************************************** */
 struct _reg_sorted_point3D
 {
     float target[3];
@@ -862,11 +735,12 @@ struct _reg_sorted_point3D
         result[2] = r[2];
     }
 
-    const bool operator <(const _reg_sorted_point3D & sp) const
+    bool operator <(const _reg_sorted_point3D & sp) const
     {
         return (sp.distance < distance);
     }
 };
+/* *************************************************************** */
 struct _reg_sorted_point2D
 {
     float target[2];
@@ -883,12 +757,12 @@ struct _reg_sorted_point2D
         result[0] = r[0];
         result[1] = r[1];
     }
-    const bool operator <(const _reg_sorted_point2D & sp) const
+    bool operator <(const _reg_sorted_point2D & sp) const
     {
         return (sp.distance < distance);
     }
 };
-
+/* *************************************************************** */
 // Multiply matrices A and B together and store the result in r.
 // We assume that the input pointers are valid and can store the result.
 // A = ar * ac
@@ -920,6 +794,7 @@ void mul_matrices(float ** a, float ** b, int ar, int ac, int bc, float ** r, bo
         }
     }
 }
+/* *************************************************************** */
 
 // Multiply a matrix with a vctor
 void mul_matvec(float ** a, int ar, int ac, float * b, float * r)
@@ -931,7 +806,7 @@ void mul_matvec(float ** a, int ar, int ac, float * b, float * r)
         }
     }
 }
-
+/* *************************************************************** */
 // Compute determinant of a 3x3 matrix
 float compute_determinant3x3(float ** mat)
 {
@@ -939,8 +814,7 @@ float compute_determinant3x3(float ** mat)
             (mat[0][1]*(mat[1][0]*mat[2][2]-mat[1][2]*mat[2][0]))+
             (mat[0][2]*(mat[1][0]*mat[2][1]-mat[1][1]*mat[2][0]));
 }
-
-
+/* *************************************************************** */
 // estimate an affine transformation using least square
 void estimate_affine_transformation2D(std::vector<_reg_sorted_point2D> & points,
                                       mat44 * transformation,
@@ -1148,7 +1022,8 @@ void optimize_affine2D(_reg_blockMatchingParam * params,
     final->m[2][0] = final->m[2][1] = final->m[2][3] = 0.0f;
     final->m[3][0] = final->m[3][1] = final->m[3][2] = 0.0f;
 
-    const unsigned num_points = params->activeBlockNumber;
+//    const unsigned num_points = params->activeBlockNumber;
+    const unsigned num_points = params->definedActiveBlock;
     unsigned long num_equations = num_points * 2;
     std::multimap<double, _reg_sorted_point2D> queue;
     std::vector<_reg_sorted_point2D> top_points;
@@ -1258,7 +1133,7 @@ void optimize_affine2D(_reg_blockMatchingParam * params,
             distance += (*it).first;
         }
 
-        if (lastDistance - distance < TOLERANCE)
+        if ((distance > lastDistance) || (lastDistance - distance) < TOLERANCE)
         {
             // restore the last transformation
             copy_transformation_4x4(lastTransformation, *(final));
@@ -1302,7 +1177,8 @@ void optimize_affine3D(_reg_blockMatchingParam *params,
     final->m[2][0] = final->m[2][1] = final->m[2][3] = 0.0f;
     final->m[3][0] = final->m[3][1] = final->m[3][2] = 0.0f;
 
-    const unsigned num_points = params->activeBlockNumber;
+//    const unsigned num_points = params->activeBlockNumber;
+    const unsigned num_points = params->definedActiveBlock;
     unsigned long num_equations = num_points * 3;
     std::multimap<double, _reg_sorted_point3D> queue;
     std::vector<_reg_sorted_point3D> top_points;
@@ -1415,7 +1291,7 @@ void optimize_affine3D(_reg_blockMatchingParam *params,
         }
 
         // If the change is not substantial or we are getting worst, we return
-        if (lastDistance - distance < TOLERANCE)
+        if ((distance >= lastDistance) || (lastDistance - distance) < TOLERANCE)
         {
             // restore the last transformation
             copy_transformation_4x4(lastTransformation, *(final));
@@ -1723,13 +1599,14 @@ void estimate_rigid_transformation3D(std::vector<_reg_sorted_point3D> & points,
 void optimize_rigid2D(  _reg_blockMatchingParam *params,
                         mat44 * final)
 {
-    unsigned num_points = params->activeBlockNumber;
+//    unsigned num_points = params->activeBlockNumber;
+    const unsigned num_points = params->definedActiveBlock;
     // Keep a sorted list of the distance measure
     std::multimap<double, _reg_sorted_point2D> queue;
 
     std::vector<_reg_sorted_point2D> top_points;
     double distance = 0.0;
-    double lastDistance = 0.0;
+    double lastDistance = std::numeric_limits<double>::max();
     unsigned long i;
 
     // Set the current transformation to identity
@@ -1747,6 +1624,9 @@ void optimize_rigid2D(  _reg_blockMatchingParam *params,
     estimate_rigid_transformation2D(top_points, final);
     unsigned long num_to_keep = (unsigned long)(num_points * (params->percent_to_keep/100.0f));
     float * newResultPosition = new float[num_points*2];
+
+    mat44 lastTransformation;
+    memset(&lastTransformation,0,sizeof(mat44));
 
     for (unsigned count = 0; count < MAX_ITERATIONS; ++count){
         // Transform the points in the target
@@ -1773,11 +1653,13 @@ void optimize_rigid2D(  _reg_blockMatchingParam *params,
         }
 
         // If the change is not substantial, we return
-        if (fabs(distance - lastDistance) < TOLERANCE)
+        if ((distance > lastDistance) || (lastDistance - distance) < TOLERANCE)
         {
+            copy_transformation_4x4(lastTransformation, *(final));
             break;
         }
         lastDistance = distance;
+        copy_transformation_4x4(*(final), lastTransformation);
         estimate_rigid_transformation2D(top_points, final);
     }
     delete [] newResultPosition;
@@ -1785,12 +1667,13 @@ void optimize_rigid2D(  _reg_blockMatchingParam *params,
 void optimize_rigid3D(  _reg_blockMatchingParam *params,
                         mat44 * final)
 {
-    unsigned num_points = params->activeBlockNumber;
+//    const unsigned num_points = params->activeBlockNumber;
+    const unsigned num_points = params->definedActiveBlock;
     // Keep a sorted list of the distance measure
     std::multimap<double, _reg_sorted_point3D> queue;
     std::vector<_reg_sorted_point3D> top_points;
     double distance = 0.0;
-    double lastDistance = 0.0;
+    double lastDistance = std::numeric_limits<double>::max();
     unsigned long i;
 
     // Set the current transformation to identity
@@ -1809,6 +1692,9 @@ void optimize_rigid3D(  _reg_blockMatchingParam *params,
     unsigned long num_to_keep = (unsigned long)(num_points * (params->percent_to_keep/100.0f));
     float * newResultPosition = new float[num_points*3];
 
+    mat44 lastTransformation;
+    memset(&lastTransformation,0,sizeof(mat44));
+
     for (unsigned count = 0; count < MAX_ITERATIONS; ++count){
         // Transform the points in the target
         for (unsigned j = 0; j < num_points * 3; j+=3){
@@ -1818,8 +1704,8 @@ void optimize_rigid3D(  _reg_blockMatchingParam *params,
         for (unsigned j = 0; j < num_points * 3; j+= 3){
             distance = get_square_distance(&newResultPosition[j], &(params->resultPosition[j]));
             queue.insert(std::pair<double, _reg_sorted_point3D>(distance,
-                    _reg_sorted_point3D(&(params->targetPosition[j]),
-                                        &(params->resultPosition[j]), distance)));
+                                                                _reg_sorted_point3D(&(params->targetPosition[j]),
+                                                                                    &(params->resultPosition[j]), distance)));
         }
 
         distance = 0.0;
@@ -1834,13 +1720,16 @@ void optimize_rigid3D(  _reg_blockMatchingParam *params,
         }
 
         // If the change is not substantial, we return
-        if (fabs(distance - lastDistance) < TOLERANCE)
+        if ((distance > lastDistance) || (lastDistance - distance) < TOLERANCE)
         {
+            copy_transformation_4x4(lastTransformation, *(final));
             break;
         }
         lastDistance = distance;
+        copy_transformation_4x4(*(final), lastTransformation);
         estimate_rigid_transformation3D(top_points, final);
     }
+
     delete [] newResultPosition;
 }
 
@@ -1899,7 +1788,7 @@ void svd(float ** in, int m, int n, float * w, float ** v)
 {
     float * rv1 = (float *)malloc(sizeof(float) * n);
     float anorm, c, f, g, h, s, scale, x, y, z;
-    int flag,i,its,j,jj,k,l,nm;
+    int flag,i,its,j,jj,k,l=0,nm=0;
 
     g = scale = anorm = 0.0f;
     for (i = 1; i <= n; ++i)

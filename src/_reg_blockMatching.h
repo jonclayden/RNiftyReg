@@ -12,6 +12,7 @@
 #ifndef __REG_BLOCKMATCHING_H__
 #define __REG_BLOCKMATCHING_H__
 
+#include "_reg_maths.h"
 #include "nifti1_io.h"
 #include <vector>
 #include <iostream>
@@ -66,15 +67,16 @@ struct _reg_blockMatchingParam{
         int blockNumber[3];
         int percent_to_keep;
 
-        float * targetPosition;
-        float * resultPosition;
+        float *targetPosition;
+        float *resultPosition;
 
         int activeBlockNumber;
         int *activeBlock;
 
+        int definedActiveBlock;
+
         _reg_blockMatchingParam()
-                :targetPosition(0), resultPosition(0), activeBlock(0)
-        {}
+                :targetPosition(0), resultPosition(0), activeBlock(0){}
 
 
         ~_reg_blockMatchingParam(){
@@ -88,8 +90,8 @@ void initialise_block_matching_method(	nifti_image * target,
                                         _reg_blockMatchingParam *params,
                                         int percentToKeep_block,
                                         int percentToKeep_opt,
-                    int *mask,
-                    bool runningOnGPU = false);
+                                        int *mask,
+                                        bool runningOnGPU = false);
 
 /**
 * Interface for the block matching algorithm.

@@ -15,21 +15,7 @@
 #include "nifti1_io.h"
 #include <fstream>
 #include <limits>
-
-extern "C++"
-mat44 reg_mat44_mul(	mat44 *A,
-			mat44 *B);
-extern "C++"
-void reg_mat44_mul(	mat44 *mat,
-			float in[3],
-			float out[3]);
-
-extern "C++"
-void reg_mat44_disp(    mat44 *mat,
-            char * title);
-extern "C++"
-void reg_mat33_disp(    mat33 *mat,
-            char * title);
+#include "_reg_maths.h"
 
 
 /** reg_affine_deformationField
@@ -44,12 +30,15 @@ void reg_affine_positionField(mat44 *,
 
 extern "C++"
 void reg_tool_ReadAffineFile(	mat44 *,
-				nifti_image *,
-				nifti_image *,
-				char *,
-				bool);
+                                nifti_image *,
+                                nifti_image *,
+                                char *,
+                                bool);
+extern "C++"
+void reg_tool_ReadAffineFile(	mat44 *,
+                                char *);
 extern "C++"
 void reg_tool_WriteAffineFile(	mat44 *mat,
-				char *fileName);
+                                char *fileName);
 
 #endif

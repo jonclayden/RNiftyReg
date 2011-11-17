@@ -13,7 +13,8 @@
 #define _REG_RESAMPLING_H
 
 #include "nifti1_io.h"
-#include "_reg_affineTransformation.h"
+#include "_reg_globalTransformation.h"
+#include "_reg_maths.h"
 
 /** reg_resampleSourceImage
   * This function resample a source image into the space of a target/result image.
@@ -23,28 +24,29 @@
   * The cubic spline interpolation assume a padding value of 0
   * The padding value for the NN and the LIN interpolation are user defined.
  */
-extern "C++" template <class PrecisionTYPE>
-void reg_resampleSourceImage(	nifti_image *targetImage,
-				nifti_image *sourceImage,
-				nifti_image *resultImage,
-				nifti_image *positionField,
-                int *mask,
-				int interp,
-				PrecisionTYPE backgroundValue);
-
-extern "C++" template <class PrecisionTYPE>
-void reg_getSourceImageGradient(	nifti_image *targetImage,
-				nifti_image *sourceImage,
-				nifti_image *resultGradientImage,
-				nifti_image *deformationField,
-                int *mask,
-				int interp);
+extern "C++"
+void reg_resampleSourceImage(nifti_image *targetImage,
+                             nifti_image *sourceImage,
+                             nifti_image *resultImage,
+                             nifti_image *positionField,
+                             int *mask,
+                             int interp,
+                             float backgroundValue);
 
 extern "C++"
-void reg_getJacobianImage(	nifti_image *deformationField,
-						  nifti_image *jacobianImage);
+void reg_getSourceImageGradient(nifti_image *targetImage,
+                                nifti_image *sourceImage,
+                                nifti_image *resultGradientImage,
+                                nifti_image *deformationField,
+                                int *mask,
+                                int interp);
 
 extern "C++"
-void reg_linearVelocityUpsampling(nifti_image *, int[8], float[8]);
+void reg_resampleImageGradient(nifti_image *inputGradientImage,
+                               nifti_image *outputGradientImage,
+                               nifti_image *deformationField,
+                               nifti_image *jacobianMatrices,
+                               int *mask,
+                               int interp);
 
 #endif

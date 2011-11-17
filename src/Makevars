@@ -1,2 +1,2 @@
 PKG_CPPFLAGS=-DNDEBUG -DRNIFTYREG
-
+OBJECTS=niftyreg.o _reg_blockMatching.o _reg_f3d.o _reg_femTransformation.o _reg_globalTransformation.o _reg_localTransformation.o _reg_maths.o _reg_mutualinformation.o _reg_resampling.o _reg_ssd.o _reg_tools.o nifti1_io.o znzlib.o
