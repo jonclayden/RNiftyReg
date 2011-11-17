@@ -19,13 +19,10 @@
 #define FOLDING_CORRECTION_STEP 20
 
 #include "_reg_resampling.h"
-#include "_reg_affineTransformation.h"
+#include "_reg_globalTransformation.h"
 #include "_reg_blockMatching.h"
 #include "_reg_tools.h"
-#include "_reg_bspline.h"
-#include "_reg_bspline_comp.h"
-#include "_reg_mutualinformation.h"
-#include "_reg_ssd.h"
+#include "_reg_f3d.h"
 
 #include <R.h>
 #include <Rdefines.h>
@@ -34,7 +31,7 @@
 #include "niftyreg.h"
 
 extern "C"
-SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
+SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
 {
     int i, j, levels = *(INTEGER(nLevels));
     SEXP returnValue, data, completedIterations;
@@ -112,7 +109,7 @@ SEXP reg_aladin (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP 
 }
 
 extern "C"
-SEXP reg_f3d (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP initControl, SEXP verbose)
+SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP initControl, SEXP verbose)
 {
     int i, j, levels = *(INTEGER(nLevels));
     SEXP returnValue, data, controlPoints, completedIterations;
@@ -476,7 +473,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
                 reg_affine_positionField(affineTransformation, targetImageCopy, positionFieldImage);
                 
                 // Resample the source image
-                reg_resampleSourceImage<PRECISION_TYPE>(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, targetMask, 1, sourceBGValue);
+                reg_resampleSourceImage(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, targetMask, 1, sourceBGValue);
                 
                 // Compute the correspondances between blocks - this is the expensive bit
                 block_matching_method<PRECISION_TYPE>(targetImageCopy, resultImage, &blockMatchingParams, targetMask);
@@ -530,7 +527,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     resultImage->datatype = sourceImage->datatype;
     resultImage->nbyper = sourceImage->nbyper;
     resultImage->data = calloc(resultImage->nvox, resultImage->nbyper);
-    reg_resampleSourceImage<PRECISION_TYPE>(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourceBGValue);
+    reg_resampleSourceImage(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourceBGValue);
     
     nifti_image_free(positionFieldImage);
     
@@ -869,7 +866,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
             reg_bspline<PRECISION_TYPE>(controlPointImage, targetImageCopy, positionFieldImage, targetMask, 0);
             
             /* Resample the source image */
-            reg_resampleSourceImage<PRECISION_TYPE>(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, targetMask, 1, sourcePaddingValue);
+            reg_resampleSourceImage(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, targetMask, 1, sourcePaddingValue);
             
             reg_getEntropies<double>(targetImageCopy, resultImage, JH_PW_APPROX, nBins, probaJointHistogram, logJointHistogram, entropies, targetMask);
 			currentValue = (1.0 - bendingEnergyWeight - jacobianWeight) * (entropies[0] + entropies[1]) / entropies[2];
@@ -1108,7 +1105,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
 				reg_bspline<PRECISION_TYPE>(controlPointImage, targetImageCopy, positionFieldImage, targetMask, 0);
 
 				/* Resample the source image */
-				reg_resampleSourceImage<PRECISION_TYPE>(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, NULL, 1, sourcePaddingValue);
+				reg_resampleSourceImage(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, NULL, 1, sourcePaddingValue);
 				
 				/* Computation of the Metric Value */
 				reg_getEntropies<double>(targetImageCopy, resultImage, JH_PW_APPROX, nBins, probaJointHistogram, logJointHistogram, entropies, targetMask);
@@ -1218,7 +1215,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
     resultImage->datatype = sourceImage->datatype;
     resultImage->nbyper = sourceImage->nbyper;
     resultImage->data = calloc(resultImage->nvox, resultImage->nbyper);
-    reg_resampleSourceImage<PRECISION_TYPE>(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourcePaddingValue);
+    reg_resampleSourceImage(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourcePaddingValue);
     
     nifti_image_free(positionFieldImage);
     
