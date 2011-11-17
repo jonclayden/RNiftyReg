@@ -565,6 +565,10 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
     if (!controlPointImageProvided && affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
     
+    // Binarise the mask image
+    if (usingTargetMask)
+        reg_tool_binarise_image(targetMaskImage);
+    
     for (int level = 0; level < nLevels; level++)
     {
         nifti_image *sourceImageCopy = copy_complete_nifti_image(sourceImage);
