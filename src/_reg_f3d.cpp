@@ -90,6 +90,10 @@ reg_f3d<T>::reg_f3d(int refTimePoint,int floTimePoint)
     this->logJointHistogram=NULL;
 
     this->interpolation=1;
+    
+#ifdef RNIFTYREG
+    this->completedIterations=NULL;
+#endif
 
 #ifndef NDEBUG
     printf("[NiftyReg DEBUG] reg_f3d constructor called\n");
@@ -178,6 +182,12 @@ reg_f3d<T>::~reg_f3d()
     if(this->floatingBinNumber!=NULL){delete []this->floatingBinNumber;this->floatingBinNumber=NULL;}
     if(this->floatingBinNumber!=NULL){delete []this->activeVoxelNumber;this->activeVoxelNumber=NULL;}
     if(this->maxSSD!=NULL){delete []this->maxSSD;this->maxSSD=NULL;}
+
+#ifdef RNIFTYREG
+    if (this->completedIterations != NULL)
+        free(completedIterations);
+#endif    
+
 #ifndef NDEBUG
     printf("[NiftyReg DEBUG] reg_f3d destructor called\n");
 #endif
@@ -1764,6 +1774,10 @@ int reg_f3d<T>::Run_f3d()
         if( this->Initisalise_f3d() )
             return 1;
     }
+    
+#ifdef RNIFTYREG
+    this->completedIterations = (int *) calloc(levelToPerform, sizeof(int));
+#endif
 
     for(unsigned int level=0; level<this->levelToPerform; level++){
 
@@ -2044,6 +2058,9 @@ int reg_f3d<T>::Run_f3d()
         }
 #endif
 
+#ifdef RNIFTYREG
+        this->completedIterations[level] = this->currentIteration;
+#endif
     } // level this->levelToPerform
 
 #ifndef NDEBUG
@@ -2104,5 +2121,13 @@ int reg_f3d<T>::CheckStoppingCriteria(bool convergence)
 }
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+
+#ifdef RNIFTYREG
+template<class T>
+int * reg_f3d<T>::GetCompletedIterations()
+{
+    return this->completedIterations;
+}
+#endif
 
 #endif

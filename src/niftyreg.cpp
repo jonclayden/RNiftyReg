@@ -621,6 +621,8 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
     
     // Run the registration
     reg->Run_f3d();
+    
+    memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
 
     f3d_result result;
     result.image = reg->GetWarpedImage();

@@ -88,6 +88,10 @@ class reg_f3d
 
     unsigned int currentIteration;
 
+#ifdef RNIFTYREG
+    int *completedIterations;
+#endif
+
     virtual int AllocateWarped();
     virtual int ClearWarped();
     virtual int AllocateDeformationField();
@@ -177,6 +181,10 @@ public:
     virtual int CheckMemoryMB_f3d(){return 0;}
     virtual nifti_image *GetWarpedImage();
     nifti_image *GetControlPointPositionImage();
+
+#ifdef RNIFTYREG
+    int * GetCompletedIterations();
+#endif
 };
 
 #include "_reg_f3d.cpp"
