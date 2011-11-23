@@ -545,7 +545,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
 {    
     int *completedIterations = (int *) calloc(nLevels, sizeof(int));
     
-    if (controlPointImage != NULL && affineTransformation == NULL)
+    if (controlPointImage == NULL && affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
     
     // Binarise the mask image
