@@ -217,7 +217,7 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         finalDims <- c(dim(target), dim(source)[nSourceDims])
         nReps <- finalDims[length(finalDims)]
         finalArray <- array(0, dim=finalDims)
-        affine <- iterations <- vector("list", nReps)
+        control <- iterations <- vector("list", nReps)
 
         for (i in seq_len(nReps))
         {
@@ -232,9 +232,11 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
                 finalArray[,,,i] <- returnValue[[1]]
             }
             
-            dim(returnValue[[2]]) <- c(4,4)
-            attr(returnValue[[2]], "affineType") <- "niftyreg"
-            affine[[i]] <- returnValue[[2]]
+            dim(returnValue[[2]]) <- c(controlPointDims,1,3)
+
+            xform <- returnValue[[4]]
+
+            control[[i]] <- new("nifti", .Data=returnValue[[2]], dim_=c(5,controlPointDims,1,3,1,1), datatype=64L, bitpix=64, pixdim=c(xform[9],finalSpacing,1,1,0,0), xyzt_units=0, qform_code=xform[1], sform_code=xform[2], quatern_b=xform[3], quatern_c=xform[4], quatern_d=xform[5], qoffset_x=xform[6], qoffset_y=xform[7], qoffset_z=xform[8], srow_x=xform[10:13], srow_y=xform[14:17], srow_z=xform[18:21], cal_min=min(returnValue[[2]]), cal_max=max(returnValue[[2]]))
             iterations[[i]] <- returnValue[[3]]
         }
         
