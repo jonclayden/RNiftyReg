@@ -203,17 +203,12 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         returnValue <- .Call("reg_f3d_R", .fixTypes(source), .fixTypes(target), interpolationPrecision, as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(abs(finalSpacing)), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine, initControl, as.integer(verbose), PACKAGE="RNiftyReg")
         
         dim(returnValue[[1]]) <- dim(target)
-        
         dim(returnValue[[2]]) <- c(controlPointDims,1,3)
-        returnValue[[2]] <- as.nifti(returnValue[[2]], target)
-        returnValue[[2]]@cal_min <- min(returnValue[[2]]@.Data)
-        returnValue[[2]]@cal_max <- max(returnValue[[2]]@.Data)
-        returnValue[[2]]@datatype <- 64L
-        returnValue[[2]]@data_type <- convert.datatype(returnValue[[2]]@datatype)
-        returnValue[[2]]@bitpix <- 64
+        
+        xform <- returnValue[[4]]
 
         resultImage <- as.nifti(returnValue[[1]], target)
-        control <- list(returnValue[[2]])
+        control <- list(new("nifti", .Data=returnValue[[2]], dim_=c(5,controlPointDims,1,3,1,1), datatype=64L, bitpix=64, pixdim=c(xform[9],finalSpacing,1,1,0,0), xyzt_units=0, qform_code=xform[1], sform_code=xform[2], quatern_b=xform[3], quatern_c=xform[4], quatern_d=xform[5], qoffset_x=xform[6], qoffset_y=xform[7], qoffset_z=xform[8], srow_x=xform[10:13], srow_y=xform[14:17], srow_z=xform[18:21], cal_min=min(returnValue[[2]]), cal_max=max(returnValue[[2]])))
         iterations <- list(returnValue[[3]])
     }
     else

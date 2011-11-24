@@ -113,7 +113,7 @@ extern "C"
 SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP initControl, SEXP verbose)
 {
     int i, j, levels = *(INTEGER(nLevels));
-    SEXP returnValue, data, controlPoints, completedIterations;
+    SEXP returnValue, data, controlPoints, completedIterations, xform;
     
     bool affineProvided = !isNull(affineComponents);
     
@@ -146,7 +146,7 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEX
     
     f3d_result result = do_reg_f3d(sourceImage, targetImage, precisionType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(finalInterpolation)), targetMaskImage, controlPointImage, affineTransformation, *(INTEGER(nBins)), spacing, (float) *(REAL(bendingEnergyWeight)), (float) *(REAL(jacobianWeight)), (*(INTEGER(verbose)) == 1));
     
-    PROTECT(returnValue = NEW_LIST(3));
+    PROTECT(returnValue = NEW_LIST(4));
     
     if (result.image->datatype == DT_INT32)
     {
@@ -171,11 +171,31 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEX
     
     SET_ELEMENT(returnValue, 1, controlPoints);
     
-    PROTECT(completedIterations = NEW_INTEGER(levels));
+    PROTECT(completedIterations = NEW_INTEGER((R_len_t) levels));
     for (i = 0; i < levels; i++)
         INTEGER(completedIterations)[i] = result.completedIterations[i];
     
     SET_ELEMENT(returnValue, 2, completedIterations);
+    
+    PROTECT(xform = NEW_NUMERIC(21));
+    REAL(xform)[0] = (double) result.controlPoints->qform_code;
+    REAL(xform)[1] = (double) result.controlPoints->sform_code;
+    REAL(xform)[2] = (double) result.controlPoints->quatern_b;
+    REAL(xform)[3] = (double) result.controlPoints->quatern_c;
+    REAL(xform)[4] = (double) result.controlPoints->quatern_d;
+    REAL(xform)[5] = (double) result.controlPoints->qoffset_x;
+    REAL(xform)[6] = (double) result.controlPoints->qoffset_y;
+    REAL(xform)[7] = (double) result.controlPoints->qoffset_z;
+    REAL(xform)[8] = (double) result.controlPoints->qfac;
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 4; j++)
+            REAL(xform)[(i*4)+j+9] = (double) result.controlPoints->sto_xyz.m[i][j];
+    }
+    
+    SET_ELEMENT(returnValue, 3, xform);
+    
+    disp_nifti_1_header(NULL, &nifti_convert_nim2nhdr(result.controlPoints));
     
     nifti_image_free(sourceImage);
     nifti_image_free(targetImage);
@@ -187,7 +207,7 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEX
     if (affineProvided || isNull(initControl))
         free(affineTransformation);
     
-    UNPROTECT(4);
+    UNPROTECT(5);
     
     return returnValue;
 }
