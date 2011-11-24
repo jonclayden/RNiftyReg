@@ -195,8 +195,6 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEX
     
     SET_ELEMENT(returnValue, 3, xform);
     
-    disp_nifti_1_header(NULL, &nifti_convert_nim2nhdr(result.controlPoints));
-    
     nifti_image_free(sourceImage);
     nifti_image_free(targetImage);
     if (targetMaskImage != NULL)
