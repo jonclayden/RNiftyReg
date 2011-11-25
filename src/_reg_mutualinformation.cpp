@@ -16,6 +16,10 @@
 #include "_reg_tools.h"
 #include <iostream>
 
+#ifdef RNIFTYREG
+#include <R.h>
+#endif
+
 /// Smooth the histogram along the given axes. Uses recursion
 template<class PrecisionTYPE>
 void smooth_axes(int axes, int current, PrecisionTYPE *histogram,
@@ -412,9 +416,13 @@ void reg_getEntropies(nifti_image *targetImage,
                       int *mask)
 {
     if(targetImage->datatype != resultImage->datatype){
+#ifdef RNIFTYREG
+        error("The two input images should have the same data type");
+#else
         fprintf(stderr, "[NiftyReg ERROR] reg_getEntropies\n");
         fprintf(stderr, "[NiftyReg ERROR] Both input images are exepected to have the same type\n");
         exit(1);
+#endif
     }
 
     switch(targetImage->datatype){
@@ -429,8 +437,12 @@ void reg_getEntropies(nifti_image *targetImage,
                  logJointHistogram, entropies, mask);
         break;
     default:
+#ifdef RNIFTYREG
+        error("The target image data type is not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_getEntropies\tThe target image data type is not supported\n");
         exit(1);
+#endif
     }
     return;
 }
@@ -924,9 +936,13 @@ void reg_getVoxelBasedNMIGradientUsingPW1(nifti_image *targetImage,
                                           int *mask)
 {
     if(resultImageGradient->datatype != nmiGradientImage->datatype){
+#ifdef RNIFTYREG
+        error("The two gradient images should have the same data type");
+#else
         fprintf(stderr, "[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\n");
         fprintf(stderr, "[NiftyReg ERROR] Both gradient images are exepected to have the same type\n");
         exit(1);
+#endif
     }
 
     if(nmiGradientImage->nz==1){
@@ -942,8 +958,12 @@ void reg_getVoxelBasedNMIGradientUsingPW1(nifti_image *targetImage,
                      entropies, nmiGradientImage, mask);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The gradient image data type is not supported");
+#else
             fprintf(stderr,"[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\tThe gradient images data type is not supported\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -959,8 +979,12 @@ void reg_getVoxelBasedNMIGradientUsingPW1(nifti_image *targetImage,
                      entropies, nmiGradientImage, mask);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The gradient image data type is not supported");
+#else
             fprintf(stderr,"[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\tThe gradient images data type is not supported\n");
             exit(1);
+#endif
         }
 
     }
@@ -978,9 +1002,13 @@ void reg_getVoxelBasedNMIGradientUsingPW(nifti_image *targetImage,
                                          int *mask)
 {
     if(targetImage->datatype != resultImage->datatype){
+#ifdef RNIFTYREG
+        error("Input images should be of the same type");
+#else
         fprintf(stderr, "[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\n");
         fprintf(stderr, "[NiftyReg ERROR] Both input images are exepected to have the same type\n");
         exit(1);
+#endif
     }
 
     switch(targetImage->datatype){
@@ -995,8 +1023,12 @@ void reg_getVoxelBasedNMIGradientUsingPW(nifti_image *targetImage,
                  entropies, nmiGradientImage, mask);
         break;
     default:
+#ifdef RNIFTYREG
+        error("The input image data type is not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\tThe input image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */

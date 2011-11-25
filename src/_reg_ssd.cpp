@@ -11,6 +11,10 @@
 
 #include "_reg_ssd.h"
 
+#ifdef RNIFTYREG
+#include <R.h>
+#endif
+
 /* *************************************************************** */
 /* *************************************************************** */
 template<class DTYPE>
@@ -53,9 +57,13 @@ double reg_getSSD(nifti_image *targetImage,
                   )
 {
     if(targetImage->datatype != resultImage->datatype){
+#ifdef RNIFTYREG
+        error("Input images should have the same data type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_getSSD\n");
         fprintf(stderr,"[NiftyReg ERROR] Input images are expected to have the same type\n");
         exit(1);
+#endif
     }
 
     switch ( targetImage->datatype ){
@@ -66,8 +74,12 @@ double reg_getSSD(nifti_image *targetImage,
             return reg_getSSD1<double>(targetImage,resultImage, mask);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Result pixel type unsupported in the SSD computation function");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Result pixel type unsupported in the SSD computation function.\n");
             exit(1);
+#endif
 	}
 	return 0.0;
 }
@@ -136,9 +148,13 @@ void reg_getVoxelBasedSSDGradient(nifti_image *targetImage,
     if(targetImage->datatype != resultImage->datatype ||
        resultImageGradient->datatype != ssdGradientImage->datatype ||
        targetImage->datatype != resultImageGradient->datatype){
+#ifdef RNIFTYREG
+        error("Input images should have the same data type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_getVoxelBasedSSDGradient\n");
         fprintf(stderr,"[NiftyReg ERROR] Input images are expected to have the same type\n");
         exit(1);
+#endif
     }
     switch ( targetImage->datatype ){
         case NIFTI_TYPE_FLOAT32:
@@ -150,8 +166,12 @@ void reg_getVoxelBasedSSDGradient(nifti_image *targetImage,
                 (targetImage, resultImage, resultImageGradient, ssdGradientImage, maxSD, mask);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Target pixel type unsupported in the SSD gradient computation function");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Target pixel type unsupported in the SSD gradient computation function.\n");
             exit(1);
+#endif
 	}
 }
 /* *************************************************************** */

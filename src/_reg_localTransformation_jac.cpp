@@ -754,9 +754,13 @@ double reg_bspline_jacobian(nifti_image *splineControlPoint,
             else return reg_bspline_jacobianValue2D<double>(splineControlPoint, referenceImage);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The Jacobian value should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the jacobian value\n");
             fprintf(stderr,"[NiftyReg ERROR] The jacobian value is not computed\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -772,9 +776,13 @@ double reg_bspline_jacobian(nifti_image *splineControlPoint,
             else return reg_bspline_jacobianValue3D<double>(splineControlPoint, referenceImage);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The Jacobian value should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the jacobian value\n");
             fprintf(stderr,"[NiftyReg ERROR] The jacobian value is not computed\n");
             exit(1);
+#endif
         }
 
     }
@@ -1839,9 +1847,13 @@ void reg_bspline_jacobianDeterminantGradient(nifti_image *splineControlPoint,
                                              bool approx)
 {
     if(splineControlPoint->datatype != gradientImage->datatype){
+#ifdef RNIFTYREG
+        error("The spline control point image and gradient image should have the same data type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] The spline control point image and the gradient image were expected to have the same datatype\n");
         fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not computed\n");
         exit(1);
+#endif
     }
 
     if(splineControlPoint->nz==1){
@@ -1856,9 +1868,13 @@ void reg_bspline_jacobianDeterminantGradient(nifti_image *splineControlPoint,
                         (splineControlPoint, referenceImage, gradientImage, weight);
                 break;
             default:
+#ifdef RNIFTYREG
+                error("The Jacobian determinant gradient should be of a floating-point type");
+#else
                 fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the Jacobian determinant gradient\n");
                 fprintf(stderr,"[NiftyReg ERROR] The jacobian penalty gradient has not computed\n");
                 exit(1);
+#endif
             }
         }
         else{
@@ -1872,9 +1888,13 @@ void reg_bspline_jacobianDeterminantGradient(nifti_image *splineControlPoint,
                         (splineControlPoint, referenceImage, gradientImage, weight);
                 break;
             default:
+#ifdef RNIFTYREG
+                error("The Jacobian determinant gradient should be of a floating-point type");
+#else
                 fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the Jacobian determinant gradient\n");
                 fprintf(stderr,"[NiftyReg ERROR] The jacobian penalty gradient has not computed\n");
                 exit(1);
+#endif
             }
         }
     }
@@ -1890,9 +1910,13 @@ void reg_bspline_jacobianDeterminantGradient(nifti_image *splineControlPoint,
                         (splineControlPoint, referenceImage, gradientImage, weight);
                 break;
             default:
+#ifdef RNIFTYREG
+                error("The Jacobian determinant gradient should be of a floating-point type");
+#else
                 fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the Jacobian determinant gradient\n");
                 fprintf(stderr,"[NiftyReg ERROR] The jacobian penalty gradient has not computed\n");
                 exit(1);
+#endif
             }
         }
         else{
@@ -1906,9 +1930,13 @@ void reg_bspline_jacobianDeterminantGradient(nifti_image *splineControlPoint,
                         (splineControlPoint, referenceImage, gradientImage, weight);
                 break;
             default:
+#ifdef RNIFTYREG
+                error("The Jacobian determinant gradient should be of a floating-point type");
+#else
                 fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the Jacobian determinant gradient\n");
                 fprintf(stderr,"[NiftyReg ERROR] The jacobian penalty gradient has not computed\n");
                 exit(1);
+#endif
             }
         }
     }
@@ -2465,9 +2493,13 @@ double reg_bspline_correctFolding(nifti_image *splineControlPoint,
                         (splineControlPoint);
                 break;
             default:
+#ifdef RNIFTYREG
+                error("The Jacobian determinant gradient should be of a floating-point type");
+#else
                 fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the Jacobian determinant gradient\n");
                 fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not computed\n");
                 exit(1);
+#endif
             }
         }
         else{
@@ -2481,9 +2513,13 @@ double reg_bspline_correctFolding(nifti_image *splineControlPoint,
                         (splineControlPoint, referenceImage);
                 break;
             default:
+#ifdef RNIFTYREG
+                error("The Jacobian determinant gradient should be of a floating-point type");
+#else
                 fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the Jacobian determinant gradient\n");
                 fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not computed\n");
                 exit(1);
+#endif
             }
         }
     }
@@ -2499,9 +2535,13 @@ double reg_bspline_correctFolding(nifti_image *splineControlPoint,
                         (splineControlPoint);
                 break;
             default:
+#ifdef RNIFTYREG
+                error("The Jacobian determinant gradient should be of a floating-point type");
+#else
                 fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the Jacobian determinant gradient\n");
                 fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not computed\n");
                 exit(1);
+#endif
             }
         }
         else{
@@ -2515,9 +2555,13 @@ double reg_bspline_correctFolding(nifti_image *splineControlPoint,
                         (splineControlPoint, referenceImage);
                 break;
             default:
+#ifdef RNIFTYREG
+                error("The Jacobian determinant gradient should be of a floating-point type");
+#else
                 fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the Jacobian determinant gradient\n");
                 fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not computed\n");
                 exit(1);
+#endif
             }
         }
     }
@@ -2750,9 +2794,13 @@ void reg_bspline_GetJacobianMap(nifti_image *splineControlPoint,
             reg_bspline_GetJacobianMap2D<double>(splineControlPoint, jacobianImage);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The Jacobian map should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the jacobian map image\n");
             fprintf(stderr,"[NiftyReg ERROR] The jacobian map has not computed\n");
             exit(1);
+#endif
         }
     }else{
         switch(jacobianImage->datatype){
@@ -2763,9 +2811,13 @@ void reg_bspline_GetJacobianMap(nifti_image *splineControlPoint,
             reg_bspline_GetJacobianMap3D<double>(splineControlPoint, jacobianImage);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The Jacobian map should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the jacobian map image\n");
             fprintf(stderr,"[NiftyReg ERROR] The jacobian map has not computed\n");
             exit(1);
+#endif
         }
     }
 }
@@ -2775,9 +2827,13 @@ void reg_bspline_GetJacobianMatrix(nifti_image *splineControlPoint,
                                    nifti_image *jacobianImage)
 {
     if(splineControlPoint->datatype != jacobianImage->datatype){
+#ifdef RNIFTYREG
+        error("Input images should be of the same type");
+#else
         fprintf(stderr, "[NiftyReg ERROR] reg_bspline_GetJacobianMatrix\n");
         fprintf(stderr, "[NiftyReg ERROR] Input images were expected to be from the same type\n");
         exit(1);
+#endif
     }
 
     unsigned int voxelNumber = jacobianImage->nx*jacobianImage->ny*jacobianImage->nz;
@@ -2793,9 +2849,13 @@ void reg_bspline_GetJacobianMatrix(nifti_image *splineControlPoint,
             reg_bspline_computeJacobianMatrices_3D<double>(jacobianImage,splineControlPoint,jacobianMatrices, NULL);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The control point image should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the control point image\n");
             fprintf(stderr,"[NiftyReg ERROR] The jacobian matrix image has not been computed\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -2807,9 +2867,13 @@ void reg_bspline_GetJacobianMatrix(nifti_image *splineControlPoint,
             reg_bspline_computeJacobianMatrices_2D<double>(jacobianImage,splineControlPoint,jacobianMatrices, NULL);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The control point image should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the control point image\n");
             fprintf(stderr,"[NiftyReg ERROR] The jacobian matrix image has not been computed\n");
             exit(1);
+#endif
         }
     }
 
@@ -3174,9 +3238,13 @@ void reg_defField_getJacobianMap(nifti_image *deformationField,
                                  nifti_image *jacobianImage)
 {
     if(deformationField->datatype!=jacobianImage->datatype){
+#ifdef RNIFTYREG
+        error("Input images should be of the same type");
+#else
         printf("[NiftyReg ERROR] reg_defField_getJacobianMap\n");
         printf("[NiftyReg ERROR] Both input images have different type. Exit\n");
         exit(1);
+#endif
     }
     switch(deformationField->datatype){
     case NIFTI_TYPE_FLOAT32:
@@ -3190,9 +3258,13 @@ void reg_defField_getJacobianMap(nifti_image *deformationField,
         else reg_defField_getJacobianMap2D<double>(deformationField,jacobianImage,NULL);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Data type not supported");
+#else
         printf("[NiftyReg ERROR] reg_defField_getJacobianMap\n");
         printf("[NiftyReg ERROR] Voxel type unsupported.\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -3201,9 +3273,13 @@ void reg_defField_getJacobianMatrix(nifti_image *deformationField,
                                     nifti_image *jacobianImage)
 {
     if(deformationField->datatype!=jacobianImage->datatype){
+#ifdef RNIFTYREG
+        error("Input images should be of the same type");
+#else
         printf("[NiftyReg ERROR] reg_defField_getJacobianMap\n");
         printf("[NiftyReg ERROR] Both input images have different type. Exit\n");
         exit(1);
+#endif
     }
     switch(deformationField->datatype){
     case NIFTI_TYPE_FLOAT32:
@@ -3217,9 +3293,13 @@ void reg_defField_getJacobianMatrix(nifti_image *deformationField,
         else reg_defField_getJacobianMap2D<double>(deformationField,NULL,jacobianImage);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Data type not supported");
+#else
         printf("[NiftyReg ERROR] reg_defField_getJacobianMap\n");
         printf("[NiftyReg ERROR] Voxel type unsupported.\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */

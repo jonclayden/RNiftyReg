@@ -15,7 +15,9 @@
 #include <iostream>
 #include <limits>
 
-
+#ifdef RNIFTYREG
+#include <R.h>
+#endif
 
 /* *************************************************************** */
 /* *************************************************************** */
@@ -234,13 +236,21 @@ void initialise_block_matching_method(  nifti_image * target,
         case NIFTI_TYPE_FLOAT64:
             _reg_set_active_blocks<double>(target, params, mask, runningOnGPU);break;
         default:
+#ifdef RNIFTYREG
+            error("The target image data type is not supported");
+#else
             fprintf(stderr,"[NiftyReg ERROR] initialise_block_matching_method\tThe target image data type is not supported\n");
             exit(1);
+#endif
     }
     if(params->activeBlockNumber<2){
+#ifdef RNIFTYREG
+        error("There are no active blocks");
+#else
         fprintf(stderr,"[NiftyReg ERROR] There are no active blocks\n");
         fprintf(stderr,"[NiftyReg ERROR] ... Exit ...\n");
         exit(1);
+#endif
     }
 #ifndef NDEBUG
     printf("[NiftyReg DEBUG]: There are %i active block(s) out of %i.\n", params->activeBlockNumber, params->blockNumber[0]*params->blockNumber[1]*params->blockNumber[2]);

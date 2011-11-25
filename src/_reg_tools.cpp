@@ -14,6 +14,10 @@
 
 #include "_reg_tools.h"
 
+#ifdef RNIFTYREG
+#include <R.h>
+#endif
+
 /* *************************************************************** */
 
 // No round() function available in windows.
@@ -163,8 +167,12 @@ void reg_intensityRescale(	nifti_image *image,
         reg_intensityRescale2<double>(image, newMin, newMax, lowThr, upThr);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_intensityRescale\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -235,8 +243,12 @@ void reg_thresholdImage(	nifti_image *image,
         reg_thresholdImage2<T,double>(image, lowThr, upThr);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_thresholdImage\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 template void reg_thresholdImage<float>(nifti_image *, float, float);
@@ -465,8 +477,12 @@ template <class PrecisionTYPE>
         reg_smoothImageForCubicSpline1<PrecisionTYPE,double>(image, radius);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_smoothImage\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -662,8 +678,12 @@ template <class PrecisionTYPE>
         reg_smoothImageForTrilinear1<PrecisionTYPE,double>(image, radius);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_smoothImage\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -749,8 +769,12 @@ template <class NewTYPE, class DTYPE>
     else if(sizeof(NewTYPE)==sizeof(float)) image->datatype = NIFTI_TYPE_FLOAT32;
     else if(sizeof(NewTYPE)==sizeof(double)) image->datatype = NIFTI_TYPE_FLOAT64;
     else{
+#ifdef RNIFTYREG
+        error("Images can only be converted to unsigned char, float or double");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_changeDatatype\tOnly change to unsigned char, float or double are supported\n");
         exit(1);
+#endif
     }
     free(image->data);
     image->nbyper = sizeof(NewTYPE);
@@ -791,8 +815,12 @@ template <class NewTYPE>
         reg_changeDatatype1<NewTYPE,double>(image);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Initial image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_changeDatatype\tThe initial image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -838,8 +866,12 @@ double reg_tool_GetIntensityValue(nifti_image *image,
         return reg_tool_GetIntensityValue1<double>(image, index);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Initial image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_changeDatatype\tThe initial image data type is not supported\n");
         exit(1);
+#endif
     }
 
     return 0.0;
@@ -907,8 +939,12 @@ template <class TYPE1>
         reg_tools_addSubMulDivImages2<TYPE1,double>(img1, img2, res, type);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Second image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_addSubMulDivImages1\tSecond image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -925,13 +961,21 @@ void reg_tools_addSubMulDivImages(  nifti_image *img1,
        img1->dim[5]!=img2->dim[5] ||
        img1->dim[6]!=img2->dim[6] ||
        img1->dim[7]!=img2->dim[7]){
+#ifdef RNIFTYREG
+        error("The two images should have the same dimensions");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_addSubMulDivImages\tBoth images do not have the same dimension\n");
         exit(1);
+#endif
     }
 
     if(img1->datatype != res->datatype){
+#ifdef RNIFTYREG
+        error("First image and result image should have the same data type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_addSubMulDivImages\tFirst and result image do not have the same data type\n");
         exit(1);
+#endif
     }
     switch(img1->datatype){
     case NIFTI_TYPE_UINT8:
@@ -959,8 +1003,12 @@ void reg_tools_addSubMulDivImages(  nifti_image *img1,
         reg_tools_addSubMulDivImages1<double>(img1, img2, res, type);
         break;
     default:
+#ifdef RNIFTYREG
+        error("First image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_addSubMulDivImages1\tFirst image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -999,8 +1047,12 @@ void reg_tools_addSubMulDivValue(   nifti_image *img1,
                                     int type)
 {
     if(img1->datatype != res->datatype){
+#ifdef RNIFTYREG
+        error("Input and result images should have the same data type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_addSubMulDivValue\tInput and result image do not have the same data type\n");
         exit(1);
+#endif
     }
     switch(img1->datatype){
     case NIFTI_TYPE_UINT8:
@@ -1036,8 +1088,12 @@ void reg_tools_addSubMulDivValue(   nifti_image *img1,
                 (img1, res, val, type);
         break;
     default:
+#ifdef RNIFTYREG
+        error("First image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_addSubMulDivImages1\tFirst image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -1176,8 +1232,12 @@ template <class PrecisionTYPE>
         reg_gaussianSmoothing1<PrecisionTYPE,double>(image, sigma, axisToSmooth);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_smoothImage\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 template void reg_gaussianSmoothing<float>(nifti_image *, float, bool[8]);
@@ -1353,8 +1413,12 @@ template <class PrecisionTYPE>
         reg_downsampleImage1<PrecisionTYPE,double>(image, type, downsampleAxis);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_downsampleImage\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 template void reg_downsampleImage<float>(nifti_image *, int, bool[8]);
@@ -1399,8 +1463,12 @@ void reg_tool_binarise_image(nifti_image *image)
         reg_tool_binarise_image1<double>(image);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tool_binarise_image\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -1443,8 +1511,12 @@ void reg_tool_binarise_image(nifti_image *image, float threshold)
         reg_tool_binarise_image1<double>(image, threshold);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tool_binarise_image\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -1494,8 +1566,12 @@ void reg_tool_binaryImage2int(nifti_image *image, int *array, int &activeVoxelNu
         reg_tool_binaryImage2int1<double>(image, array, activeVoxelNumber);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tool_binarise_image\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -1557,8 +1633,12 @@ template <class ATYPE>
     case NIFTI_TYPE_FLOAT64:
         return reg_tools_getMeanRMS2<ATYPE,double>(imageA, imageB);
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_getMeanRMS\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -1582,8 +1662,12 @@ double reg_tools_getMeanRMS(nifti_image *imageA, nifti_image *imageB)
     case NIFTI_TYPE_FLOAT64:
         return reg_tools_getMeanRMS1<double>(imageA, imageB);
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_getMeanRMS\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -1634,8 +1718,12 @@ int reg_tool_nanMask_image1(nifti_image *image, nifti_image *maskImage, nifti_im
         return reg_tool_nanMask_image2<TYPE1,double>
                 (image, maskImage, resultImage);
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tool_nanMask_image\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */
@@ -1643,13 +1731,21 @@ int reg_tool_nanMask_image(nifti_image *image, nifti_image *maskImage, nifti_ima
 {
     // Check dimension
     if(image->nvox != maskImage->nvox || image->nvox != resultImage->nvox){
+#ifdef RNIFTYREG
+        error("Input images should have the same size");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tool_nanMask_image\tInput images have different size\n");
         exit(1);
+#endif
     }
     // Check output data type
     if(image->datatype != resultImage->datatype){
+#ifdef RNIFTYREG
+        error("Input images should have the same data type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tool_nanMask_image\tInput and result images have different data type\n");
         exit(1);
+#endif
     }
     switch(image->datatype){
     case NIFTI_TYPE_UINT8:
@@ -1677,8 +1773,12 @@ int reg_tool_nanMask_image(nifti_image *image, nifti_image *maskImage, nifti_ima
         return reg_tool_nanMask_image1<double>
                 (image, maskImage, resultImage);
     default:
+#ifdef RNIFTYREG
+        error("Image data type not supported");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_tool_nanMask_image\tThe image data type is not supported\n");
         exit(1);
+#endif
     }
 }
 /* *************************************************************** */

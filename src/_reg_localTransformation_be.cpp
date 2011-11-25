@@ -212,9 +212,13 @@ double reg_bspline_bendingEnergy(nifti_image *splineControlPoint)
         case NIFTI_TYPE_FLOAT64:
             return reg_bspline_bendingEnergyApproxValue2D<double>(splineControlPoint);
         default:
+#ifdef RNIFTYREG
+            error("The bending energy should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the bending energy\n");
             fprintf(stderr,"[NiftyReg ERROR] The bending energy is not computed\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -224,9 +228,13 @@ double reg_bspline_bendingEnergy(nifti_image *splineControlPoint)
         case NIFTI_TYPE_FLOAT64:
             return reg_bspline_bendingEnergyApproxValue3D<double>(splineControlPoint);
         default:
+#ifdef RNIFTYREG
+            error("The bending energy should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the bending energy\n");
             fprintf(stderr,"[NiftyReg ERROR] The bending energy is not computed\n");
             exit(1);
+#endif
         }
 
     }
@@ -568,9 +576,13 @@ void reg_bspline_bendingEnergyGradient( nifti_image *splineControlPoint,
                                        float weight)
 {
     if(splineControlPoint->datatype != gradientImage->datatype){
+#ifdef RNIFTYREG
+        error("The spline control point image and gradient image should have the same data type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] The spline control point image and the gradient image were expected to have the same datatype\n");
         fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not computed\n");
         exit(1);
+#endif
     }
     if(splineControlPoint->nz==1){
         switch(splineControlPoint->datatype){
@@ -583,9 +595,13 @@ void reg_bspline_bendingEnergyGradient( nifti_image *splineControlPoint,
                     (splineControlPoint, targetImage, gradientImage, weight);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The bending energy gradient should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the bending energy gradient\n");
             fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not been computed\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -599,9 +615,13 @@ void reg_bspline_bendingEnergyGradient( nifti_image *splineControlPoint,
                     (splineControlPoint, targetImage, gradientImage, weight);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The bending energy gradient should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the bending energy gradient\n");
             fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not been computed\n");
             exit(1);
+#endif
         }
     }
 }
@@ -734,9 +754,13 @@ void reg_bspline_linearEnergy(nifti_image *splineControlPoint, double *val)
             reg_bspline_linearEnergyApproxValue2D<double>(splineControlPoint, val);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The linear energy should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the linear energy\n");
             fprintf(stderr,"[NiftyReg ERROR] The linear energy is not computed\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -748,9 +772,13 @@ void reg_bspline_linearEnergy(nifti_image *splineControlPoint, double *val)
             reg_bspline_linearEnergyApproxValue3D<double>(splineControlPoint, val);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The linear energy should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the linear energy\n");
             fprintf(stderr,"[NiftyReg ERROR] The linear energy is not computed\n");
             exit(1);
+#endif
         }
     }
 }
@@ -991,9 +1019,13 @@ void reg_bspline_linearEnergyGradient(nifti_image *splineControlPoint,
                                       )
 {
     if(splineControlPoint->datatype != gradientImage->datatype){
+#ifdef RNIFTYREG
+        error("The spline control point image and gradient image should have the same data type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] The spline control point image and the gradient image were expected to have the same datatype\n");
         fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not computed\n");
         exit(1);
+#endif
     }
     if(splineControlPoint->nz==1){
         switch(splineControlPoint->datatype){
@@ -1006,9 +1038,13 @@ void reg_bspline_linearEnergyGradient(nifti_image *splineControlPoint,
                     (splineControlPoint, targetImage, gradientImage, weight0, weight1, weight2);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The bending energy gradient should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the bending energy gradient\n");
             fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not been computed\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -1022,9 +1058,13 @@ void reg_bspline_linearEnergyGradient(nifti_image *splineControlPoint,
                     (splineControlPoint, targetImage, gradientImage, weight0, weight1, weight2);
             break;
         default:
+#ifdef RNIFTYREG
+            error("The bending energy gradient should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the bending energy gradient\n");
             fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not been computed\n");
             exit(1);
+#endif
         }
     }
 }

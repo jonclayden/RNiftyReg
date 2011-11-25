@@ -14,6 +14,10 @@
 
 #include "_reg_resampling.h"
 
+#ifdef RNIFTYREG
+#include <R.h>
+#endif
+
 // No round() function available in windows.
 #ifdef _WINDOWS
 template<class DTYPE>
@@ -736,15 +740,23 @@ void reg_resampleSourceImage(	nifti_image *targetImage,
                                 float bgValue)
 {
     if(sourceImage->datatype != resultImage->datatype){
+#ifdef RNIFTYREG
+        error("Source and result images should have the same data type");
+#else
         printf("[NiftyReg ERROR] reg_resampleSourceImage\tSource and result image should have the same data type\n");
         printf("[NiftyReg ERROR] reg_resampleSourceImage\tNothing has been done\n");
         exit(1);
+#endif
     }
 
     if(sourceImage->nt != resultImage->nt){
+#ifdef RNIFTYREG
+        error("The source and result images have different lengths along the time axis");
+#else
         printf("[NiftyReg ERROR] reg_resampleSourceImage\tThe source and result images have different dimension along the time axis\n");
         printf("[NiftyReg ERROR] reg_resampleSourceImage\tNothing has been done\n");
         exit(1);
+#endif
     }
 
     // a mask array is created if no mask is specified
@@ -1648,9 +1660,13 @@ void reg_resampleImageGradient(nifti_image *inputGradientImage,
 {
     // Check the input datatype
     if(outputGradientImage->datatype!=jacobianMatrices->datatype){
+#ifdef RNIFTYREG
+        error("Input images should have the same data type");
+#else
         printf("[NiftyReg ERROR] reg_resampleImageGradient\n");
         printf("[NiftyReg ERROR] Input image have different datatype. Exit\n");
         exit(1);
+#endif
     }
 
     inputGradientImage->nt=inputGradientImage->dim[4]=inputGradientImage->nu;
@@ -1679,9 +1695,13 @@ void reg_resampleImageGradient(nifti_image *inputGradientImage,
         else reg_resampleImageGradient2D<double>(outputGradientImage, jacobianMatrices, mask);
         break;
     default:
+#ifdef RNIFTYREG
+        error("Only floating-point data types are supported");
+#else
         printf("[NiftyReg ERROR] reg_resampleImageGradient\n");
         printf("[NiftyReg ERROR] Only floating and double precision have been implemented. Exit\n");
         exit(1);
+#endif
     }
 
     inputGradientImage->nu=inputGradientImage->dim[5]=inputGradientImage->nt;

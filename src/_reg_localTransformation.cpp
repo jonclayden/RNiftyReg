@@ -14,6 +14,10 @@
 
 #include "_reg_localTransformation.h"
 
+#ifdef RNIFTYREG
+#include <R.h>
+#endif
+
 /* *************************************************************** */
 /* *************************************************************** */
 
@@ -1105,9 +1109,13 @@ void reg_spline_getDeformationField(nifti_image *splineControlPoint,
                                     bool bspline)
 {
     if(splineControlPoint->datatype != deformationField->datatype){
+#ifdef RNIFTYREG
+        error("The spline control point image and deformation field image should be of the same type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] The spline control point image and the deformation field image are expected to be the same type\n");
         fprintf(stderr,"[NiftyReg ERROR] The deformation field is not computed\n");
         exit(1);
+#endif
     }
 
 #if _USE_SSE
@@ -1134,9 +1142,13 @@ void reg_spline_getDeformationField(nifti_image *splineControlPoint,
             reg_spline_getDeformationField2D<double>(splineControlPoint, referenceImage, deformationField, mask, composition, bspline);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Deformation field should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for deformation field\n");
             fprintf(stderr,"[NiftyReg ERROR] The deformation field is not computed\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -1148,9 +1160,13 @@ void reg_spline_getDeformationField(nifti_image *splineControlPoint,
             reg_spline_getDeformationField3D<double>(splineControlPoint, referenceImage, deformationField, mask, composition, bspline);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Deformation field should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for deformation field\n");
             fprintf(stderr,"[NiftyReg ERROR] The deformation field is not computed\n");
             exit(1);
+#endif
         }
     }
     if(MrPropre==true) free(mask);
@@ -1267,9 +1283,13 @@ void reg_voxelCentric2NodeCentric(nifti_image *nodeImage,
                                   )
 {
     if(nodeImage->datatype!=voxelImage->datatype){
+#ifdef RNIFTYREG
+        error("Input images should have the same data type");
+#else
         fprintf(stderr, "[NiftyReg ERROR] reg_voxelCentric2NodeCentric\n");
         fprintf(stderr, "[NiftyReg ERROR] Both input images do not have the same type\n");
         exit(1);
+#endif
     }
     // it is assumed than node[000] and voxel[000] are aligned.
     if(nodeImage->nz==1){
@@ -1281,8 +1301,12 @@ void reg_voxelCentric2NodeCentric(nifti_image *nodeImage,
             reg_voxelCentric2NodeCentric2D<double>(nodeImage, voxelImage, weight, update);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Data type not supported");
+#else
             fprintf(stderr,"[NiftyReg ERROR] reg_voxelCentric2NodeCentric:\tdata type not supported\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -1294,8 +1318,12 @@ void reg_voxelCentric2NodeCentric(nifti_image *nodeImage,
             reg_voxelCentric2NodeCentric3D<double>(nodeImage, voxelImage, weight, update);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Data type not supported");
+#else
             fprintf(stderr,"[NiftyReg ERROR] reg_voxelCentric2NodeCentric:\tdata type not supported\n");
             exit(1);
+#endif
         }
     }
 }
@@ -1749,9 +1777,13 @@ void reg_bspline_refineControlPointGrid(nifti_image *referenceImage,
             reg_bspline_refineControlPointGrid2D<double>(referenceImage,controlPointGrid);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Bending energy gradient should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the bending energy gradient\n");
             fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not computed\n");
             exit(1);
+#endif
         }
     }else{
         switch(controlPointGrid->datatype){
@@ -1762,9 +1794,13 @@ void reg_bspline_refineControlPointGrid(nifti_image *referenceImage,
             reg_bspline_refineControlPointGrid3D<double>(referenceImage,controlPointGrid);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Bending energy gradient should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the bending energy gradient\n");
             fprintf(stderr,"[NiftyReg ERROR] The bending energy gradient has not computed\n");
             exit(1);
+#endif
         }
     }
     // Compute the new control point header
@@ -1895,9 +1931,13 @@ int reg_bspline_initialiseControlPointGridWithAffine(   mat44 *affineTransformat
             reg_bspline_initialiseControlPointGridWithAffine2D<double>(affineTransformation, controlPointImage);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Control point image should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] reg_bspline_initialiseControlPointGridWithAffine\n");
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the control point image\n");
             exit(1);
+#endif
         }
     }
     else{
@@ -1909,9 +1949,13 @@ int reg_bspline_initialiseControlPointGridWithAffine(   mat44 *affineTransformat
             reg_bspline_initialiseControlPointGridWithAffine3D<double>(affineTransformation, controlPointImage);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Control point image should be of a floating-point type");
+#else
             fprintf(stderr,"[NiftyReg ERROR] reg_bspline_initialiseControlPointGridWithAffine\n");
             fprintf(stderr,"[NiftyReg ERROR] Only single or double precision is implemented for the control point image\n");
             exit(1);
+#endif
         }
     }
     return 0;
@@ -2037,9 +2081,13 @@ int reg_getDisplacementFromDeformation(nifti_image *splineControlPoint)
         }
     }
     else{
+#ifdef RNIFTYREG
+        error("Only single or double precision floating-point have been implemented");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_getDisplacementFromPosition\n");
         fprintf(stderr,"[NiftyReg ERROR] Only single or double floating precision have been implemented. EXIT\n");
         exit(1);
+#endif
     }
     return 0;
 }
@@ -2145,9 +2193,13 @@ int reg_getDeformationFromDisplacement(nifti_image *splineControlPoint)
             reg_getDeformationFromDisplacement_3D<float>(splineControlPoint);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Only 2D or 3D deformation fields are supported");
+#else
             fprintf(stderr,"[NiftyReg ERROR] reg_getDeformationFromDisplacement\n");
             fprintf(stderr,"[NiftyReg ERROR] Only implemented for 2 or 3D deformation fields. EXIT\n");
             exit(1);
+#endif
         }
     }
     else if(splineControlPoint->datatype==NIFTI_TYPE_FLOAT64){
@@ -2159,15 +2211,23 @@ int reg_getDeformationFromDisplacement(nifti_image *splineControlPoint)
             reg_getDeformationFromDisplacement_3D<double>(splineControlPoint);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Only 2D or 3D deformation fields are supported");
+#else
             fprintf(stderr,"[NiftyReg ERROR] reg_getDeformationFromDisplacement\n");
             fprintf(stderr,"[NiftyReg ERROR] Only implemented for 2 or 3D deformation fields. EXIT\n");
             exit(1);
+#endif
         }
     }
     else{
+#ifdef RNIFTYREG
+        error("Only single or double precision floating-point have been implemented");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_getPositionFromDisplacement\n");
         fprintf(stderr,"[NiftyReg ERROR] Only single or double floating precision have been implemented. EXIT\n");
         exit(1);
+#endif
     }
     return 0;
 }
@@ -2373,9 +2433,13 @@ void reg_defField_compose(nifti_image *deformationField,
                           int *mask)
 {
     if(deformationField->datatype != dfToUpdate->datatype){
+#ifdef RNIFTYREG
+        error("The two deformation fields should have the same type");
+#else
         fprintf(stderr, "[NiftyReg ERROR] reg_composeDefField\n");
         fprintf(stderr, "[NiftyReg ERROR] Both deformation fields are expected to have the same type. Exit\n");
         exit(1);
+#endif
     }
 
     bool freeMask=false;
@@ -2396,8 +2460,12 @@ void reg_defField_compose(nifti_image *deformationField,
             reg_defField_compose2D<double>(deformationField,dfToUpdate,mask);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Deformation field pixel type unsupported");
+#else
             printf("[NiftyReg ERROR] reg_composeDefField2D\tDeformation field pixel type unsupported.");
             exit(1);
+#endif
         }
     }
     else{
@@ -2409,8 +2477,12 @@ void reg_defField_compose(nifti_image *deformationField,
             reg_defField_compose3D<double>(deformationField,dfToUpdate,mask);
             break;
         default:
+#ifdef RNIFTYREG
+            error("Deformation field pixel type unsupported");
+#else
             printf("[NiftyReg ERROR] reg_composeDefField3D\tDeformation field pixel type unsupported.");
             exit(1);
+#endif
         }
     }
 
@@ -2735,9 +2807,13 @@ int reg_spline_cppComposition(nifti_image *grid1,
     // REMINDER Grid2(x)=Grid1(Grid2(x))
 
     if(grid1->datatype != grid2->datatype){
+#ifdef RNIFTYREG
+        error("The two images should have the same type");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_spline_cppComposition\n");
         fprintf(stderr,"[NiftyReg ERROR] Both input images do not have the same type\n");
         exit(1);
+#endif
     }
 
 #if _USE_SSE
@@ -2791,9 +2867,13 @@ void reg_getDeformationFieldFromVelocityGrid(nifti_image *velocityFieldGrid,
 {
 
     if(approx && intermediateDeformationField!=NULL){
+#ifdef RNIFTYREG
+        error("Implementation of the intermediate steps using approximation has not been done yet");
+#else
         fprintf(stderr,"[NiftyReg ERROR] reg_getDeformationFieldFromVelocityGrid\n");
         fprintf(stderr,"[NiftyReg ERROR] Implementation of the intermediate steps using approximation has not been done yet\n");
         exit(1);
+#endif
     }
     // The velocity field is first scaled down
     nifti_image *scaledVelocityField = nifti_copy_nim_info(velocityFieldGrid);

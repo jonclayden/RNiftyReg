@@ -3,6 +3,10 @@
 
 #include "_reg_maths.h"
 
+#ifdef RNIFTYREG
+#include <R.h>
+#endif
+
 /* *************************************************************** */
 /* *************************************************************** */
 void reg_LUdecomposition(float *mat,
@@ -25,8 +29,12 @@ void reg_LUdecomposition(float *mat,
         for(int j=0;j<dim;++j)
             if( (temp=fabs(mat[i*dim+j]))>big) big=temp;
         if(big==0.f){
+#ifdef RNIFTYREG
+            error("Singular matrix in the LU decomposition");
+#else
             fprintf(stderr, "[NiftyReg] ERROR Singular matrix in the LU decomposition\n");
             exit(1);
+#endif
         }
         vv[i]=1.f/big;
     }
