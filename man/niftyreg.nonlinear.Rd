@@ -19,8 +19,8 @@ niftyreg.nonlinear(source, target, targetMask = NULL, initAffine = NULL,
   \item{source}{The source image, an object of class \code{"nifti"} with 2, 3 or 4 dimensions. Package \code{oro.nifti} defines this class and provides functions for reading and writing NIfTI files.}
   \item{target}{The target image, an object of class \code{"nifti"} with 2 or 3 dimensions.}
   \item{targetMask}{An optional mask image (again a \code{"nifti"} object), whose nonzero region will be taken as the region of interest for the registration. Must have the same voxel and image dimensions as the target image.}
-  \item{initAffine}{An optional affine matrix to initialise the algorithm. If both this parameter and \code{initControl} are \code{NULL}, the identity matrix is used, with an appropriate offset to account for differences in the image origins.}
-  \item{initControl}{An optional image, of class \code{"nifti"}, representing a field of previously-calculated control points to use as initialisation for the algorithm.}
+  \item{initAffine}{An optional affine matrix, or list of matrices, to initialise the algorithm. If both this parameter and \code{initControl} are \code{NULL}, the identity matrix is used, with an appropriate offset to account for differences in the image origins.}
+  \item{initControl}{An optional image of class \code{"nifti"}, or a list of images, representing fields of previously-calculated control points to use as initialisation for the algorithm. This parameter takes priority over \code{initAffine} if both are not \code{NULL}.}
   \item{nLevels}{A single integer specifying the number of levels of the algorithm that should be applied. If zero, no optimisation will be performed, and the final control-point image will be the same as its initialisation value.}
   \item{maxIterations}{A single integer specifying the maximum number of iterations to be used within each level. Fewer iterations may be used if a convergence test deems the process to have completed.}
   \item{nBins}{A single integer giving the number of bins to use for the joint histogram created by the algorithm.}

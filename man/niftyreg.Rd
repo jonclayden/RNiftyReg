@@ -15,7 +15,7 @@ niftyreg(source, target, targetMask = NULL, initAffine = NULL,
   \item{source}{The source image, an object of class \code{"nifti"} with 2, 3 or 4 dimensions. Package \code{oro.nifti} defines this class and provides functions for reading and writing NIfTI files.}
   \item{target}{The target image, an object of class \code{"nifti"} with 2 or 3 dimensions.}
   \item{targetMask}{An optional mask image (again a \code{"nifti"} object), whose nonzero region will be taken as the region of interest for the registration. Must have the same voxel and image dimensions as the target image.}
-  \item{initAffine}{An optional affine matrix to initialise the algorithm.}
+  \item{initAffine}{An optional affine matrix, or list of matrices, to initialise the algorithm.}
   \item{scope}{A string describing the scope, or number of degrees of freedom (DOF), of the registration. The currently-supported values are \code{"affine"} (12 DOF), \code{"rigid"} (6 DOF) or \code{"nonlinear"} (high DOF, with the exact number depending on the image sizes).}
   \item{...}{Further arguments to \code{\link{niftyreg.linear}} or \code{\link{niftyreg.nonlinear}}.}
 }

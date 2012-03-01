@@ -21,7 +21,7 @@ applyAffine(affine, source, target, affineType = NULL,
   \item{source}{The source image, an object of class \code{"nifti"} with 2, 3 or 4 dimensions. Package \code{oro.nifti} defines this class and provides functions for reading and writing NIfTI files.}
   \item{target}{The target image, an object of class \code{"nifti"} with 2 or 3 dimensions.}
   \item{targetMask}{An optional mask image (again a \code{"nifti"} object), whose nonzero region will be taken as the region of interest for the registration. Must have the same voxel and image dimensions as the target image.}
-  \item{initAffine}{An optional affine matrix to initialise the algorithm. If \code{NULL}, the identity matrix is used, with an appropriate offset to account for differences in the image origins.}
+  \item{initAffine}{An optional affine matrix, or list of matrices, to initialise the algorithm. If \code{NULL}, the identity matrix is used, with an appropriate offset to account for differences in the image origins.}
   \item{scope}{A string describing the scope, or number of degrees of freedom (DOF), of the registration. Only \code{"affine"} (12 DOF) and \code{"rigid"} (6 DOF) are currently supported.}
   \item{nLevels}{A single integer specifying the number of levels of the algorithm that should be applied. If zero, no optimisation will be performed, and the final affine matrix will be the same as its initialisation value.}
   \item{maxIterations}{A single integer specifying the maximum number of iterations to be used within each level. Fewer iterations may be used if a convergence test deems the process to have completed.}
@@ -29,7 +29,7 @@ applyAffine(affine, source, target, affineType = NULL,
   \item{finalInterpolation}{A single integer specifying the type of interpolation to be applied to the final resampled image. May be 0 (nearest neighbour), 1 (trilinear) or 3 (cubic spline). No other values are valid.}
   \item{verbose}{A single logical value: if \code{TRUE}, the code will give some feedback on its progress; otherwise, nothing will be output while the algorithm runs.}
   \item{interpolationPrecision}{The precision of the final, interpolated image: a single character string, or \code{NULL}. See Details.}
-  \item{affine}{For \code{applyAffine}, the affine transformation to apply to the source image.}
+  \item{affine}{For \code{applyAffine}, the affine transformation(s) to apply to the source image.}
   \item{affineType}{For \code{applyAffine}, the storage convention type of the affine matrix, if it is not stored in the \code{affineType} attribute of the matrix.}
 }
 
