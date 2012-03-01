@@ -296,3 +296,8 @@ applyAffine <- function (affine, source, target, affineType = NULL, finalInterpo
     
     return (niftyreg.linear(source, target, targetMask=NULL, initAffine=affine, scope="affine", nLevels=0, finalInterpolation=finalInterpolation, interpolationPrecision=interpolationPrecision, verbose=FALSE))
 }
+
+applyControlPoints <- function (controlPointImage, source, target, finalInterpolation = 3, interpolationPrecision = NULL)
+{
+    return (niftyreg.nonlinear(source, target, targetMask=NULL, initControl=controlPointImage, nLevels=0, finalInterpolation=finalInterpolation, interpolationPrecision=interpolationPrecision, verbose=FALSE))
+}

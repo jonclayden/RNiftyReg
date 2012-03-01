@@ -1,18 +1,22 @@
 \name{niftyreg.nonlinear}
 \alias{niftyreg.nonlinear}
+\alias{applyControlPoints}
 
 \title{Two and three dimensional nonlinear image registration}
 \description{
-The \code{niftyreg.nonlinear} function performs nonlinear registration for two and three dimensional images. 4D images may also be registered volumewise to a 3D image, or 3D images slicewise to a 2D image. The warping is based on free-form deformations, parameterised using an image of control points.
+The \code{niftyreg.nonlinear} function performs nonlinear registration for two and three dimensional images. 4D images may also be registered volumewise to a 3D image, or 3D images slicewise to a 2D image. The warping is based on free-form deformations, parameterised using an image of control points. A precalculated transformation can be applied to a new image using the \code{applyControlPoints} function.
 }
 
 \usage{
 niftyreg.nonlinear(source, target, targetMask = NULL, initAffine = NULL,
-            initControl = NULL, nLevels = 3, maxIterations = 300,
-            nBins = 64, bendingEnergyWeight = 0.01, jacobianWeight = 0,
-            finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"),
-            finalInterpolation = 3, verbose = FALSE,
-            interpolationPrecision = NULL)
+         initControl = NULL, nLevels = 3, maxIterations = 300,
+         nBins = 64, bendingEnergyWeight = 0.01, jacobianWeight = 0,
+         finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"),
+         finalInterpolation = 3, verbose = FALSE,
+         interpolationPrecision = NULL)
+
+applyControlPoints(controlPointImage, source, target,
+         finalInterpolation = 3, interpolationPrecision = NULL)
 }
 
 \arguments{
@@ -31,6 +35,7 @@ niftyreg.nonlinear(source, target, targetMask = NULL, initAffine = NULL,
   \item{finalInterpolation}{A single integer specifying the type of interpolation to be applied to the final resampled image. May be 0 (nearest neighbour), 1 (trilinear) or 3 (cubic spline). No other values are valid.}
   \item{verbose}{A single logical value: if \code{TRUE}, the code will give some feedback on its progress; otherwise, nothing will be output while the algorithm runs.}
   \item{interpolationPrecision}{The precision of the final, interpolated image: a single character string, or \code{NULL}. See Details.}
+  \item{controlPointImage}{For \code{applyControlPoints}, the control point map to apply to the source image.}
 }
 
 \details{
@@ -41,6 +46,8 @@ The nonlinear warping is based on free-form deformations. A lattice of equally-s
 The source image may have 2, 3 or 4 dimensions, and the target 2 or 3. The dimensionality of the target image determines whether 2D or 3D registration is applied, and source images with one more dimension than the target (i.e. 4D to 3D, or 3D to 2D) will be registered volumewise or slicewise, as appropriate. In the latter case the last dimension of the resulting image is taken from the source image, while all other dimensions come from the target. One image of control points is returned for each registration performed.
 
 Greater precision may be appropriate for the final interpolated image than is used the source image. In particular, if the source image is integer-valued, then interpolation will generally produce nonintegral data values in the final image. The precision of the final image therefore defaults to being the same as the source image if nearest neighbour interpolation is requested (i.e. with \code{finalInterpolation=0}), and single-precision floating point otherwise. This default is chosen if the \code{interpolationPrecision} parameter is \code{NULL}: alternatively, one of \code{"source"} (for the same as the source image), \code{"single"} (for single-precision floating point) or \code{"double"} (for double-precision) may be specified explicitly.
+
+The \code{applyControlPoints} function is a convenience wrapper that calls \code{niftyreg.nonlinear} with \code{nLevels=0} to apply the specified transformation without any further optimisation. Note that a target image must still be specified in this case, since the metadata associated with that image is needed by \code{niftyreg.nonlinear}.
 }
 
 \value{
