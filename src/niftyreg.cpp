@@ -199,6 +199,8 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEX
     nifti_image_free(targetImage);
     if (targetMaskImage != NULL)
         nifti_image_free(targetMaskImage);
+    if (controlPointImage != NULL)
+        nifti_image_free(controlPointImage);
     nifti_image_free(result.image);
     nifti_image_free(result.controlPoints);
     free(result.completedIterations);
@@ -560,9 +562,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
 }
 
 f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int finalPrecision, int nLevels, int maxIterations, int finalInterpolation, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, float *spacing, float bendingEnergyWeight, float jacobianWeight, bool verbose)
-{    
-    int *completedIterations = (int *) calloc(nLevels, sizeof(int));
-    
+{
     if (controlPointImage == NULL && affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
     
@@ -574,81 +574,128 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
     if (finalPrecision == INTERP_PREC_DOUBLE)
         reg_changeDatatype<double>(sourceImage);
     
-    // Create the object encapsulating the registration
-    reg_f3d<PRECISION_TYPE> *reg = new reg_f3d<PRECISION_TYPE>(targetImage->nt, sourceImage->nt);
+    f3d_result result;
+    
+    if (nLevels == 0)
+    {
+        // Allocate and set completed iterations (nothing will be done so this is zero)
+        int *completedIterations = (int *) calloc(1, sizeof(int));
+        *completedIterations = 0;
+        
+        reg_checkAndCorrectDimension(controlPointImage);
+        
+        // Allocate a deformation field image
+        nifti_image *deformationFieldImage = create_position_field(targetImage, targetImage->nz <= 1);
+        
+        // Calculate deformation field from the control point image
+        if(controlPointImage->pixdim[5] > 1)
+            reg_getDeformationFieldFromVelocityGrid(controlPointImage, deformationFieldImage, NULL, false);
+        else
+            reg_spline_getDeformationField(controlPointImage, targetImage, deformationFieldImage, NULL, false, true);
+        
+        // Allocate result image
+        nifti_image *resultImage = nifti_copy_nim_info(targetImage);
+        resultImage->dim[0] = resultImage->ndim = sourceImage->dim[0];
+        resultImage->dim[4] = resultImage->nt = sourceImage->dim[4];
+        resultImage->cal_min = sourceImage->cal_min;
+        resultImage->cal_max = sourceImage->cal_max;
+        resultImage->scl_slope = sourceImage->scl_slope;
+        resultImage->scl_inter = sourceImage->scl_inter;
+        resultImage->datatype = sourceImage->datatype;
+        resultImage->nbyper = sourceImage->nbyper;
+        resultImage->nvox = resultImage->dim[1] * resultImage->dim[2] * resultImage->dim[3] * resultImage->dim[4];
+        resultImage->data = (void *) calloc(resultImage->nvox, resultImage->nbyper);
+        
+        // Resample source image to target space
+        reg_resampleSourceImage(targetImage, sourceImage, resultImage, deformationFieldImage, NULL, finalInterpolation, 0);
+        
+        // Free deformation field image
+        nifti_image_free(deformationFieldImage);
+        
+        result.image = resultImage;
+        result.controlPoints = copy_complete_nifti_image(controlPointImage);
+        result.completedIterations = completedIterations;
+    }
+    else
+    {
+        // Create the object encapsulating the registration
+        reg_f3d<PRECISION_TYPE> *reg = new reg_f3d<PRECISION_TYPE>(targetImage->nt, sourceImage->nt);
+        
+        // Create a vector to hold the number of completed iterations
+        int *completedIterations = (int *) calloc(nLevels, sizeof(int));
 
 #ifdef _OPENMP
-    int maxThreadNumber = omp_get_max_threads();
-    if (verbose)
-        Rprintf("[NiftyReg F3D] OpenMP is used with %i thread(s)\n", maxThreadNumber);
+        int maxThreadNumber = omp_get_max_threads();
+        if (verbose)
+            Rprintf("[NiftyReg F3D] OpenMP is used with %i thread(s)\n", maxThreadNumber);
 #endif
 
-    // Set the reg_f3d parameters
-    reg->SetReferenceImage(targetImage);
-    reg->SetFloatingImage(sourceImage);
+        // Set the reg_f3d parameters
+        reg->SetReferenceImage(targetImage);
+        reg->SetFloatingImage(sourceImage);
 
-    if (verbose)
-        reg->PrintOutInformation();
-    else
-        reg->DoNotPrintOutInformation();
+        if (verbose)
+            reg->PrintOutInformation();
+        else
+            reg->DoNotPrintOutInformation();
 
-    if (targetMaskImage != NULL)
-       reg->SetReferenceMask(targetMaskImage);
+        if (targetMaskImage != NULL)
+           reg->SetReferenceMask(targetMaskImage);
 
-    if (controlPointImage != NULL)
-       reg->SetControlPointGridImage(controlPointImage);
+        if (controlPointImage != NULL)
+           reg->SetControlPointGridImage(controlPointImage);
 
-    if (affineTransformation != NULL)
-       reg->SetAffineTransformation(affineTransformation);
+        if (affineTransformation != NULL)
+           reg->SetAffineTransformation(affineTransformation);
 
-    reg->SetBendingEnergyWeight(bendingEnergyWeight);
+        reg->SetBendingEnergyWeight(bendingEnergyWeight);
 
-    // if (linearEnergyWeight0==linearEnergyWeight0 || linearEnergyWeight1==linearEnergyWeight1 || linearEnergyWeight2==linearEnergyWeight2)
-    // {
-    //     if(linearEnergyWeight0!=linearEnergyWeight0) linearEnergyWeight0=0.0;
-    //     if(linearEnergyWeight1!=linearEnergyWeight1) linearEnergyWeight1=0.0;
-    //     if(linearEnergyWeight2!=linearEnergyWeight2) linearEnergyWeight2=0.0;
-    //     reg->SetLinearEnergyWeights(linearEnergyWeight0,linearEnergyWeight1,linearEnergyWeight2);
-    // }
+        // if (linearEnergyWeight0==linearEnergyWeight0 || linearEnergyWeight1==linearEnergyWeight1 || linearEnergyWeight2==linearEnergyWeight2)
+        // {
+        //     if(linearEnergyWeight0!=linearEnergyWeight0) linearEnergyWeight0=0.0;
+        //     if(linearEnergyWeight1!=linearEnergyWeight1) linearEnergyWeight1=0.0;
+        //     if(linearEnergyWeight2!=linearEnergyWeight2) linearEnergyWeight2=0.0;
+        //     reg->SetLinearEnergyWeights(linearEnergyWeight0,linearEnergyWeight1,linearEnergyWeight2);
+        // }
     
-    reg->SetJacobianLogWeight(jacobianWeight);
+        reg->SetJacobianLogWeight(jacobianWeight);
 
-    reg->SetMaximalIterationNumber(maxIterations);
+        reg->SetMaximalIterationNumber(maxIterations);
 
-    if (nBins > 0)
-    {
-        for (int i = 0; i < targetImage->nt; i++)
+        if (nBins > 0)
         {
-            reg->SetReferenceBinNumber(i, (unsigned) nBins);
-            reg->SetFloatingBinNumber(i, (unsigned) nBins);
+            for (int i = 0; i < targetImage->nt; i++)
+            {
+                reg->SetReferenceBinNumber(i, (unsigned) nBins);
+                reg->SetFloatingBinNumber(i, (unsigned) nBins);
+            }
         }
+
+        for (int i = 0; i < 3; i++)
+            reg->SetSpacing((unsigned) i, (PRECISION_TYPE) spacing[i]);
+
+        reg->SetLevelNumber(nLevels);
+        reg->SetLevelToPerform(nLevels);
+
+        if (finalInterpolation == 3)
+            reg->UseCubicSplineInterpolation();
+        else if (finalInterpolation == 1)
+            reg->UseLinearInterpolation();
+        else
+            reg->UseNeareatNeighborInterpolation();
+    
+        // Run the registration
+        reg->Run_f3d();
+    
+        memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
+
+        result.image = reg->GetWarpedImage();
+        result.controlPoints = reg->GetControlPointPositionImage();
+        result.completedIterations = completedIterations;
+    
+        // Erase the registration object
+        delete reg;
     }
-
-    for (int i = 0; i < 3; i++)
-        reg->SetSpacing((unsigned) i, (PRECISION_TYPE) spacing[i]);
-
-    reg->SetLevelNumber(nLevels);
-    reg->SetLevelToPerform(nLevels);
-
-    if (finalInterpolation == 3)
-        reg->UseCubicSplineInterpolation();
-    else if (finalInterpolation == 1)
-        reg->UseLinearInterpolation();
-    else
-        reg->UseNeareatNeighborInterpolation();
-    
-    // Run the registration
-    reg->Run_f3d();
-    
-    memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
-
-    f3d_result result;
-    result.image = reg->GetWarpedImage();
-    result.controlPoints = reg->GetControlPointPositionImage();
-    result.completedIterations = completedIterations;
-    
-    // Erase the registration object
-    delete reg;
     
     return result;
 }
