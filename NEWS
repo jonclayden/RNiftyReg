@@ -2,6 +2,22 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 0.6.0
+
+- RNiftyReg can now perform nonlinear registration via the niftyreg.nonlinear()
+  function. This method optimises over a set of moveable control points arranged
+  in a grid over the image. The applyControlPoints() function has also been
+  added as the nonlinear equivalent of applyAffine(). See ?niftyreg.nonlinear
+  for details on these new functions. The niftyreg() function now serves as a
+  common interface to both the linear and nonlinear optimisations.
+- The "initAffine" argument to niftyreg() now accepts a list of matrices as well
+  as a single affine matrix.
+- The upstream NiftyReg code has been updated, thereby taking in a number of
+  tweaks added since the last release version.
+- A bug in the quaternion-to-matrix conversion in xformToAffine() has been fixed.
+
+=================================================================================
+
 VERSION 0.5.0
 
 - The niftyreg() and applyAffine() functions gain an "interpolationPrecision"
