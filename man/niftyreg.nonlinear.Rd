@@ -55,6 +55,8 @@ See \code{\link{niftyreg}}.
 }
 
 \note{
+Performing a linear registration first, and then initialising the nonlinear transformation with the result (via the \code{initAffine} parameter), is usually wise.
+
 If substantial parts of the target image are zero-valued, for example because the target image has been brain-extracted, it can be useful to pass it as a target mask as well as the target image, viz. \code{niftyreg.nonlinear(source, target, target)}.
 
 There is no reason that arrays that do not represent medical images cannot be registered using this function. A standard R array can be converted to a valid \code{"nifti"} object easily for these purposes using the \code{as.nifti} function in the \code{oro.nifti} package.
