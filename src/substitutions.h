@@ -5,5 +5,6 @@
 
 #define printf  Rprintf
 #define fprintf rniftyreg_fprintf
+#define fputs   rniftyreg_fputs
 
 #endif
