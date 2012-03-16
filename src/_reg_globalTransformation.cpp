@@ -15,6 +15,10 @@
 #include "_reg_globalTransformation.h"
 #include "_reg_maths.h"
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 /* *************************************************************** */
 /* *************************************************************** */
 template <class FieldTYPE>

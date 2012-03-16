@@ -18,6 +18,7 @@
 
 #ifdef RNIFTYREG
 #include <R.h>
+#include "substitutions.h"
 #endif
 
 /// Smooth the histogram along the given axes. Uses recursion

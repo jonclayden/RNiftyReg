@@ -11,6 +11,10 @@
 
 #include "_reg_localTransformation.h"
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 #define _USE_SQUARE_LOG_JAC
 
 /* *************************************************************** */

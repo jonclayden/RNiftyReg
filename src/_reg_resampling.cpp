@@ -16,6 +16,7 @@
 
 #ifdef RNIFTYREG
 #include <R.h>
+#include "substitutions.h"
 #endif
 
 // No round() function available in windows.

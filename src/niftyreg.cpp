@@ -29,6 +29,7 @@
 #include <Rinternals.h>
 
 #include "niftyreg.h"
+#include "substitutions.h"
 
 extern "C"
 SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)

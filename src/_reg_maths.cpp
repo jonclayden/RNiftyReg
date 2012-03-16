@@ -5,6 +5,7 @@
 
 #ifdef RNIFTYREG
 #include <R.h>
+#include "substitutions.h"
 #endif
 
 /* *************************************************************** */

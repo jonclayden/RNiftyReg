@@ -2,6 +2,10 @@
 
 #include "nifti1_io.h"   /* typedefs, prototypes, macros, etc. */
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 /*****===================================================================*****/
 /*****     Sample functions to deal with NIFTI-1 and ANALYZE files       *****/
 /*****...................................................................*****/
