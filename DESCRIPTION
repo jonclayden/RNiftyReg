@@ -1,6 +1,6 @@
 Package: RNiftyReg
-Version: 0.6.0
-Date: 2012-03-01
+Version: 0.6.1
+Date: 2012-03-16
 Title: Medical image registration using the NiftyReg library
 Author: Jon Clayden; based on original code by Marc Modat and Pankaj Daga
 Maintainer: Jon Clayden <jon.clayden+rniftyreg@gmail.com>

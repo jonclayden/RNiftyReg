@@ -2,6 +2,13 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 0.6.1
+
+- The package now redefines standard C print functions to avoid problems with
+  output not being captured by R.
+
+=================================================================================
+
 VERSION 0.6.0
 
 - RNiftyReg can now perform nonlinear registration via the niftyreg.nonlinear()
