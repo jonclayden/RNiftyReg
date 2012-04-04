@@ -2,6 +2,17 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 0.6.2
+
+- Nonlinear registration now works properly for 2D target images.
+- Control point spacing is now set from the initial control point image (as it
+  should be), if one is supplied.
+- Two small bugs in the upstream NiftyReg code have been fixed.
+- Attempting to perform 4D-to-2D registration now produces a more specific
+  error message.
+
+=================================================================================
+
 VERSION 0.6.1
 
 - The package now redefines standard C print functions to avoid problems with
