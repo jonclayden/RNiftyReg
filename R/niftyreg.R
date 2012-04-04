@@ -159,6 +159,8 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         report(OL$Error, "Only 2D, 3D or 4D source images may be used")
     if (!(target@dim_[1] %in% c(2,3)))
         report(OL$Error, "Only 2D or 3D target images may be used")
+    if (source@dim_[1] == 4 && target@dim_[1] == 2)
+        report(OL$Error, "4D to 2D registration cannot be performed")
     if (length(dim(source)) - length(dim(target)) > 1)
         report(OL$Error, "The source image may not have more than one extra dimension")
     if (!is.null(targetMask) && !is.nifti(targetMask))
