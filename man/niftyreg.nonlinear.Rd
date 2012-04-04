@@ -30,7 +30,7 @@ applyControlPoints(controlPointImage, source, target,
   \item{nBins}{A single integer giving the number of bins to use for the joint histogram created by the algorithm.}
   \item{bendingEnergyWeight}{A numeric value giving the weight of the bending energy term in the cost function.}
   \item{jacobianWeight}{A numeric value giving the weight of the Jacobian determinant term in the cost function.}
-  \item{finalSpacing}{A 3-vector giving the spacing of control points in the final grid, along the X, Y and Z directions respectively.}
+  \item{finalSpacing}{A numeric vector giving the spacing of control points in the final grid, along the X, Y and Z directions respectively. This is set from the \code{initControl} image if one is supplied.}
   \item{spacingUnit}{A character string giving the units in which the \code{finalSpacing} is specified: either \code{"vox"} for voxels or \code{"mm"} for millimetres (which is assumed to be the spatial unit of the source and target images).}
   \item{finalInterpolation}{A single integer specifying the type of interpolation to be applied to the final resampled image. May be 0 (nearest neighbour), 1 (trilinear) or 3 (cubic spline). No other values are valid.}
   \item{verbose}{A single logical value: if \code{TRUE}, the code will give some feedback on its progress; otherwise, nothing will be output while the algorithm runs.}
