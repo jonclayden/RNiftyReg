@@ -17,7 +17,9 @@
 #include "_reg_localTransformation.h"
 #include "_reg_mutualinformation.h"
 #include "_reg_ssd.h"
+#include "_reg_KLdivergence.h"
 #include "_reg_tools.h"
+#include "_reg_ReadWriteImage.h"
 #include "float.h"
 #include <limits>
 
@@ -39,7 +41,7 @@ class reg_f3d
     T bendingEnergyWeight;
     T linearEnergyWeight0;
     T linearEnergyWeight1;
-    T linearEnergyWeight2;
+    T L2NormWeight;
     T jacobianLogWeight;
     bool jacobianLogApproximation;
     unsigned int maxiterationNumber;
@@ -57,6 +59,7 @@ class reg_f3d
     unsigned int levelToPerform;
     T gradientSmoothingSigma;
     bool useSSD;
+    bool useKLD;
     bool useConjGradient;
     bool verbose;
     bool usePyramid;
@@ -75,116 +78,151 @@ class reg_f3d
     nifti_image *deformationFieldImage;
     nifti_image *warpedGradientImage;
     nifti_image *voxelBasedMeasureGradientImage;
-    nifti_image *nodeBasedMeasureGradientImage;
+    nifti_image *nodeBasedGradientImage;
     T *conjugateG;
     T *conjugateH;
     T *bestControlPointPosition;
     double *probaJointHistogram;
     double *logJointHistogram;
     double entropies[4];
+    bool approxParzenWindow;
     T *maxSSD;
     unsigned int currentLevel;
     unsigned totalBinNumber;
+    bool xOptimisation;
+    bool yOptimisation;
+    bool zOptimisation;
+    bool gridRefinement;
+
+    bool additive_mc_nmi; // Additive multi channel NMI
 
     unsigned int currentIteration;
 
-#ifdef RNIFTYREG
-    int *completedIterations;
-#endif
+    virtual void AllocateWarped();
+    virtual void ClearWarped();
+    virtual void AllocateDeformationField();
+    virtual void ClearDeformationField();
+    virtual void AllocateWarpedGradient();
+    virtual void ClearWarpedGradient();
+    virtual void AllocateVoxelBasedMeasureGradient();
+    virtual void ClearVoxelBasedMeasureGradient();
+    virtual void AllocateNodeBasedGradient();
+    virtual void ClearNodeBasedGradient();
+    virtual void AllocateConjugateGradientVariables();
+    virtual void ClearConjugateGradientVariables();
+    virtual void AllocateBestControlPointArray();
+    virtual void ClearBestControlPointArray();
+    virtual void AllocateJointHistogram();
+    virtual void ClearJointHistogram();
+    virtual void AllocateCurrentInputImage();
+    virtual void ClearCurrentInputImage();
 
-    virtual int AllocateWarped();
-    virtual int ClearWarped();
-    virtual int AllocateDeformationField();
-    virtual int ClearDeformationField();
-    virtual int AllocateWarpedGradient();
-    virtual int ClearWarpedGradient();
-    virtual int AllocateVoxelBasedMeasureGradient();
-    virtual int ClearVoxelBasedMeasureGradient();
-    virtual int AllocateNodeBasedMeasureGradient();
-    virtual int ClearNodeBasedMeasureGradient();
-    virtual int AllocateConjugateGradientVariables();
-    virtual int ClearConjugateGradientVariables();
-    virtual int AllocateBestControlPointArray();
-    virtual int ClearBestControlPointArray();
-    virtual int AllocateJointHistogram();
-    virtual int ClearJointHistogram();
-    virtual int AllocateCurrentInputImage(int);
-    virtual int ClearCurrentInputImage();
-
-    virtual int SaveCurrentControlPoint();
-    virtual int RestoreCurrentControlPoint();
+    virtual void SaveCurrentControlPoint();
+    virtual void RestoreCurrentControlPoint();
     virtual double ComputeJacobianBasedPenaltyTerm(int);
     virtual double ComputeBendingEnergyPenaltyTerm();
     virtual double ComputeLinearEnergyPenaltyTerm();
-    virtual int GetDeformationField();
-    virtual int WarpFloatingImage(int);
+    virtual double ComputeL2NormDispPenaltyTerm();
+    virtual void GetDeformationField();
+    virtual void WarpFloatingImage(int);
     virtual double ComputeSimilarityMeasure();
-    virtual int GetVoxelBasedGradient();
-    virtual int GetSimilarityMeasureGradient();
-    virtual int GetBendingEnergyGradient();
-    virtual int GetLinearEnergyGradient();
-    virtual int GetJacobianBasedGradient();
-    virtual int ComputeConjugateGradient();
+    virtual void GetVoxelBasedGradient();
+    virtual void GetSimilarityMeasureGradient();
+    virtual void GetBendingEnergyGradient();
+    virtual void GetLinearEnergyGradient();
+    virtual void GetL2NormDispGradient();
+    virtual void GetJacobianBasedGradient();
+    virtual void ComputeConjugateGradient();
     virtual T GetMaximalGradientLength();
-    virtual int UpdateControlPointPosition(T);
-    virtual int CheckStoppingCriteria(bool);
+    virtual void SetGradientImageToZero();
+    virtual void UpdateControlPointPosition(T);
+    virtual void DisplayCurrentLevelParameters();
+
+    void (*funcProgressCallback)(float pcntProgress, void *params);
+    void *paramsProgressCallback;
 
 public:
     reg_f3d(int refTimePoint,int floTimePoint);
     virtual ~reg_f3d();
 
-    int SetReferenceImage(nifti_image *);
-    int SetFloatingImage(nifti_image *);
-    int SetControlPointGridImage(nifti_image *);
-    int SetReferenceMask(nifti_image *);
-    int SetAffineTransformation(mat44 *);
-    int SetBendingEnergyWeight(T);
-    int SetLinearEnergyWeights(T,T,T);
-    int SetJacobianLogWeight(T);
-    int ApproximateJacobianLog();
-    int DoNotApproximateJacobianLog();
-    int SetReferenceSmoothingSigma(T);
-    int SetFloatingSmoothingSigma(T);
-    int SetReferenceThresholdUp(unsigned int,T);
-    int SetReferenceThresholdLow(unsigned int,T);
-    int SetFloatingThresholdUp(unsigned int, T);
-    int SetFloatingThresholdLow(unsigned int,T);
-    int SetWarpedPaddingValue(T);
-    int SetSpacing(unsigned int ,T);
-    int SetLevelNumber(unsigned int);
-    int SetLevelToPerform(unsigned int);
-    int SetGradientSmoothingSigma(T);
-    int UseComposition();
-    int DoNotUseComposition();
-    int UseSSD();
-    int DoNotUseSSD();
-    int UseConjugateGradient();
-    int DoNotUseConjugateGradient();
-    int PrintOutInformation();
-    int DoNotPrintOutInformation();
-    int SetMaximalIterationNumber(unsigned int);
-    int SetReferenceBinNumber(int, unsigned int);
-    int SetFloatingBinNumber(int, unsigned int);
-    int DoNotUsePyramidalApproach();
-    int UseNeareatNeighborInterpolation();
-    int UseLinearInterpolation();
-    int UseCubicSplineInterpolation();
+    void SetReferenceImage(nifti_image *);
+    void SetFloatingImage(nifti_image *);
+    void SetControlPointGridImage(nifti_image *);
+    void SetReferenceMask(nifti_image *);
+    void SetAffineTransformation(mat44 *);
+    void SetBendingEnergyWeight(T);
+    void SetLinearEnergyWeights(T,T);
+    void SetL2NormDisplacementWeight(T);
+    void SetJacobianLogWeight(T);
+    void ApproximateJacobianLog();
+    void DoNotApproximateJacobianLog();
+    void ApproximateParzenWindow();
+    void DoNotApproximateParzenWindow();
+    void SetReferenceSmoothingSigma(T);
+    void SetFloatingSmoothingSigma(T);
+    void SetReferenceThresholdUp(unsigned int,T);
+    void SetReferenceThresholdLow(unsigned int,T);
+    void SetFloatingThresholdUp(unsigned int, T);
+    void SetFloatingThresholdLow(unsigned int,T);
+    void SetWarpedPaddingValue(T);
+    void SetSpacing(unsigned int ,T);
+    void SetLevelNumber(unsigned int);
+    void SetLevelToPerform(unsigned int);
+    void SetGradientSmoothingSigma(T);
+
+    // Set the multi channel implementation to additive.
+    void SetAdditiveMC() { this->additive_mc_nmi = true; }
+
+    void UseComposition();
+    void DoNotUseComposition();
+    void UseSSD();
+    void DoNotUseSSD();
+    void UseKLDivergence();
+    void DoNotUseKLDivergence();
+    void UseConjugateGradient();
+    void DoNotUseConjugateGradient();
+    void PrintOutInformation();
+    void DoNotPrintOutInformation();
+    void SetMaximalIterationNumber(unsigned int);
+    void SetReferenceBinNumber(int, unsigned int);
+    void SetFloatingBinNumber(int, unsigned int);
+    void DoNotUsePyramidalApproach();
+    void UseNeareatNeighborInterpolation();
+    void UseLinearInterpolation();
+    void UseCubicSplineInterpolation();
+    void NoOptimisationAlongX(){this->xOptimisation=false;}
+    void NoOptimisationAlongY(){this->yOptimisation=false;}
+    void NoOptimisationAlongZ(){this->zOptimisation=false;}
+    void NoGridRefinement(){this->gridRefinement=false;}
 //    int SetThreadNumber(int t);
 
-    virtual int SetCompositionStepNumber(int){return 0;}
-    virtual int ApproximateComposition(){return 0;}
-    virtual int UseSimilaritySymmetry(){return 0;}
+    // F3D2 specific options
+    virtual void SetCompositionStepNumber(int){return;}
+    virtual void ApproximateComposition(){return;}
+    virtual void UseSimilaritySymmetry(){return;}
 
-    int CheckParameters_f3d();
-    int Initisalise_f3d();
-    int Run_f3d();
+    // F3D_SYM specific options
+    virtual void SetFloatingMask(nifti_image *){return;}
+    virtual void SetInverseConsistencyWeight(T){return;}
+    virtual nifti_image *GetBackwardControlPointPositionImage(){return NULL;}
+    virtual double GetInverseConsistencyPenaltyTerm(){return 0.;}
+    virtual void GetInverseConsistencyGradient(){return;}
+
+    // F3D_gpu specific option
     virtual int CheckMemoryMB_f3d(){return 0;}
-    virtual nifti_image *GetWarpedImage();
-    nifti_image *GetControlPointPositionImage();
 
-#ifdef RNIFTYREG
-    int * GetCompletedIterations();
-#endif
+    virtual void CheckParameters_f3d();
+    void Run_f3d();
+    virtual void Initisalise_f3d();
+    nifti_image *GetControlPointPositionImage();
+    virtual nifti_image **GetWarpedImage();
+
+    void SetProgressCallbackFunction( void (*funcProgCallback)(float pcntProgress,
+							       void *params), 
+				      void *paramsProgCallback ) {
+      funcProgressCallback = funcProgCallback;
+      paramsProgressCallback = paramsProgCallback;
+    }
 };
 
 #include "_reg_f3d.cpp"

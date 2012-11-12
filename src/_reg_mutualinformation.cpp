@@ -16,11 +16,6 @@
 #include "_reg_tools.h"
 #include <iostream>
 
-#ifdef RNIFTYREG
-#include <R.h>
-#include "substitutions.h"
-#endif
-
 /// Smooth the histogram along the given axes. Uses recursion
 template<class PrecisionTYPE>
 void smooth_axes(int axes, int current, PrecisionTYPE *histogram,
@@ -145,17 +140,19 @@ PrecisionTYPE GetBasisSplineDerivativeValue(PrecisionTYPE ori)
 template<class DTYPE>
 void reg_getEntropies1(nifti_image *targetImage,
                        nifti_image *resultImage,
-                       //int type, //! Not used at the moment
                        unsigned int *target_bins,
                        unsigned int *result_bins,
                        double *probaJointHistogram,
                        double *logJointHistogram,
                        double *entropies,
-                       int *mask)
+                       int *mask,
+                       bool approx)
 {
     int num_target_volumes = targetImage->nt;
     int num_result_volumes = resultImage->nt;
     int i, j, index;
+
+    if(num_target_volumes>1 || num_result_volumes>1) approx=true;
 
     int targetVoxelNumber = targetImage->nx * targetImage->ny * targetImage->nz;
 
@@ -207,8 +204,8 @@ void reg_getEntropies1(nifti_image *targetImage,
 
     bool valid_values;
 
-    unsigned int target_flat_index, result_flat_index;
-    double voxel_number = 0.;
+    DTYPE target_flat_index, result_flat_index;
+    double voxel_number = 0., added_value;
 
     // For now we only use the approximate PW approach for filling the joint histogram.
     // Fill the joint histogram using the classical approach
@@ -220,9 +217,9 @@ void reg_getEntropies1(nifti_image *targetImage,
 #pragma omp parallel for default(none) \
     shared(tempHistogram, num_target_volumes, num_result_volumes, mask, \
     targetImagePtr, resultImagePtr, targetVoxelNumber, target_bins, result_bins, \
-    target_offsets, result_offsets, total_target_entries) \
+    target_offsets, result_offsets, total_target_entries, approx) \
     private(index, i, valid_values, target_flat_index, tid, \
-    result_flat_index, target_values, result_values) \
+    result_flat_index, target_values, result_values, added_value) \
     reduction(+:voxel_number)
 #endif
     for (index=0; index<targetVoxelNumber; ++index){
@@ -230,18 +227,20 @@ void reg_getEntropies1(nifti_image *targetImage,
         tid = omp_get_thread_num();
 #endif
         if (mask[index] > -1) {
+            added_value=0.;
             valid_values = true;
             target_flat_index = 0;
+
             // Get the target values
             for (i = 0; i < num_target_volumes; ++i) {
                 target_values[i] = targetImagePtr[index+i*targetVoxelNumber];
                 if (target_values[i] < (DTYPE)0 ||
-                        target_values[i] >= (DTYPE)target_bins[i] ||
-                        target_values[i] != target_values[i]) {
+                    target_values[i] >= (DTYPE)target_bins[i] ||
+                    target_values[i] != target_values[i]) {
                     valid_values = false;
                     break;
                 }
-                target_flat_index += static_cast<int>(target_values[i]) * target_offsets[i];
+                target_flat_index += target_values[i] * (DTYPE)(target_offsets[i]);
             }
 
             if (valid_values) {
@@ -250,22 +249,45 @@ void reg_getEntropies1(nifti_image *targetImage,
                 for (i = 0; i < num_result_volumes; ++i){
                     result_values[i] = resultImagePtr[index+i*targetVoxelNumber];
                     if (result_values[i] < (DTYPE)0 ||
-                            result_values[i] >= (DTYPE)result_bins[i] ||
-                            result_values[i] != result_values[i]) {
+                        result_values[i] >= (DTYPE)result_bins[i] ||
+                        result_values[i] != result_values[i]) {
                         valid_values = false;
                         break;
                     }
-                    result_flat_index += static_cast<int>(result_values[i]) * result_offsets[i];
+                    result_flat_index += result_values[i] * (DTYPE)(result_offsets[i]);
                 }
             }
             if (valid_values) {
+                if(approx){ // standard joint histogram filling
 #ifdef _OPENMP
-                tempHistogram[tid][target_flat_index + (result_flat_index * total_target_entries)]++;
+                    tempHistogram[tid][static_cast<int>(round(target_flat_index)) +
+                            (static_cast<int>(round(result_flat_index)) * total_target_entries)]++;
 #else
-                probaJointHistogram[target_flat_index + (result_flat_index * total_target_entries)]++;
+                    probaJointHistogram[static_cast<int>(round(target_flat_index)) +
+                            (static_cast<int>(round(result_flat_index)) * total_target_entries)]++;
 #endif
-                ++voxel_number;
+                    added_value=1;
+                }
+                else{ // Parzen window joint histogram filling
+                    for(int t=static_cast<int>(target_values[0]-1.); t<static_cast<int>(target_values[0]+2.); ++t){
+                        if(t>=0 || t<static_cast<int>(target_bins[0])){
+                            double target_weight = GetBasisSplineValue<double>(double(target_values[0])-double(t));
+                            for(int r=static_cast<int>(result_values[0]-1.); r<static_cast<int>(result_values[0]+2.); ++r){
+                                if(r>=0 || r<static_cast<int>(result_bins[0])){
+                                    double weight = target_weight * GetBasisSplineValue<double>(double(result_values[0])-double(r));
+                                    added_value+= weight;
+#ifdef _OPENMP
+                                    tempHistogram[tid][t + r * total_target_entries]  += weight;
+#else
+                                    probaJointHistogram[t + r * total_target_entries] += weight;
+#endif
+                                }
+                            }
+                        }
+                    }
+                }
             }
+            voxel_number+=added_value;
         } //mask
     }
 #ifdef _OPENMP
@@ -282,34 +304,37 @@ void reg_getEntropies1(nifti_image *targetImage,
     free(tempHistogram);
 #endif
 
-    double window[3];
-    window[0] = window[2] = GetBasisSplineValue((double)(-1.0));
-    window[1] = GetBasisSplineValue((double)(0.0));
-
-    double *histogram=NULL;
-    double *result=NULL;
     int num_axes = num_target_volumes + num_result_volumes;
+    if(approx || targetImage->nt>1 || resultImage->nt>1){
+    // standard joint histogram filling has been used
+    // Joint histogram has to be smoothed
+        double window[3];
+        window[0] = window[2] = GetBasisSplineValue((double)(-1.0));
+        window[1] = GetBasisSplineValue((double)(0.0));
 
-    // Smooth along each of the axes
-    for (i = 0; i < num_axes; ++i)
-    {
-        // Use the arrays for storage of results
-        if (i % 2 == 0) {
-            result = logJointHistogram;
-            histogram = probaJointHistogram;
+        double *histogram=NULL;
+        double *result=NULL;
+
+        // Smooth along each of the axes
+        for (i = 0; i < num_axes; ++i)
+        {
+            // Use the arrays for storage of results
+            if (i % 2 == 0) {
+                result = logJointHistogram;
+                histogram = probaJointHistogram;
+            }
+            else {
+                result = probaJointHistogram;
+                histogram = logJointHistogram;
+            }
+            traverse_and_smooth_axes<double>(i, histogram, result, window,
+                                             num_axes, histogram_dimensions);
         }
-        else {
-            result = probaJointHistogram;
-            histogram = logJointHistogram;
-        }
-        traverse_and_smooth_axes<double>(i, histogram, result, window,
-                                         num_axes, histogram_dimensions);
-    }
 
-    // We may need to transfer the result
-    if (result == logJointHistogram) memcpy(probaJointHistogram, logJointHistogram,
-                                            sizeof(double)*num_probabilities);
-
+        // We may need to transfer the result
+        if (result == logJointHistogram) memcpy(probaJointHistogram, logJointHistogram,
+                                                sizeof(double)*num_probabilities);
+    }// approx
     memset(logJointHistogram, 0, num_histogram_entries * sizeof(double));
 
     // Convert to probabilities
@@ -403,47 +428,41 @@ void reg_getEntropies1(nifti_image *targetImage,
     entropies[1] = result_entropy;
     entropies[2] = joint_entropy;
     entropies[3] = voxel_number;
+
+    return;
 }
 /***************************************************************** */
 extern "C++"
 void reg_getEntropies(nifti_image *targetImage,
                       nifti_image *resultImage,
-                      //int type, //! Not used at the moment
                       unsigned int *target_bins, // should be an array of size num_target_volumes
                       unsigned int *result_bins, // should be an array of size num_result_volumes
                       double *probaJointHistogram,
                       double *logJointHistogram,
                       double *entropies,
-                      int *mask)
+                      int *mask,
+                      bool approx)
 {
     if(targetImage->datatype != resultImage->datatype){
-#ifdef RNIFTYREG
-        error("The two input images should have the same data type");
-#else
         fprintf(stderr, "[NiftyReg ERROR] reg_getEntropies\n");
         fprintf(stderr, "[NiftyReg ERROR] Both input images are exepected to have the same type\n");
         exit(1);
-#endif
     }
 
     switch(targetImage->datatype){
     case NIFTI_TYPE_FLOAT32:
         reg_getEntropies1<float>
                 (targetImage, resultImage, /*type,*/ target_bins, result_bins, probaJointHistogram,
-                 logJointHistogram, entropies, mask);
+                 logJointHistogram, entropies, mask, approx);
         break;
     case NIFTI_TYPE_FLOAT64:
         reg_getEntropies1<double>
                 (targetImage, resultImage, /*type,*/ target_bins, result_bins, probaJointHistogram,
-                 logJointHistogram, entropies, mask);
+                 logJointHistogram, entropies, mask, approx);
         break;
     default:
-#ifdef RNIFTYREG
-        error("The target image data type is not supported");
-#else
         fprintf(stderr,"[NiftyReg ERROR] reg_getEntropies\tThe target image data type is not supported\n");
         exit(1);
-#endif
     }
     return;
 }
@@ -460,11 +479,14 @@ void reg_getVoxelBasedNMIGradientUsingPW2D(nifti_image *targetImage,
                                            double *logJointHistogram,
                                            double *entropies,
                                            nifti_image *nmiGradientImage,
-                                           int *mask)
+                                           int *mask,
+                                           bool approx)
 {
     unsigned int num_target_volumes=targetImage->nt;
     unsigned int num_result_volumes=resultImage->nt;
     unsigned int num_loops = num_target_volumes + num_result_volumes;
+
+    if(num_target_volumes>1 || num_result_volumes>1) approx=true;
 
     unsigned targetVoxelNumber = targetImage->nx * targetImage->ny;
 
@@ -545,12 +567,13 @@ void reg_getVoxelBasedNMIGradientUsingPW2D(nifti_image *targetImage,
             for (unsigned int i = 0; i < num_target_volumes; ++i) {
                 voxel_values[i] = targetImagePtr[index+i*targetVoxelNumber];
                 if (voxel_values[i] <= (DTYPE)0 ||
-                        voxel_values[i] >= (DTYPE)target_bins[i] ||
-                        voxel_values[i] != voxel_values[i]) {
+                    voxel_values[i] >= (DTYPE)target_bins[i] ||
+                    voxel_values[i] != voxel_values[i]) {
                     valid_values = false;
                     break;
                 }
-                voxel_values[i] = (DTYPE)static_cast<int>((double)voxel_values[i]);
+//                if(approx) // standard joint histogram filling
+                    voxel_values[i] = (DTYPE)static_cast<int>(round(voxel_values[i]));
             }
 
             // Collect the result intensities and do some sanity checking
@@ -562,14 +585,16 @@ void reg_getVoxelBasedNMIGradientUsingPW2D(nifti_image *targetImage,
                     result_gradient_y_values[i] = resulImageGradientPtrY[currentIndex];
 
                     if (temp <= (DTYPE)0 ||
-                            temp >= (DTYPE)result_bins[i] ||
-                            temp != temp ||
-                            result_gradient_x_values[i] != result_gradient_x_values[i] ||
-                            result_gradient_y_values[i] != result_gradient_y_values[i]) {
+                        temp >= (DTYPE)result_bins[i] ||
+                        temp != temp ||
+                        result_gradient_x_values[i] != result_gradient_x_values[i] ||
+                        result_gradient_y_values[i] != result_gradient_y_values[i]) {
                         valid_values = false;
                         break;
                     }
-                    voxel_values[num_target_volumes + i] = (DTYPE)static_cast<int>((double)temp);
+//                    if(approx) // standard joint histogram filling
+                        voxel_values[num_target_volumes + i] = (DTYPE)static_cast<int>(round(temp));
+//                    else voxel_values[num_target_volumes + i] = temp;
                 }
             }
             if (valid_values) {
@@ -671,18 +696,20 @@ void reg_getVoxelBasedNMIGradientUsingPW2D(nifti_image *targetImage,
 template<class DTYPE,class GradTYPE>
 void reg_getVoxelBasedNMIGradientUsingPW3D(nifti_image *targetImage,
                                            nifti_image *resultImage,
-                                           //int type, //! Not used at the moment
                                            nifti_image *resultImageGradient,
                                            unsigned int *target_bins,
                                            unsigned int *result_bins,
                                            double *logJointHistogram,
                                            double *entropies,
                                            nifti_image *nmiGradientImage,
-                                           int *mask)
+                                           int *mask,
+                                           bool approx)
 {
     int num_target_volumes=targetImage->nt;
     int num_result_volumes=resultImage->nt;
     int num_loops = num_target_volumes + num_result_volumes;
+
+    if(num_target_volumes>1 || num_result_volumes>1) approx=true;
 
     int targetVoxelNumber = targetImage->nx * targetImage->ny * targetImage->nz;
 
@@ -782,7 +809,7 @@ void reg_getVoxelBasedNMIGradientUsingPW3D(nifti_image *targetImage,
     num_result_volumes, result_bins, resultImagePtr, bins, num_loops, num_probabilities, \
     result_offsets, target_offsets, total_target_entries, logJointHistogram, \
     resultImageGradientPtrX, resultImageGradientPtrY, resultImageGradientPtrZ, \
-    nmiGradientPtrX, nmiGradientPtrY, nmiGradientPtrZ, NMI, joint_entropy)
+    nmiGradientPtrX, nmiGradientPtrY, nmiGradientPtrZ, NMI, joint_entropy, approx)
 #endif // _OPENMP
     for (index = 0; index < targetVoxelNumber; ++index){
         if(mask[index]>-1){
@@ -791,12 +818,13 @@ void reg_getVoxelBasedNMIGradientUsingPW3D(nifti_image *targetImage,
             for (i = 0; i < num_target_volumes; ++i) {
                 voxel_values[i] = targetImagePtr[index+i*targetVoxelNumber];
                 if (voxel_values[i] <= (DTYPE)0 ||
-                        voxel_values[i] >= (DTYPE)target_bins[i] ||
-                        voxel_values[i] != voxel_values[i]) {
+                    voxel_values[i] >= (DTYPE)target_bins[i] ||
+                    voxel_values[i] != voxel_values[i]) {
                     valid_values = false;
                     break;
                 }
-                voxel_values[i] = (DTYPE)static_cast<int>((double)voxel_values[i]);
+//                if(approx) // standard joint histogram filling
+                    voxel_values[i] = (DTYPE)static_cast<int>(round(voxel_values[i]));
             }
 
             // Collect the result intensities and do some sanity checking
@@ -809,15 +837,17 @@ void reg_getVoxelBasedNMIGradientUsingPW3D(nifti_image *targetImage,
                     result_gradient_z_values[i] = resultImageGradientPtrZ[currentIndex];
 
                     if (temp <= (DTYPE)0 ||
-                            temp >= (DTYPE)result_bins[i] ||
-                            temp != temp ||
-                            result_gradient_x_values[i] != result_gradient_x_values[i] ||
-                            result_gradient_y_values[i] != result_gradient_y_values[i] ||
-                            result_gradient_z_values[i] != result_gradient_z_values[i]) {
+                        temp >= (DTYPE)result_bins[i] ||
+                        temp != temp ||
+                        result_gradient_x_values[i] != result_gradient_x_values[i] ||
+                        result_gradient_y_values[i] != result_gradient_y_values[i] ||
+                        result_gradient_z_values[i] != result_gradient_z_values[i]) {
                         valid_values = false;
                         break;
                     }
-                    voxel_values[num_target_volumes + i] = (DTYPE)static_cast<int>((double)temp);
+//                    if(approx) // standard joint histogram filling
+                        voxel_values[num_target_volumes + i] = (DTYPE)static_cast<int>(round(temp));
+//                    else voxel_values[num_target_volumes + i] = temp;
                 }
             }
             if (valid_values) {
@@ -838,23 +868,23 @@ void reg_getVoxelBasedNMIGradientUsingPW3D(nifti_image *targetImage,
                     valid_values = true;
 
                     for(lc = 0; lc < num_target_volumes; ++lc){
-                        relative_pos = int(voxel_values[lc] + loop.Index(lc));
+                        relative_pos = static_cast<int>(voxel_values[lc] + loop.Index(lc));
                         if(relative_pos< 0 || relative_pos >= bins[lc]){
                             valid_values = false; break;
                         }
-                        GradTYPE common_value = GetBasisSplineValue<GradTYPE>((GradTYPE)relative_pos-(GradTYPE)voxel_values[lc]);
+                        double common_value = GetBasisSplineValue<double>((double)relative_pos-(double)voxel_values[lc]);
                         coefficients[lc] = common_value;
                         positions[lc] = (GradTYPE)relative_pos-(GradTYPE)voxel_values[lc];
                         relative_positions[lc] = relative_pos;
                     }
 
                     for(jc = num_target_volumes; jc < num_loops; ++jc){
-                        relative_pos = int(voxel_values[jc] + loop.Index(jc));
+                        relative_pos = static_cast<int>(voxel_values[jc] + loop.Index(jc));
                         if(relative_pos< 0 || relative_pos >= bins[jc]){
                             valid_values = false; break;
                         }
                         if (num_result_volumes > 1) {
-                            GradTYPE common_value = GetBasisSplineValue<double>((GradTYPE)relative_pos-(GradTYPE)voxel_values[jc]);
+                            double common_value = GetBasisSplineValue<double>((double)relative_pos-(double)voxel_values[jc]);
                             coefficients[jc] = common_value;
                         }
                         positions[jc] = (GradTYPE)relative_pos-(GradTYPE)voxel_values[jc];
@@ -872,8 +902,8 @@ void reg_getVoxelBasedNMIGradientUsingPW3D(nifti_image *targetImage,
                             der_term[0] = der_term[1] = der_term[2] = (GradTYPE)1.0;
                             for (j = 0; j < num_result_volumes; ++j){
                                 if (i == j) {
-                                    reg = GetBasisSplineDerivativeValue<GradTYPE>
-                                            ((GradTYPE)positions[j + num_target_volumes]);
+                                    reg = GetBasisSplineDerivativeValue<double>
+                                            ((double)positions[j + num_target_volumes]);
                                     der_term[0] *= reg * (GradTYPE)result_gradient_x_values[j];
                                     der_term[1] *= reg * (GradTYPE)result_gradient_y_values[j];
                                     der_term[2] *= reg * (GradTYPE)result_gradient_z_values[j];
@@ -927,65 +957,53 @@ void reg_getVoxelBasedNMIGradientUsingPW3D(nifti_image *targetImage,
 template<class DTYPE>
 void reg_getVoxelBasedNMIGradientUsingPW1(nifti_image *targetImage,
                                           nifti_image *resultImage,
-                                          //int type,
                                           nifti_image *resultImageGradient,
                                           unsigned int *target_bins,
                                           unsigned int *result_bins,
                                           double *logJointHistogram,
                                           double *entropies,
                                           nifti_image *nmiGradientImage,
-                                          int *mask)
+                                          int *mask,
+                                          bool approx)
 {
     if(resultImageGradient->datatype != nmiGradientImage->datatype){
-#ifdef RNIFTYREG
-        error("The two gradient images should have the same data type");
-#else
         fprintf(stderr, "[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\n");
         fprintf(stderr, "[NiftyReg ERROR] Both gradient images are exepected to have the same type\n");
         exit(1);
-#endif
     }
 
     if(nmiGradientImage->nz==1){
         switch(resultImageGradient->datatype){
         case NIFTI_TYPE_FLOAT32:
             reg_getVoxelBasedNMIGradientUsingPW2D<DTYPE,float>
-                    (targetImage, resultImage, /*type,*/ resultImageGradient, target_bins, result_bins, logJointHistogram,
-                     entropies, nmiGradientImage, mask);
+                    (targetImage, resultImage, resultImageGradient, target_bins, result_bins, logJointHistogram,
+                     entropies, nmiGradientImage, mask, approx);
             break;
         case NIFTI_TYPE_FLOAT64:
             reg_getVoxelBasedNMIGradientUsingPW2D<DTYPE,double>
-                    (targetImage, resultImage, /*type,*/ resultImageGradient, target_bins, result_bins, logJointHistogram,
-                     entropies, nmiGradientImage, mask);
+                    (targetImage, resultImage, resultImageGradient, target_bins, result_bins, logJointHistogram,
+                     entropies, nmiGradientImage, mask, approx);
             break;
         default:
-#ifdef RNIFTYREG
-            error("The gradient image data type is not supported");
-#else
             fprintf(stderr,"[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\tThe gradient images data type is not supported\n");
             exit(1);
-#endif
         }
     }
     else{
         switch(resultImageGradient->datatype){
         case NIFTI_TYPE_FLOAT32:
             reg_getVoxelBasedNMIGradientUsingPW3D<DTYPE,float>
-                    (targetImage, resultImage, /*type,*/ resultImageGradient, target_bins, result_bins, logJointHistogram,
-                     entropies, nmiGradientImage, mask);
+                    (targetImage, resultImage, resultImageGradient, target_bins, result_bins, logJointHistogram,
+                     entropies, nmiGradientImage, mask, approx);
             break;
         case NIFTI_TYPE_FLOAT64:
             reg_getVoxelBasedNMIGradientUsingPW3D<DTYPE,double>
-                    (targetImage, resultImage, /*type,*/ resultImageGradient, target_bins, result_bins, logJointHistogram,
-                     entropies, nmiGradientImage, mask);
+                    (targetImage, resultImage, resultImageGradient, target_bins, result_bins, logJointHistogram,
+                     entropies, nmiGradientImage, mask, approx);
             break;
         default:
-#ifdef RNIFTYREG
-            error("The gradient image data type is not supported");
-#else
             fprintf(stderr,"[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\tThe gradient images data type is not supported\n");
             exit(1);
-#endif
         }
 
     }
@@ -993,43 +1011,35 @@ void reg_getVoxelBasedNMIGradientUsingPW1(nifti_image *targetImage,
 /* *************************************************************** */
 void reg_getVoxelBasedNMIGradientUsingPW(nifti_image *targetImage,
                                          nifti_image *resultImage,
-                                         //int type,
                                          nifti_image *resultImageGradient,
                                          unsigned int *target_bins,
                                          unsigned int *result_bins,
                                          double *logJointHistogram,
                                          double *entropies,
                                          nifti_image *nmiGradientImage,
-                                         int *mask)
+                                         int *mask,
+                                         bool approx)
 {
     if(targetImage->datatype != resultImage->datatype){
-#ifdef RNIFTYREG
-        error("Input images should be of the same type");
-#else
         fprintf(stderr, "[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\n");
         fprintf(stderr, "[NiftyReg ERROR] Both input images are exepected to have the same type\n");
         exit(1);
-#endif
     }
 
     switch(targetImage->datatype){
     case NIFTI_TYPE_FLOAT32:
         reg_getVoxelBasedNMIGradientUsingPW1<float>
-                (targetImage, resultImage, /*type,*/ resultImageGradient, target_bins, result_bins, logJointHistogram,
-                 entropies, nmiGradientImage, mask);
+                (targetImage, resultImage, resultImageGradient, target_bins, result_bins, logJointHistogram,
+                 entropies, nmiGradientImage, mask, approx);
         break;
     case NIFTI_TYPE_FLOAT64:
         reg_getVoxelBasedNMIGradientUsingPW1<double>
-                (targetImage, resultImage, /*type,*/ resultImageGradient, target_bins, result_bins, logJointHistogram,
-                 entropies, nmiGradientImage, mask);
+                (targetImage, resultImage, resultImageGradient, target_bins, result_bins, logJointHistogram,
+                 entropies, nmiGradientImage, mask, approx);
         break;
     default:
-#ifdef RNIFTYREG
-        error("The input image data type is not supported");
-#else
         fprintf(stderr,"[NiftyReg ERROR] reg_getVoxelBasedNMIGradientUsingPW\tThe input image data type is not supported\n");
         exit(1);
-#endif
     }
 }
 /* *************************************************************** */
