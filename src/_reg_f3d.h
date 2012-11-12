@@ -19,7 +19,9 @@
 #include "_reg_ssd.h"
 #include "_reg_KLdivergence.h"
 #include "_reg_tools.h"
+#ifndef RNIFTYREG
 #include "_reg_ReadWriteImage.h"
+#endif
 #include "float.h"
 #include <limits>
 

@@ -404,7 +404,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     
     // Binarise the mask image
     if (usingTargetMask)
-        reg_tool_binarise_image(targetMaskImage);
+        reg_tools_binarise_image(targetMaskImage);
     
     for (int level = 0; level < nLevels; level++)
     {
@@ -414,8 +414,8 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
         if (usingTargetMask)
             targetMaskImageCopy = copy_complete_nifti_image(targetMaskImage);
         
-        reg_changeDatatype<PRECISION_TYPE>(sourceImageCopy);
-        reg_changeDatatype<PRECISION_TYPE>(targetImageCopy);
+        reg_tools_changeDatatype<PRECISION_TYPE>(sourceImageCopy);
+        reg_tools_changeDatatype<PRECISION_TYPE>(targetImageCopy);
         
         for (int l = level; l < nLevels-1; l++)
         {
@@ -441,7 +441,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
         int *targetMask = (int *) calloc(targetImageCopy->nvox, sizeof(int));
         if (usingTargetMask)
         {
-            reg_tool_binaryImage2int(targetMaskImageCopy, targetMask, activeVoxelNumber);
+            reg_tools_binaryImage2int(targetMaskImageCopy, targetMask, activeVoxelNumber);
             nifti_image_free(targetMaskImageCopy);
         }
         else
@@ -539,7 +539,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     
     // The source data type is changed for precision if requested
     if (finalPrecision == INTERP_PREC_DOUBLE)
-        reg_changeDatatype<double>(sourceImage);
+        reg_tools_changeDatatype<double>(sourceImage);
 
     // The result image is resampled using a cubic spline interpolation
     resultImage = nifti_copy_nim_info(targetImage);
@@ -569,11 +569,11 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
     
     // Binarise the mask image
     if (targetMaskImage != NULL)
-        reg_tool_binarise_image(targetMaskImage);
+        reg_tools_binarise_image(targetMaskImage);
     
     // The source data type is changed for precision if requested
     if (finalPrecision == INTERP_PREC_DOUBLE)
-        reg_changeDatatype<double>(sourceImage);
+        reg_tools_changeDatatype<double>(sourceImage);
     
     f3d_result result;
     
@@ -590,7 +590,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
         
         // Calculate deformation field from the control point image
         if(controlPointImage->pixdim[5] > 1)
-            reg_getDeformationFieldFromVelocityGrid(controlPointImage, deformationFieldImage, NULL, false);
+            reg_bspline_getDeformationFieldFromVelocityGrid(controlPointImage, deformationFieldImage);
         else
             reg_spline_getDeformationField(controlPointImage, targetImage, deformationFieldImage, NULL, false, true);
         
@@ -688,11 +688,11 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
         // Run the registration
         reg->Run_f3d();
     
-        memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
+        // memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
 
-        result.image = reg->GetWarpedImage();
+        result.image = *(reg->GetWarpedImage());
         result.controlPoints = reg->GetControlPointPositionImage();
-        result.completedIterations = completedIterations;
+        // result.completedIterations = completedIterations;
     
         // Erase the registration object
         delete reg;
