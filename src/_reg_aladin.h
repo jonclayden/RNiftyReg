@@ -106,6 +106,9 @@ class reg_aladin
       void SetInputTransform(const char *filename, bool IsFlirt);
       mat44* GetInputTransform() {return this->InputTransform;}
 
+#ifdef RNIFTYREG
+      void SetTransformationMatrix(mat44 *input) {this->TransformationMatrix=input;}
+#endif
       mat44* GetTransformationMatrix() {return this->TransformationMatrix;}
       nifti_image *GetFinalWarpedImage();
 

@@ -22,6 +22,7 @@
 #include "_reg_globalTransformation.h"
 #include "_reg_blockMatching.h"
 #include "_reg_tools.h"
+#include "_reg_aladin.h"
 #include "_reg_f3d.h"
 
 #include <R.h>
@@ -390,174 +391,45 @@ mat44 * create_init_affine (nifti_image *sourceImage, nifti_image *targetImage)
 // Run the "aladin" registration algorithm
 aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
 {
-    int i;
-    bool usingTargetMask = (targetMaskImage != NULL);
-    bool twoDimRegistration = (sourceImage->nz == 1 || targetImage->nz == 1);
-    float sourceBGValue = 0.0;
-    nifti_image *resultImage, *positionFieldImage = NULL;
-    
-    int *completedIterations = (int *) calloc(nLevels, sizeof(int));
-    
-    // Initial affine matrix is the identity
     if (affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
     
-    // Binarise the mask image
-    if (usingTargetMask)
-        reg_tools_binarise_image(targetMaskImage);
+    reg_aladin<PRECISION_TYPE> *reg = new reg_aladin<PRECISION_TYPE>;
     
-    for (int level = 0; level < nLevels; level++)
-    {
-        nifti_image *sourceImageCopy = copy_complete_nifti_image(sourceImage);
-        nifti_image *targetImageCopy = copy_complete_nifti_image(targetImage);
-        nifti_image *targetMaskImageCopy = NULL;
-        if (usingTargetMask)
-            targetMaskImageCopy = copy_complete_nifti_image(targetMaskImage);
-        
-        reg_tools_changeDatatype<PRECISION_TYPE>(sourceImageCopy);
-        reg_tools_changeDatatype<PRECISION_TYPE>(targetImageCopy);
-        
-        for (int l = level; l < nLevels-1; l++)
-        {
-            int ratio = (int) powf(2.0f, l+1.0f);
-
-            bool sourceDownsampleAxis[8] = {true,true,true,true,true,true,true,true};
-            if ((sourceImage->nx/ratio) < 32) sourceDownsampleAxis[1] = false;
-            if ((sourceImage->ny/ratio) < 32) sourceDownsampleAxis[2] = false;
-            if ((sourceImage->nz/ratio) < 32) sourceDownsampleAxis[3] = false;
-            reg_downsampleImage<PRECISION_TYPE>(sourceImageCopy, 1, sourceDownsampleAxis);
-
-            bool targetDownsampleAxis[8] = {true,true,true,true,true,true,true,true};
-            if ((targetImage->nx/ratio) < 32) targetDownsampleAxis[1] = false;
-            if ((targetImage->ny/ratio) < 32) targetDownsampleAxis[2] = false;
-            if ((targetImage->nz/ratio) < 32) targetDownsampleAxis[3] = false;
-            reg_downsampleImage<PRECISION_TYPE>(targetImageCopy, 1, targetDownsampleAxis);
-
-            if (usingTargetMask)
-                reg_downsampleImage<PRECISION_TYPE>(targetMaskImageCopy, 0, targetDownsampleAxis);
-        }
-        
-        int activeVoxelNumber = 0;
-        int *targetMask = (int *) calloc(targetImageCopy->nvox, sizeof(int));
-        if (usingTargetMask)
-        {
-            reg_tools_binaryImage2int(targetMaskImageCopy, targetMask, activeVoxelNumber);
-            nifti_image_free(targetMaskImageCopy);
-        }
-        else
-        {
-            for (unsigned int j = 0; j < targetImageCopy->nvox; j++)
-                targetMask[j] = j;
-            activeVoxelNumber = targetImageCopy->nvox;
-        }
-        
-        // Allocate the deformation field image
-        positionFieldImage = create_position_field(targetImageCopy, twoDimRegistration);
-        
-        // Allocate the result image
-        resultImage = nifti_copy_nim_info(targetImageCopy);
-        resultImage->datatype = sourceImageCopy->datatype;
-        resultImage->nbyper = sourceImageCopy->nbyper;
-        resultImage->data = calloc(1, nifti_get_volsize(resultImage));
-
-        // Initialise the block matching - all the blocks are used during the first level
-        _reg_blockMatchingParam blockMatchingParams;
-        initialise_block_matching_method(targetImageCopy, &blockMatchingParams, (level==0 ? 100 : useBlockPercentage), 50, targetMask, 0);
-
-        if (verbose)
-        {
-            // Display some parameters specific to the current level
-            Rprintf("Current level %i / %i\n", level+1, nLevels);
-            Rprintf("Target image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", targetImageCopy->nx, targetImageCopy->ny, targetImageCopy->nz, targetImageCopy->dx, targetImageCopy->dy, targetImageCopy->dz);
-            Rprintf("Source image size: \t%ix%ix%i voxels\t%gx%gx%g mm\n", sourceImageCopy->nx, sourceImageCopy->ny, sourceImageCopy->nz, sourceImageCopy->dx, sourceImageCopy->dy, sourceImageCopy->dz);
-            if (twoDimRegistration)
-                Rprintf("Block size = [4 4 1]\n");
-            else
-                Rprintf("Block size = [4 4 4]\n");
-            Rprintf("Block number = [%i %i %i]\n", blockMatchingParams.blockNumber[0], blockMatchingParams.blockNumber[1], blockMatchingParams.blockNumber[2]);
-            Rprintf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n");
-            reg_mat44_disp(affineTransformation, (char *) "Initial affine transformation");
-        }
-
-        int nLoops = ((type==AFFINE && level==0) ? 2 : 1);
-        int currentType, iteration;
-        mat44 updateAffineMatrix;
-        
-        for (i = 0; i < nLoops; i++)
-        {
-            // The first optimisation is rigid even if the final scope is affine
-            currentType = ((i==0 && nLoops==2) ? RIGID : type);
-            iteration = 0;
-            
-            // Twice as many iterations are performed during the first level
-            while (iteration < (level==0 ? 2*maxIterations : maxIterations))
-            {
-                // Compute the affine transformation deformation field
-                reg_affine_positionField(affineTransformation, targetImageCopy, positionFieldImage);
-                
-                // Resample the source image
-                reg_resampleSourceImage(targetImageCopy, sourceImageCopy, resultImage, positionFieldImage, targetMask, 1, sourceBGValue);
-                
-                // Compute the correspondances between blocks - this is the expensive bit
-                block_matching_method<PRECISION_TYPE>(targetImageCopy, resultImage, &blockMatchingParams, targetMask);
-                
-                // Optimise the update matrix
-                optimize(&blockMatchingParams, &updateAffineMatrix, currentType);
-                
-                // Update the affine transformation matrix
-                *affineTransformation = reg_mat44_mul(affineTransformation, &(updateAffineMatrix));
-                    
-                if (reg_test_convergence(&updateAffineMatrix))
-                    break;
-                
-                iteration++;
-            }
-        }
-        
-        completedIterations[level] = iteration;
-
-        free(targetMask);
-        nifti_image_free(resultImage);
-        nifti_image_free(targetImageCopy);
-        nifti_image_free(sourceImageCopy);
-        
-        if (level < (nLevels - 1))
-            nifti_image_free(positionFieldImage);
-        
-        if (verbose)
-        {
-            reg_mat44_disp(affineTransformation, (char *)"Final affine transformation");
-            Rprintf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n\n");
-        }
-    }
+    reg->SetMaxIterations(maxIterations);
+    reg->SetNumberOfLevels(nLevels);
+    reg->SetLevelsToPerform(nLevels);
+    reg->SetReferenceSigma(0.0);
+    reg->SetFloatingSigma(0.0);
+    reg->SetAlignCentre(1);
+    reg->SetPerformAffine(type == AFFINE);
+    reg->SetPerformRigid(1);
+    reg->SetBlockPercentage(useBlockPercentage);
+    reg->SetInlierLts(50.0);
+    reg->SetInterpolation(finalInterpolation);
     
-    if (nLevels == 0)
-        positionFieldImage = create_position_field(targetImage, twoDimRegistration);
+    // Set the reference and floating images
+    reg->SetInputReference(targetImage);
+    reg->SetInputFloating(sourceImage);
     
-    // The corresponding deformation field is evaluated and saved
-    reg_affine_positionField(affineTransformation, targetImage, positionFieldImage);
+    // Set the initial affine transformation
+    reg->SetTransformationMatrix(affineTransformation);
     
-    // The source data type is changed for precision if requested
-    if (finalPrecision == INTERP_PREC_DOUBLE)
-        reg_tools_changeDatatype<double>(sourceImage);
-
-    // The result image is resampled using a cubic spline interpolation
-    resultImage = nifti_copy_nim_info(targetImage);
-    resultImage->cal_min = sourceImage->cal_min;
-    resultImage->cal_max = sourceImage->cal_max;
-    resultImage->scl_slope = sourceImage->scl_slope;
-    resultImage->scl_inter = sourceImage->scl_inter;
-    resultImage->datatype = sourceImage->datatype;
-    resultImage->nbyper = sourceImage->nbyper;
-    resultImage->data = calloc(resultImage->nvox, resultImage->nbyper);
-    reg_resampleSourceImage(targetImage, sourceImage, resultImage, positionFieldImage, NULL, finalInterpolation, sourceBGValue);
+    // Set the reference mask if defined
+    if (targetMaskImage != NULL)
+        reg->SetInputMask(targetMaskImage);
     
-    nifti_image_free(positionFieldImage);
+    // Run the registration
+    reg->Run();
     
+    // Store the results
     aladin_result result;
-    result.image = resultImage;
-    result.affine = affineTransformation;
-    result.completedIterations = completedIterations;
+    result.image = copy_complete_nifti_image(reg->GetFinalWarpedImage());
+    result.affine = (mat44 *) calloc(1, sizeof(mat44));
+    memcpy(result.affine, reg->GetTransformationMatrix(), sizeof(mat44));
+    // result.completedIterations = completedIterations;
+    
+    delete reg;
     
     return result;
 }
