@@ -1259,8 +1259,8 @@ void CubicSplineGradientResultImage(nifti_image *sourceImage,
 
                 if(bg==true){
                     grad[0]=0.0;
-                    grad[0]=0.0;
-                    grad[0]=0.0;
+                    grad[1]=0.0;
+                    grad[2]=0.0;
                 }
             }
 
@@ -1318,8 +1318,8 @@ void CubicSplineGradientResultImage2D(nifti_image *sourceImage,
 #endif // _OPENMP
         for(index=0;index<targetVoxelNumber; index++){
 
-            grad[index]=0.0;
-            grad[index]=0.0;
+            grad[0]=0.0;
+            grad[1]=0.0;
 
             if(maskPtr[index]>-1){
                 world[0]=(FieldTYPE) deformationFieldPtrX[index];
