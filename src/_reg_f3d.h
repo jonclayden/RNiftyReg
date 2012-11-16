@@ -100,6 +100,10 @@ class reg_f3d
 
     unsigned int currentIteration;
 
+#ifdef RNIFTYREG
+    int *completedIterations;
+#endif
+
     virtual void AllocateWarped();
     virtual void ClearWarped();
     virtual void AllocateDeformationField();
@@ -209,6 +213,10 @@ public:
     virtual nifti_image *GetBackwardControlPointPositionImage(){return NULL;}
     virtual double GetInverseConsistencyPenaltyTerm(){return 0.;}
     virtual void GetInverseConsistencyGradient(){return;}
+    
+#ifdef RNIFTYREG
+    int * GetCompletedIterations();
+#endif
 
     // F3D_gpu specific option
     virtual int CheckMemoryMB_f3d(){return 0;}

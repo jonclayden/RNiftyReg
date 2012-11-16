@@ -526,7 +526,8 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
         // Run the registration
         reg->Run_f3d();
         
-        // memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
+        int *completedIterations = (int *) calloc(nLevels, sizeof(int));
+        memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
         
         result.forwardImage = reg->GetWarpedImage()[0];
         result.forwardControlPoints = reg->GetControlPointPositionImage();
@@ -535,7 +536,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
             result.reverseImage = reg->GetWarpedImage()[1];
             result.reverseControlPoints = reg->GetBackwardControlPointPositionImage();
         }
-        // result.completedIterations = completedIterations;
+        result.completedIterations = completedIterations;
         
         // Erase the registration object
         delete reg;

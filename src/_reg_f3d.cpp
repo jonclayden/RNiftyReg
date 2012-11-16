@@ -2151,6 +2151,10 @@ void reg_f3d<T>::Run_f3d()
 
         this->ClearCurrentInputImage();
 
+#ifdef RNIFTYREG
+        this->completedIterations[this->currentLevel] = this->currentIteration;
+#endif
+
 #ifdef NDEBUG
         if(this->verbose){
 #endif
@@ -2219,5 +2223,13 @@ nifti_image * reg_f3d<T>::GetControlPointPositionImage()
 }
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+
+#ifdef RNIFTYREG
+template<class T>
+int * reg_f3d<T>::GetCompletedIterations()
+{
+    return this->completedIterations;
+}
+#endif
 
 #endif
