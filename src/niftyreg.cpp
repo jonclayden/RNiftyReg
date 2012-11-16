@@ -473,7 +473,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
 #ifdef _OPENMP
         int maxThreadNumber = omp_get_max_threads();
         if (verbose)
-            printf("[NiftyReg F3D] Using OpenMP with %i thread(s)\n", maxThreadNumber);
+            Rprintf("[NiftyReg F3D] Using OpenMP with %i thread(s)\n", maxThreadNumber);
 #endif
 
         // Set the reg_f3d parameters

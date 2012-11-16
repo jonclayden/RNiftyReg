@@ -2,9 +2,11 @@
 #define SUBSTITUTIONS_H
 
 #include "print.h"
+#include "exit.h"
 
 #define printf  Rprintf
 #define fprintf rniftyreg_fprintf
 #define fputs   rniftyreg_fputs
+#define exit    rniftyreg_exit
 
 #endif
