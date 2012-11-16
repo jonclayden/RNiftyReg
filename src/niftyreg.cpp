@@ -10,8 +10,6 @@
 #define PRECISION_TYPE double
 
 #include "_reg_resampling.h"
-#include "_reg_globalTransformation.h"
-#include "_reg_blockMatching.h"
 #include "_reg_tools.h"
 #include "_reg_aladin.h"
 #include "_reg_f3d.h"
