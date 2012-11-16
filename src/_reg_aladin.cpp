@@ -1,6 +1,11 @@
 #include "_reg_aladin.h"
 #ifndef _REG_ALADIN_CPP
 #define _REG_ALADIN_CPP
+
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 template <class T> reg_aladin<T>::reg_aladin ()
 {
     this->ExecutableName=(char*) "reg_aladin";

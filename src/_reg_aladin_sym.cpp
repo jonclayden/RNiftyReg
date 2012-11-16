@@ -4,6 +4,10 @@
 #ifndef _REG_ALADIN_SYM_CPP
 #define _REG_ALADIN_SYM_CPP
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 template <class T>
 reg_aladin_sym<T>::reg_aladin_sym ()

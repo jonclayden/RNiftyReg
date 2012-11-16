@@ -11,6 +11,10 @@
 
 #include "_reg_localTransformation.h"
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 /* *************************************************************** */
 /* *************************************************************** */
 template<class SplineTYPE>

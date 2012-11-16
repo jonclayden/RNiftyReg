@@ -14,6 +14,10 @@
 
 #include "_reg_tools.h"
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 /* *************************************************************** */
 /* *************************************************************** */
 void reg_checkAndCorrectDimension(nifti_image *image)

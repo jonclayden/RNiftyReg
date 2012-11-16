@@ -13,6 +13,10 @@
 
 #define _USE_SQUARE_LOG_JAC
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 /* *************************************************************** */
 /* *************************************************************** */
 template<class DTYPE>

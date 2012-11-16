@@ -14,6 +14,10 @@
 
 #include "_reg_femTransformation.h"
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 float reg_getTetrahedronVolume(float *node1,float *node2,float *node3,float *node4)
 {
     mat33 matrix;

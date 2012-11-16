@@ -14,6 +14,10 @@
 
 #include "_reg_resampling.h"
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 // No round() function available in windows.
 #ifdef _WINDOWS
 template<class DTYPE>

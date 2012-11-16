@@ -4,6 +4,10 @@
 #include "_reg_maths.h"
 #include "_reg_tools.h"
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 #define mat(i,j,dim) mat[i*dim+j]
 
 /* *************************************************************** */

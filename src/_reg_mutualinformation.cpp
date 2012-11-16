@@ -16,6 +16,10 @@
 #include "_reg_tools.h"
 #include <iostream>
 
+#ifdef RNIFTYREG
+#include "substitutions.h"
+#endif
+
 /// Smooth the histogram along the given axes. Uses recursion
 template<class PrecisionTYPE>
 void smooth_axes(int axes, int current, PrecisionTYPE *histogram,
