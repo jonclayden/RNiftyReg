@@ -68,6 +68,10 @@ class reg_aladin
       float FloatingSigma;
 
       float ReferenceSigma;
+      
+#ifdef RNIFTYREG
+      int *completedIterations;
+#endif
 
       bool TestMatrixConvergence(mat44 *mat);
 
@@ -107,6 +111,7 @@ class reg_aladin
       mat44* GetInputTransform() {return this->InputTransform;}
 
 #ifdef RNIFTYREG
+      int * GetCompletedIterations();
       void SetTransformationMatrix(mat44 *input) {this->TransformationMatrix=input;}
 #endif
       mat44* GetTransformationMatrix() {return this->TransformationMatrix;}

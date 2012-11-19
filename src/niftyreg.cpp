@@ -391,12 +391,15 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     // Run the registration
     reg->Run();
     
+    int *completedIterations = (int *) calloc(nLevels, sizeof(int));
+    memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
+    
     // Store the results
     aladin_result result;
     result.image = copy_complete_nifti_image(reg->GetFinalWarpedImage());
     result.affine = (mat44 *) calloc(1, sizeof(mat44));
     memcpy(result.affine, reg->GetTransformationMatrix(), sizeof(mat44));
-    // result.completedIterations = completedIterations;
+    result.completedIterations = completedIterations;
     
     delete reg;
     

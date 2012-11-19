@@ -73,6 +73,11 @@ template <class T> reg_aladin<T>::~reg_aladin()
     free(this->ReferenceMaskPyramid);this->ReferenceMaskPyramid=NULL;
 
     free(activeVoxelNumber);
+
+#ifdef RNIFTYREG
+    if (this->completedIterations != NULL)
+        free(completedIterations);
+#endif
 }
 template <class T>
 bool reg_aladin<T>::TestMatrixConvergence(mat44 *mat)
@@ -429,6 +434,9 @@ void reg_aladin<T>::Run()
       nProgressSteps = this->MaxIterations*(this->LevelsToPerform + 1);
     }
 
+#ifdef RNIFTYREG
+    this->completedIterations = (int *) calloc(this->LevelsToPerform, sizeof(int));
+#endif
 
     //Main loop over the levels:
     for(this->CurrentLevel=0; this->CurrentLevel < this->LevelsToPerform; this->CurrentLevel++)
@@ -527,6 +535,10 @@ void reg_aladin<T>::Run()
             }
         }
 
+#ifdef RNIFTYREG
+        this->completedIterations[this->CurrentLevel] = iteration + 1;
+#endif
+
         // SOME CLEANING IS PERFORMED
         this->ClearCurrentInputImage();
 
@@ -606,5 +618,13 @@ void reg_aladin<T>::DebugPrintLevelInfo (int CurrentLevel)
     reg_mat44_disp(this->TransformationMatrix, (char *)"[reg_aladin] Initial transformation matrix:");
 
 }
+
+#ifdef RNIFTYREG
+template<class T>
+int * reg_aladin<T>::GetCompletedIterations()
+{
+    return this->completedIterations;
+}
+#endif
 
 #endif //#ifndef _REG_ALADIN_CPP
