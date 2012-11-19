@@ -193,6 +193,12 @@ reg_f3d<T>::~reg_f3d()
     if(this->floatingBinNumber!=NULL){delete []this->floatingBinNumber;this->floatingBinNumber=NULL;}
     if(this->floatingBinNumber!=NULL){delete []this->activeVoxelNumber;this->activeVoxelNumber=NULL;}
     if(this->maxSSD!=NULL){delete []this->maxSSD;this->maxSSD=NULL;}
+
+#ifdef RNIFTYREG
+    if (this->completedIterations != NULL)
+        free(this->completedIterations);
+#endif
+    
 #ifndef NDEBUG
     printf("[NiftyReg DEBUG] reg_f3d destructor called\n");
 #endif
@@ -1896,6 +1902,9 @@ void reg_f3d<T>::Run_f3d()
     float iProgressStep=1, nProgressSteps;
     nProgressSteps = this->levelToPerform*this->maxiterationNumber;
 
+#ifdef RNIFTYREG
+    this->completedIterations = (int *) calloc(this->levelToPerform, sizeof(int));
+#endif
 
     for(this->currentLevel=0;
         this->currentLevel<this->levelToPerform;
