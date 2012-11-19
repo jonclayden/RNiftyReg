@@ -536,7 +536,7 @@ void reg_aladin<T>::Run()
         }
 
 #ifdef RNIFTYREG
-        this->completedIterations[this->CurrentLevel] = iteration + 1;
+        this->completedIterations[this->CurrentLevel] = iteration;
 #endif
 
         // SOME CLEANING IS PERFORMED
