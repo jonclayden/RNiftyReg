@@ -76,7 +76,7 @@ template <class T> reg_aladin<T>::~reg_aladin()
 
 #ifdef RNIFTYREG
     if (this->completedIterations != NULL)
-        free(completedIterations);
+        free(this->completedIterations);
 #endif
 }
 template <class T>
@@ -165,7 +165,13 @@ void reg_aladin<T>::InitialiseRegistration()
     printf("[NiftyReg DEBUG] reg_aladin::InitialiseRegistration() called\n");
 #endif
 
-    this->Print();
+#ifdef NDEBUG
+    if(this->Verbose) {
+#endif
+        this->Print();
+#ifdef NDEBUG
+    }
+#endif
 
     // CREATE THE PYRAMIDE IMAGES
     this->ReferencePyramid = (nifti_image **)malloc(this->LevelsToPerform*sizeof(nifti_image *));

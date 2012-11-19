@@ -373,6 +373,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     reg->SetAlignCentre(1);
     reg->SetPerformAffine(type == AFFINE);
     reg->SetPerformRigid(1);
+    reg->SetVerbose((int) verbose);
     reg->SetBlockPercentage(useBlockPercentage);
     reg->SetInlierLts(50.0);
     reg->SetInterpolation(finalInterpolation);

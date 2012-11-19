@@ -150,6 +150,10 @@ class reg_aladin
       SetMacro(AlignCentre,int);
       BooleanMacro(AlignCentre, int);
 
+#ifdef RNIFTYREG
+      SetMacro(Verbose,int);
+#endif
+
       SetClampMacro(Interpolation,int,0,3);
       GetMacro(Interpolation, int);
 
