@@ -147,7 +147,7 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
     return (result)
 }
 
-niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = NULL, initControl = NULL, nLevels = 3, maxIterations = 300, nBins = 64, bendingEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"), finalInterpolation = 3, verbose = FALSE, interpolationPrecision = NULL)
+niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = NULL, initControl = NULL, nLevels = 3, maxIterations = 300, nBins = 64, bendingEnergyWeight = 0.005, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"), finalInterpolation = 3, verbose = FALSE, interpolationPrecision = NULL)
 {
     if (!require("oro.nifti"))
         report(OL$Error, "The \"oro.nifti\" package is required")
