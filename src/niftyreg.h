@@ -25,9 +25,9 @@ nifti_image * s4_image_to_struct (SEXP object);
 
 nifti_image * copy_complete_nifti_image (nifti_image *source);
 
-nifti_image * create_position_field (nifti_image *templateImage, bool twoDimRegistration);
-
 mat44 * create_init_affine (nifti_image *sourceImage, nifti_image *targetImage);
+
+nifti_image * resample_image (nifti_image *sourceImage, nifti_image *targetImage, nifti_image *controlPointImage, mat44 *affineTransformation, int finalInterpolation);
 
 aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose);
 
