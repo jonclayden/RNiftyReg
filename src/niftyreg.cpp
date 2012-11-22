@@ -2,11 +2,7 @@
 #define TYPE_RIGID 0
 #define TYPE_AFFINE 1
 
-// Precision levels for final interpolation
-#define INTERP_PREC_SOURCE 0
-#define INTERP_PREC_DOUBLE 1
-
-// Working precision for the source and target images: float and double are valid for the NiftyReg code
+// Working precision: float and double are valid for the NiftyReg code
 #define PRECISION_TYPE double
 
 #include "_reg_resampling.h"
@@ -23,7 +19,7 @@
 #include "substitutions.h"
 
 extern "C"
-SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
+SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
 {
     int i, j, levels = *(INTEGER(nLevels));
     SEXP returnValue, data, completedIterations;
@@ -49,15 +45,14 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEX
     }
     
     int regType = (strcmp(CHAR(STRING_ELT(type,0)),"rigid")==0 ? TYPE_RIGID : TYPE_AFFINE);
-    int precisionType = (strcmp(CHAR(STRING_ELT(finalPrecision,0)),"source")==0 ? INTERP_PREC_SOURCE : INTERP_PREC_DOUBLE);
     
-    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, precisionType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
+    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
     
     PROTECT(returnValue = NEW_LIST(3));
     
     if (result.image->datatype == DT_INT32)
     {
-        // Integer-valued data went in, and precision must be "source"
+        // Integer-valued data went in, and nearest-neighbour interpolation was used
         PROTECT(data = NEW_INTEGER((R_len_t) result.image->nvox));
         for (size_t i = 0; i < result.image->nvox; i++)
             INTEGER(data)[i] = ((int *) result.image->data)[i];
@@ -109,7 +104,7 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP finalPrecision, SEX
 }
 
 extern "C"
-SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP initControl, SEXP verbose)
+SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP initControl, SEXP verbose)
 {
     int i, j, levels = *(INTEGER(nLevels));
     SEXP returnValue, data, controlPoints, completedIterations, xform;
@@ -140,16 +135,14 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP finalPrecision, SEXP nLevels, SEX
     float spacing[3];
     for (i = 0; i < 3; i++)
         spacing[i] = (float) REAL(finalSpacing)[i];
-    
-    int precisionType = (strcmp(CHAR(STRING_ELT(finalPrecision,0)),"source")==0 ? INTERP_PREC_SOURCE : INTERP_PREC_DOUBLE);
-    
-    f3d_result result = do_reg_f3d(sourceImage, targetImage, precisionType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(finalInterpolation)), NULL, targetMaskImage, controlPointImage, affineTransformation, *(INTEGER(nBins)), spacing, (float) *(REAL(bendingEnergyWeight)), (float) *(REAL(jacobianWeight)), 0.01, false, (*(INTEGER(verbose)) == 1));
+        
+    f3d_result result = do_reg_f3d(sourceImage, targetImage, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(finalInterpolation)), NULL, targetMaskImage, controlPointImage, affineTransformation, *(INTEGER(nBins)), spacing, (float) *(REAL(bendingEnergyWeight)), (float) *(REAL(jacobianWeight)), 0.01, false, (*(INTEGER(verbose)) == 1));
     
     PROTECT(returnValue = NEW_LIST(4));
     
     if (result.forwardImage->datatype == DT_INT32)
     {
-        // Integer-valued data went in, and precision must be "source"
+        // Integer-valued data went in, and nearest-neighbour interpolation was used
         PROTECT(data = NEW_INTEGER((R_len_t) result.forwardImage->nvox));
         for (size_t i = 0; i < result.forwardImage->nvox; i++)
             INTEGER(data)[i] = ((int *) result.forwardImage->data)[i];
@@ -409,7 +402,7 @@ nifti_image * resample_image (nifti_image *sourceImage, nifti_image *targetImage
 }
 
 // Run the "aladin" registration algorithm
-aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int finalPrecision, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
+aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
 {
     if (affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
@@ -418,8 +411,8 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     if (targetMaskImage != NULL)
         reg_tools_binarise_image(targetMaskImage);
     
-    // The source data type is changed for precision if requested
-    if (finalPrecision == INTERP_PREC_DOUBLE)
+    // The source data type is changed for interpolation precision if necessary
+    if (finalInterpolation != 0)
         reg_tools_changeDatatype<double>(sourceImage);
     
     aladin_result result;
@@ -477,7 +470,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     return result;
 }
 
-f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int finalPrecision, int nLevels, int maxIterations, int finalInterpolation, nifti_image *sourceMaskImage, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, float *spacing, float bendingEnergyWeight, float jacobianWeight, float inverseConsistencyWeight, bool symmetric, bool verbose)
+f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int nLevels, int maxIterations, int finalInterpolation, nifti_image *sourceMaskImage, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, float *spacing, float bendingEnergyWeight, float jacobianWeight, float inverseConsistencyWeight, bool symmetric, bool verbose)
 {
     if (controlPointImage == NULL && affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
@@ -488,8 +481,8 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int f
     if (sourceMaskImage != NULL)
         reg_tools_binarise_image(sourceMaskImage);
     
-    // The source data type is changed for precision if requested
-    if (finalPrecision == INTERP_PREC_DOUBLE)
+    // The source data type is changed for interpolation precision if necessary
+    if (finalInterpolation != 0)
         reg_tools_changeDatatype<double>(sourceImage);
     
     f3d_result result;
