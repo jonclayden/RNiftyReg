@@ -22,7 +22,7 @@ extern "C"
 SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
 {
     int i, j, levels = *(INTEGER(nLevels));
-    SEXP returnValue, data, completedIterations;
+    SEXP returnValue, completedIterations;
     
     bool affineProvided = !isNull(affineComponents);
     
@@ -50,22 +50,7 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIt
     
     PROTECT(returnValue = NEW_LIST(3));
     
-    if (result.image->datatype == DT_INT32)
-    {
-        // Integer-valued data went in, and nearest-neighbour interpolation was used
-        PROTECT(data = NEW_INTEGER((R_len_t) result.image->nvox));
-        for (size_t i = 0; i < result.image->nvox; i++)
-            INTEGER(data)[i] = ((int *) result.image->data)[i];
-    }
-    else
-    {
-        // All other cases
-        PROTECT(data = NEW_NUMERIC((R_len_t) result.image->nvox));
-        for (size_t i = 0; i < result.image->nvox; i++)
-            REAL(data)[i] = ((double *) result.image->data)[i];
-    }
-    
-    SET_ELEMENT(returnValue, 0, data);
+    convert_and_insert_image(result.image, returnValue, 0);
     
     if (!affineProvided)
         PROTECT(affineComponents = NEW_NUMERIC(16));
@@ -98,25 +83,29 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIt
     if (result.completedIterations != NULL)
         free(result.completedIterations);
     
-    UNPROTECT(affineProvided ? 2 : 3);
+    UNPROTECT(affineProvided ? 1 : 2);
     
     return returnValue;
 }
 
 extern "C"
-SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP initControl, SEXP verbose)
+SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP inverseConsistencyWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP sourceMask, SEXP affineComponents, SEXP initControl, SEXP symmetric, SEXP verbose)
 {
     int i, j, levels = *(INTEGER(nLevels));
-    SEXP returnValue, data, controlPoints, completedIterations, xform;
+    SEXP returnValue, completedIterations;
     
     bool affineProvided = !isNull(affineComponents);
+    bool useSymmetricAlgorithm = (*(INTEGER(symmetric)) == 1);
     
     nifti_image *sourceImage = s4_image_to_struct(source);
     nifti_image *targetImage = s4_image_to_struct(target);
+    nifti_image *sourceMaskImage = NULL;
     nifti_image *targetMaskImage = NULL;
     nifti_image *controlPointImage = NULL;
     mat44 *affineTransformation = NULL;
     
+    if (!isNull(sourceMask) && useSymmetricAlgorithm)
+        sourceMaskImage = s4_image_to_struct(sourceMask);
     if (!isNull(targetMask))
         targetMaskImage = s4_image_to_struct(targetMask);
     if (!isNull(initControl))
@@ -136,32 +125,16 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
     for (i = 0; i < 3; i++)
         spacing[i] = (float) REAL(finalSpacing)[i];
         
-    f3d_result result = do_reg_f3d(sourceImage, targetImage, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(finalInterpolation)), NULL, targetMaskImage, controlPointImage, affineTransformation, *(INTEGER(nBins)), spacing, (float) *(REAL(bendingEnergyWeight)), (float) *(REAL(jacobianWeight)), 0.01, false, (*(INTEGER(verbose)) == 1));
+    f3d_result result = do_reg_f3d(sourceImage, targetImage, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(finalInterpolation)), sourceMaskImage, targetMaskImage, controlPointImage, affineTransformation, *(INTEGER(nBins)), spacing, (float) *(REAL(bendingEnergyWeight)), (float) *(REAL(jacobianWeight)), (float) *(REAL(inverseConsistencyWeight)), useSymmetricAlgorithm, (*(INTEGER(verbose)) == 1));
     
-    PROTECT(returnValue = NEW_LIST(4));
-    
-    if (result.forwardImage->datatype == DT_INT32)
-    {
-        // Integer-valued data went in, and nearest-neighbour interpolation was used
-        PROTECT(data = NEW_INTEGER((R_len_t) result.forwardImage->nvox));
-        for (size_t i = 0; i < result.forwardImage->nvox; i++)
-            INTEGER(data)[i] = ((int *) result.forwardImage->data)[i];
-    }
+    if (useSymmetricAlgorithm)
+        PROTECT(returnValue = NEW_LIST(7));
     else
-    {
-        // All other cases
-        PROTECT(data = NEW_NUMERIC((R_len_t) result.forwardImage->nvox));
-        for (size_t i = 0; i < result.forwardImage->nvox; i++)
-            REAL(data)[i] = ((double *) result.forwardImage->data)[i];
-    }
+        PROTECT(returnValue = NEW_LIST(4));
     
-    SET_ELEMENT(returnValue, 0, data);
-    
-    PROTECT(controlPoints = NEW_NUMERIC((R_len_t) result.forwardControlPoints->nvox));
-    for (size_t i = 0; i < result.forwardControlPoints->nvox; i++)
-        REAL(controlPoints)[i] = ((double *) result.forwardControlPoints->data)[i];
-    
-    SET_ELEMENT(returnValue, 1, controlPoints);
+    convert_and_insert_image(result.forwardImage, returnValue, 0);
+    convert_and_insert_image(result.forwardControlPoints, returnValue, 1);
+    convert_and_insert_xform(result.forwardControlPoints, returnValue, 2);
     
     if (result.completedIterations != NULL)
     {
@@ -169,29 +142,18 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
         for (i = 0; i < levels; i++)
             INTEGER(completedIterations)[i] = result.completedIterations[i];
     
-        SET_ELEMENT(returnValue, 2, completedIterations);
+        SET_ELEMENT(returnValue, 3, completedIterations);
         UNPROTECT(1);
     }
     else
-        SET_ELEMENT(returnValue, 2, R_NilValue);
+        SET_ELEMENT(returnValue, 3, R_NilValue);
     
-    PROTECT(xform = NEW_NUMERIC(21));
-    REAL(xform)[0] = (double) result.forwardControlPoints->qform_code;
-    REAL(xform)[1] = (double) result.forwardControlPoints->sform_code;
-    REAL(xform)[2] = (double) result.forwardControlPoints->quatern_b;
-    REAL(xform)[3] = (double) result.forwardControlPoints->quatern_c;
-    REAL(xform)[4] = (double) result.forwardControlPoints->quatern_d;
-    REAL(xform)[5] = (double) result.forwardControlPoints->qoffset_x;
-    REAL(xform)[6] = (double) result.forwardControlPoints->qoffset_y;
-    REAL(xform)[7] = (double) result.forwardControlPoints->qoffset_z;
-    REAL(xform)[8] = (double) result.forwardControlPoints->qfac;
-    for (i = 0; i < 3; i++)
+    if (useSymmetricAlgorithm)
     {
-        for (j = 0; j < 4; j++)
-            REAL(xform)[(i*4)+j+9] = (double) result.forwardControlPoints->sto_xyz.m[i][j];
+        convert_and_insert_image(result.reverseImage, returnValue, 4);
+        convert_and_insert_image(result.reverseControlPoints, returnValue, 5);
+        convert_and_insert_xform(result.reverseControlPoints, returnValue, 6);
     }
-    
-    SET_ELEMENT(returnValue, 3, xform);
     
     nifti_image_free(sourceImage);
     nifti_image_free(targetImage);
@@ -206,9 +168,55 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
     if (affineProvided || isNull(initControl))
         free(affineTransformation);
     
-    UNPROTECT(4);
+    UNPROTECT(1);
     
     return returnValue;
+}
+
+void convert_and_insert_image (nifti_image *image, SEXP list, int index)
+{
+    SEXP data;
+    
+    if (image->datatype == DT_INT32)
+    {
+        PROTECT(data = NEW_INTEGER((R_len_t) image->nvox));
+        for (size_t i = 0; i < image->nvox; i++)
+            INTEGER(data)[i] = ((int *) image->data)[i];
+    }
+    else
+    {
+        PROTECT(data = NEW_NUMERIC((R_len_t) image->nvox));
+        for (size_t i = 0; i < image->nvox; i++)
+            REAL(data)[i] = ((double *) image->data)[i];
+    }
+    
+    SET_ELEMENT(list, index, data);
+    UNPROTECT(1);
+}
+
+void convert_and_insert_xform (nifti_image *image, SEXP list, int index)
+{
+    int i, j;
+    SEXP xform;
+    
+    PROTECT(xform = NEW_NUMERIC(21));
+    REAL(xform)[0] = (double) image->qform_code;
+    REAL(xform)[1] = (double) image->sform_code;
+    REAL(xform)[2] = (double) image->quatern_b;
+    REAL(xform)[3] = (double) image->quatern_c;
+    REAL(xform)[4] = (double) image->quatern_d;
+    REAL(xform)[5] = (double) image->qoffset_x;
+    REAL(xform)[6] = (double) image->qoffset_y;
+    REAL(xform)[7] = (double) image->qoffset_z;
+    REAL(xform)[8] = (double) image->qfac;
+    for (i = 0; i < 3; i++)
+    {
+        for (j = 0; j < 4; j++)
+            REAL(xform)[(i*4)+j+9] = (double) image->sto_xyz.m[i][j];
+    }
+    
+    SET_ELEMENT(list, index, xform);
+    UNPROTECT(1);
 }
 
 // Convert an S4 "nifti" object, as defined in the oro.nifti package, to a "nifti_image" struct
