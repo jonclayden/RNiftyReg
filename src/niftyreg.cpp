@@ -491,9 +491,13 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int n
     if (sourceMaskImage != NULL)
         reg_tools_binarise_image(sourceMaskImage);
     
-    // The source data type is changed for interpolation precision if necessary
+    // Change data types for interpolation precision if necessary
     if (finalInterpolation != 0)
+    {
         reg_tools_changeDatatype<double>(sourceImage);
+        if (symmetric)
+            reg_tools_changeDatatype<double>(targetImage);
+    }
     
     f3d_result result;
     
