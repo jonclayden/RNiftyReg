@@ -73,8 +73,6 @@ niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scop
 
 niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE)
 {
-    if (!require("oro.nifti"))
-        report(OL$Error, "The \"oro.nifti\" package is required")
     if (missing(source) || missing(target))
         report(OL$Error, "Source and target images must be given")
     if (!is.nifti(source) || !is.nifti(target))
@@ -166,8 +164,6 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
 
 niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = NULL, initControl = NULL, symmetric = FALSE, sourceMask = NULL, nLevels = 3, maxIterations = 300, nBins = 64, bendingEnergyWeight = 0.005, jacobianWeight = 0, inverseConsistencyWeight = 0.01, finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"), finalInterpolation = 3, verbose = FALSE)
 {
-    if (!require("oro.nifti"))
-        report(OL$Error, "The \"oro.nifti\" package is required")
     if (missing(source) || missing(target))
         report(OL$Error, "Source and target images must be given")
     if (!is.nifti(source) || !is.nifti(target))

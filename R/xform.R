@@ -1,7 +1,5 @@
 xformToAffine <- function (image, useQuaternionFirst = TRUE)
 {
-    if (!require("oro.nifti"))
-        report(OL$Error, "The \"oro.nifti\" package is required")
     if (!is.nifti(image))
         report(OL$Error, "The specified image is not a \"nifti\" object")
     

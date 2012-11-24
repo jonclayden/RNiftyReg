@@ -5,8 +5,7 @@ Title: Medical image registration using the NiftyReg library
 Author: Jon Clayden; based on original code by Marc Modat and Pankaj Daga
 Maintainer: Jon Clayden <jon.clayden+rniftyreg@gmail.com>
 Depends: R (>= 2.9.0)
-Imports: reportr
-Suggests: oro.nifti
+Imports: reportr, oro.nifti
 Description: This package provides an R interface to the NiftyReg image registration tools <http://sourceforge.net/projects/niftyreg/>.
 License: GPL-2
 URL: https://github.com/jonclayden/RNiftyReg

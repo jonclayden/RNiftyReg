@@ -19,8 +19,6 @@ writeAffine <- function (affine, fileName)
 
 convertAffine <- function (affine, source, target, newType = c("niftyreg","fsl"), currentType = NULL)
 {
-    if (!require("oro.nifti"))
-        report(OL$Error, "The \"oro.nifti\" package is required")
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
         report(OL$Error, "Specified affine matrix is not valid")
     if (!is.nifti(source) || !is.nifti(target))
