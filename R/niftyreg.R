@@ -197,7 +197,7 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         if (!is.nifti(initControl[[1]]))
             report(OL$Error, "Initial control point images must be specified as \"nifti\" objects")
         initControl <- lapply(initControl, .fixTypes)
-        finalSpacing <- initControl[[1]]@pixdim[2:4]
+        finalSpacing <- initControl[[1]]@pixdim[2:4] / 2^max(0,nLevels-1)
         spacingUnit <- "mm"
         initAffine <- NULL
     }
