@@ -535,13 +535,28 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int n
             reg->DoNotPrintOutInformation();
         
         if (targetMaskImage != NULL)
-           reg->SetReferenceMask(targetMaskImage);
+            reg->SetReferenceMask(targetMaskImage);
         
         if (controlPointImage != NULL)
-           reg->SetControlPointGridImage(controlPointImage);
+            reg->SetControlPointGridImage(controlPointImage);
         
         if (affineTransformation != NULL)
-           reg->SetAffineTransformation(affineTransformation);
+        {
+            if (symmetric)
+            {
+                mat44 inverseTransformation = nifti_mat44_inverse(*affineTransformation);
+                if (sourceImage->sform_code > 0)
+                    sourceImage->sto_xyz = reg_mat44_mul(&inverseTransformation, &(sourceImage->sto_xyz));
+                else
+                {
+                    sourceImage->sform_code = 1;
+                    sourceImage->sto_xyz = reg_mat44_mul(&inverseTransformation, &(sourceImage->qto_xyz));
+                }
+                sourceImage->sto_ijk = nifti_mat44_inverse(sourceImage->sto_xyz);
+            }
+            else
+                reg->SetAffineTransformation(affineTransformation);
+        }
         
         reg->SetBendingEnergyWeight(bendingEnergyWeight);
         reg->SetLinearEnergyWeights(0.0, 0.0);
