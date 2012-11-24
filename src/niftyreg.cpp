@@ -482,6 +482,8 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int n
 {
     if (controlPointImage == NULL && affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
+    else if (controlPointImage != NULL)
+        affineTransformation = NULL;
     
     // Binarise the mask images
     if (targetMaskImage != NULL)
