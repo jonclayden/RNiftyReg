@@ -26,7 +26,7 @@ writeAffine <- function (affine, fileName)
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
         report(OL$Error, "Specified affine matrix is not valid")
     
-    lines <- apply(format(affine,scientific=FALSE),1,implode,sep="  ")
+    lines <- apply(format(affine,scientific=FALSE), 1, paste, collapse="  ")
     lines <- c(paste("# affineType:",attr(affine,"affineType"),sep=" "), lines)
     writeLines(lines, fileName)
 }
