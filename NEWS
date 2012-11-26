@@ -2,6 +2,22 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 1.0.0
+
+- RNiftyReg now provides an interface to the symmetric version of the NiftyReg
+  nonlinear registration algorithm. This allows consistent transformations to be
+  obtained in both directions, in one operation.
+- The upstream code has been updated to match NiftyReg v1.3.9. Default cost
+  function weightings have also been tweaked to match those used in that release.
+- The type of an affine matrix is now written to file with it. The type therefore
+  does not necessarily need to be specified when reading the matrix back in.
+- The "interpolationPrecision" option has been removed where it appeared. The
+  code now simply makes an appropriate choice in each case.
+- Internal calculation of the final control point spacing from an initial control
+  point image was sometimes wrong. This has been corrected.
+
+=================================================================================
+
 VERSION 0.6.2
 
 - Nonlinear registration now works properly for 2D target images.
