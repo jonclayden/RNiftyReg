@@ -7,7 +7,8 @@ Affine transformation matrices can be stored using a number of different convent
 }
 
 \usage{
-convertAffine(affine, source, target, newType = c("niftyreg", "fsl"), currentType = NULL)
+convertAffine(affine, source, target, newType = c("niftyreg","fsl"),
+    currentType = NULL)
 }
 
 \arguments{

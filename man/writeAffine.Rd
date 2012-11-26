@@ -3,7 +3,7 @@
 
 \title{Write an affine matrix to a file}
 \description{
-This function is used to write a 4x4 numeric matrix representing an affine transformation to a file. It is a wrapper around \code{write.table}.
+This function is used to write a 4x4 numeric matrix representing an affine transformation to a file. The \code{affineType} attribute is also written, as a comment.
 }
 
 \usage{

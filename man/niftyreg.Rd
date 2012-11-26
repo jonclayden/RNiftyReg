@@ -8,7 +8,7 @@ The \code{niftyreg} function performs linear or nonlinear registration for two a
 
 \usage{
 niftyreg(source, target, targetMask = NULL, initAffine = NULL,
-            scope = c("affine","rigid","nonlinear"), ...)
+    scope = c("affine","rigid","nonlinear"), ...)
 }
 
 \arguments{
@@ -25,6 +25,8 @@ A list of class \code{"niftyreg"} with components
 \item{image}{An image object of class \code{"nifti"} representing the registered and resampled \code{source} image in the space of the \code{target} image.}
 \item{affine}{A list of 4x4 matrices containing the optimised affine transformations for each slice or volume of the source image. If the target is a 2D image, elements involving the Z dimension will have no effect. This element is \code{NULL} if nonlinear registration is performed.}
 \item{control}{A list of objects of class \code{"nifti"}, representing the control point images for each warping. This element is \code{NULL} if linear (rigid or affine) registration is performed.}
+\item{reverseImage}{An image object of class \code{"nifti"} representing the reverse-registered \code{target} image in the space of the \code{source} image. This element is \code{NULL} unless symmetric nonlinear registration is performed.}
+\item{reverseControl}{A list of objects of class \code{"nifti"}, representing the control points for each reverse warping. This element is \code{NULL} unless symmetric nonlinear registration is performed.}
 \item{iterations}{A list of integer vectors giving the number of iterations actually run within each level, for each slice or volume of the source image. Note that for the first level of the linear algorithm specifically, twice the specified number of iterations is allowed.}
 \item{scope}{Copied from the function argument of the same name.}
 }
