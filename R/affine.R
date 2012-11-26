@@ -1,7 +1,18 @@
-readAffine <- function (fileName, type)
+readAffine <- function (fileName, type = NULL)
 {
-    type <- match.arg(tolower(type), c("niftyreg","fsl"))
-    affine <- as.matrix(read.table(fileName))
+    if (!is.null(type))
+        type <- match.arg(tolower(type), c("niftyreg","fsl"))
+    
+    lines <- readLines(fileName)
+    typeLine <- (lines %~% "\\# affineType\\: \\w+")
+    if (!any(typeLine) && is.null(type))
+        report(OL$Error, "Type is not stored in the file - it must be specified")
+    else if (is.null(type))
+        type <- match.arg(tolower(sub("\\# affineType\\: (\\w+)", "\\1", lines[typeLine][1], perl=TRUE)), c("niftyreg","fsl"))
+    
+    connection <- textConnection(lines[!typeLine])
+    affine <- as.matrix(read.table(connection))
+    close(connection)
     
     if (!isTRUE(all.equal(dim(affine), c(4,4))))
         report(OL$Error, "The specified file does not contain a 4x4 affine matrix")
@@ -14,7 +25,10 @@ writeAffine <- function (affine, fileName)
 {
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
         report(OL$Error, "Specified affine matrix is not valid")
-    write.table(affine, fileName, row.names=FALSE, col.names=FALSE)
+    
+    lines <- apply(format(affine,scientific=FALSE),1,implode,sep="  ")
+    lines <- c(paste("# affineType:",attr(affine,"affineType"),sep=" "), lines)
+    writeLines(lines, fileName)
 }
 
 convertAffine <- function (affine, source, target, newType = c("niftyreg","fsl"), currentType = NULL)
