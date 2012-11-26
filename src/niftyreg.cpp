@@ -51,16 +51,7 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIt
     PROTECT(returnValue = NEW_LIST(3));
     
     convert_and_insert_image(result.image, returnValue, 0);
-    
-    if (!affineProvided)
-        PROTECT(affineComponents = NEW_NUMERIC(16));
-    for (i = 0; i < 4; i++)
-    {
-        for (j = 0; j < 4; j++)
-            REAL(affineComponents)[(j*4)+i] = (double) result.affine->m[i][j];
-    }
-    
-    SET_ELEMENT(returnValue, 1, affineComponents);
+    convert_and_insert_affine(result.affine, returnValue, 1);
     
     if (result.completedIterations != NULL)
     {
@@ -83,7 +74,7 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIt
     if (result.completedIterations != NULL)
         free(result.completedIterations);
     
-    UNPROTECT(affineProvided ? 1 : 2);
+    UNPROTECT(1);
     
     return returnValue;
 }
@@ -128,7 +119,7 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
     f3d_result result = do_reg_f3d(sourceImage, targetImage, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(finalInterpolation)), sourceMaskImage, targetMaskImage, controlPointImage, affineTransformation, *(INTEGER(nBins)), spacing, (float) *(REAL(bendingEnergyWeight)), (float) *(REAL(jacobianWeight)), (float) *(REAL(inverseConsistencyWeight)), useSymmetricAlgorithm, (*(INTEGER(verbose)) == 1));
     
     if (useSymmetricAlgorithm)
-        PROTECT(returnValue = NEW_LIST(7));
+        PROTECT(returnValue = NEW_LIST(8));
     else
         PROTECT(returnValue = NEW_LIST(4));
     
@@ -153,6 +144,7 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
         convert_and_insert_image(result.reverseImage, returnValue, 4);
         convert_and_insert_image(result.reverseControlPoints, returnValue, 5);
         convert_and_insert_xform(result.reverseControlPoints, returnValue, 6);
+        convert_and_insert_affine(result.initAffine, returnValue, 7);
     }
     
     nifti_image_free(sourceImage);
@@ -216,6 +208,22 @@ void convert_and_insert_xform (nifti_image *image, SEXP list, int index)
     }
     
     SET_ELEMENT(list, index, xform);
+    UNPROTECT(1);
+}
+
+void convert_and_insert_affine (mat44 *affine, SEXP list, int index)
+{
+    int i, j;
+    SEXP elements;
+    
+    PROTECT(elements = NEW_NUMERIC(16));
+    for (i = 0; i < 4; i++)
+    {
+        for (j = 0; j < 4; j++)
+            REAL(elements)[(j*4)+i] = (double) affine->m[i][j];
+    }
+    
+    SET_ELEMENT(list, index, elements);
     UNPROTECT(1);
 }
 
@@ -503,6 +511,7 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int n
     
     if (nLevels == 0)
     {
+        result.initAffine = NULL;
         result.forwardImage = resample_image(sourceImage, targetImage, controlPointImage, affineTransformation, finalInterpolation);
         result.forwardControlPoints = copy_complete_nifti_image(controlPointImage);
         result.reverseImage = NULL;
@@ -597,9 +606,12 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int n
         result.forwardControlPoints = reg->GetControlPointPositionImage();
         if (symmetric)
         {
+            result.initAffine = affineTransformation;
             result.reverseImage = reg->GetWarpedImage()[1];
             result.reverseControlPoints = reg->GetBackwardControlPointPositionImage();
         }
+        else
+            result.initAffine = NULL;
         result.completedIterations = completedIterations;
         
         // Erase the registration object

@@ -8,6 +8,7 @@ typedef struct {
 } aladin_result;
 
 typedef struct {
+    mat44 *initAffine;
     nifti_image *forwardImage;
     nifti_image *forwardControlPoints;
     nifti_image *reverseImage;
@@ -24,6 +25,8 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
 void convert_and_insert_image (nifti_image *image, SEXP list, int index);
 
 void convert_and_insert_xform (nifti_image *image, SEXP list, int index);
+
+void convert_and_insert_affine (mat44 *affine, SEXP list, int index);
 
 nifti_image * s4_image_to_struct (SEXP object);
 

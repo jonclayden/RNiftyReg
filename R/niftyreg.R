@@ -176,6 +176,8 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         report(OL$Error, "4D to 2D registration cannot be performed")
     if (symmetric && source@dim_[1] != target@dim_[1])
         report(OL$Error, "Source and target images must have the same dimensionality for symmetric registration")
+    if (symmetric && !is.null(initControl))
+        report(OL$Error, "The symmetric algorithm does not currently use an initial control point image")
     if (!is.null(targetMask) && !is.nifti(targetMask))
         report(OL$Error, "Target mask must be NULL or a \"nifti\" object")
     if (!is.null(sourceMask) && !is.nifti(sourceMask))
@@ -188,6 +190,9 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         report(OL$Error, "Penalty term weights cannot add up to more than 1")
     if (!(finalInterpolation %in% c(0,1,3)))
         report(OL$Error, "Final interpolation specifier must be 0, 1 or 3")
+    
+    if (nLevels == 0)
+        symmetric <- FALSE
     
     # This takes priority over any affine initialisation, if present
     if (!is.list(initControl))
@@ -251,15 +256,23 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         
         dim(returnValue[[1]]) <- dim(target)
         resultImage <- as.nifti(returnValue[[1]], target)
-        control <- list(.createControlPointImage(returnValue[[2]], controlPointDims, finalSpacing, returnValue[[3]]))
-        iterations <- list(returnValue[[4]])
         
         if (symmetric)
         {
             dim(returnValue[[5]]) <- dim(source)
             reverseImage <- as.nifti(returnValue[[5]], source)
+            
+            dim(returnValue[[8]]) <- c(4,4)
+            dim(returnValue[[2]]) <- c(prod(controlPointDims[1:4]), controlPointDims[5])
+            for (i in controlPointDims[5]:3)
+                returnValue[[2]] <- cbind(returnValue[[2]], 1)
+            returnValue[[2]] <- t((returnValue[[8]] %*% t(returnValue[[2]]))[1:controlPointDims[5],])
+            
             reverseControl <- list(.createControlPointImage(returnValue[[6]], reverseControlPointDims, finalSpacing, returnValue[[7]]))
         }
+        
+        control <- list(.createControlPointImage(returnValue[[2]], controlPointDims, finalSpacing, returnValue[[3]]))
+        iterations <- list(returnValue[[4]])
     }
     else
     {
