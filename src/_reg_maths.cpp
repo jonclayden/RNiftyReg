@@ -13,15 +13,15 @@
 /* *************************************************************** */
 #define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
 
-static double maxarg1,maxarg2;
+double maxarg1,maxarg2;
 #define FMAX(a,b) (maxarg1=(a),maxarg2=(b),(maxarg1) > (maxarg2) ?\
 (maxarg1) : (maxarg2))
 
-static int iminarg1,iminarg2;
+int iminarg1,iminarg2;
 #define IMIN(a,b) (iminarg1=(a),iminarg2=(b),(iminarg1) < (iminarg2) ?\
 (iminarg1) : (iminarg2))
 
-static double sqrarg;
+double sqrarg;
 #define SQR(a) ((sqrarg=(a)) == 0.0 ? 0.0 : sqrarg*sqrarg)
 
 /* *************************************************************** */
