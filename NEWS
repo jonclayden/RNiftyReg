@@ -2,6 +2,13 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 1.0.2
+
+- A further compiler-sensitive problem, which was causing the package to fail to
+  install using Solaris Studio, has been addressed.
+
+=================================================================================
+
 VERSION 1.0.1
 
 - A Windows-specific compile-time problem has been addressed.
