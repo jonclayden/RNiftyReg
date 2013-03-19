@@ -39,6 +39,9 @@
 
 .setImageMetadata <- function (image, referenceImage, finalInterpolation)
 {
+    if (is.null(image))
+        return (NULL)
+    
     image@cal_min <- min(image@.Data, na.rm=TRUE)
     image@cal_max <- max(image@.Data, na.rm=TRUE)
     image@scl_slope <- referenceImage@scl_slope
@@ -59,19 +62,19 @@
     return (image)
 }
 
-niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid","nonlinear"), ...)
+niftyreg <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid","nonlinear"), estimateOnly = FALSE, ...)
 {
     if (missing(source) || missing(target))
         report(OL$Error, "Source and target images must be given")
     
     scope <- match.arg(scope)
     if (scope == "nonlinear")
-        niftyreg.nonlinear(source, target, targetMask, initAffine, ...)
+        niftyreg.nonlinear(source, target, targetMask, initAffine, estimateOnly=estimateOnly, ...)
     else
-        niftyreg.linear(source, target, targetMask, initAffine, scope, ...)
+        niftyreg.linear(source, target, targetMask, initAffine, scope, estimateOnly=estimateOnly, ...)
 }
 
-niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE)
+niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NULL, scope = c("affine","rigid"), nLevels = 3, maxIterations = 5, useBlockPercentage = 50, finalInterpolation = 3, verbose = FALSE, estimateOnly = FALSE)
 {
     if (missing(source) || missing(target))
         report(OL$Error, "Source and target images must be given")
@@ -87,7 +90,7 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
         report(OL$Error, "Images of fewer than 4 voxels in any dimension cannot be registered")
     if (!is.null(targetMask) && !is.nifti(targetMask))
         report(OL$Error, "Target mask must be NULL or a \"nifti\" object")
-    if (any(sapply(list(nLevels,maxIterations,useBlockPercentage,finalInterpolation,verbose), length) != 1))
+    if (any(sapply(list(nLevels,maxIterations,useBlockPercentage,finalInterpolation,verbose,estimateOnly), length) != 1))
         report(OL$Error, "Control parameters must all be of unit length")
     if (!(finalInterpolation %in% c(0,1,3)))
         report(OL$Error, "Final interpolation specifier must be 0, 1 or 3")
@@ -108,14 +111,20 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
     
     if (source@dim_[1] == target@dim_[1])
     {
-        returnValue <- .Call("reg_aladin_R", .fixTypes(source), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine[[1]], as.integer(verbose), PACKAGE="RNiftyReg")
+        returnValue <- .Call("reg_aladin_R", .fixTypes(source), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine[[1]], as.integer(verbose), as.integer(estimateOnly), PACKAGE="RNiftyReg")
         
-        dim(returnValue[[1]]) <- dim(target)
+        if (estimateOnly)
+            resultImage <- NULL
+        else
+        {
+            dim(returnValue[[1]]) <- dim(target)
+            resultImage <- as.nifti(returnValue[[1]], target)
+        }
+        
         dim(returnValue[[2]]) <- c(4,4)
         attr(returnValue[[2]], "affineType") <- "niftyreg"
-
-        resultImage <- as.nifti(returnValue[[1]], target)
         affine <- list(returnValue[[2]])
+        
         iterations <- list(returnValue[[3]])
     }
     else
@@ -123,7 +132,8 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
         nSourceDims <- source@dim_[1]
         finalDims <- c(dim(target), dim(source)[nSourceDims])
         nReps <- finalDims[length(finalDims)]
-        finalArray <- array(0, dim=finalDims)
+        if (!estimateOnly)
+            finalArray <- array(0, dim=finalDims)
         affine <- iterations <- vector("list", nReps)
         
         if (length(initAffine) == 1)
@@ -135,13 +145,17 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
         {
             if (nSourceDims == 3)
             {
-                returnValue <- .Call("reg_aladin_R", .fixTypes(as.nifti(source[,,i],source)), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine[[i]], as.integer(verbose), PACKAGE="RNiftyReg")
-                finalArray[,,i] <- returnValue[[1]]
+                returnValue <- .Call("reg_aladin_R", .fixTypes(as.nifti(source[,,i],source)), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine[[i]], as.integer(verbose), as.integer(estimateOnly), PACKAGE="RNiftyReg")
+                
+                if (!estimateOnly)
+                    finalArray[,,i] <- returnValue[[1]]
             }
             else if (nSourceDims == 4)
             {
-                returnValue <- .Call("reg_aladin_R", .fixTypes(as.nifti(source[,,,i],source)), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine[[i]], as.integer(verbose), PACKAGE="RNiftyReg")
-                finalArray[,,,i] <- returnValue[[1]]
+                returnValue <- .Call("reg_aladin_R", .fixTypes(as.nifti(source[,,,i],source)), .fixTypes(target), scope, as.integer(nLevels), as.integer(maxIterations), as.integer(useBlockPercentage), as.integer(finalInterpolation), .fixTypes(targetMask), initAffine[[i]], as.integer(verbose), as.integer(estimateOnly), PACKAGE="RNiftyReg")
+                
+                if (!estimateOnly)
+                    finalArray[,,,i] <- returnValue[[1]]
             }
             
             dim(returnValue[[2]]) <- c(4,4)
@@ -150,8 +164,13 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
             iterations[[i]] <- returnValue[[3]]
         }
         
-        resultImage <- as.nifti(finalArray, target)
-        resultImage@dim_[nSourceDims+1] <- nReps
+        if (estimateOnly)
+            resultImage <- NULL
+        else
+        {
+            resultImage <- as.nifti(finalArray, target)
+            resultImage@dim_[nSourceDims+1] <- nReps
+        }
     }
     
     resultImage <- .setImageMetadata(resultImage, source, finalInterpolation)
@@ -162,7 +181,7 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
     return (result)
 }
 
-niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = NULL, initControl = NULL, symmetric = FALSE, sourceMask = NULL, nLevels = 3, maxIterations = 300, nBins = 64, bendingEnergyWeight = 0.005, jacobianWeight = 0, inverseConsistencyWeight = 0.01, finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"), finalInterpolation = 3, verbose = FALSE)
+niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = NULL, initControl = NULL, symmetric = FALSE, sourceMask = NULL, nLevels = 3, maxIterations = 300, nBins = 64, bendingEnergyWeight = 0.005, jacobianWeight = 0, inverseConsistencyWeight = 0.01, finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"), finalInterpolation = 3, verbose = FALSE, estimateOnly = FALSE)
 {
     if (missing(source) || missing(target))
         report(OL$Error, "Source and target images must be given")
@@ -182,7 +201,7 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         report(OL$Error, "Target mask must be NULL or a \"nifti\" object")
     if (!is.null(sourceMask) && !is.nifti(sourceMask))
         report(OL$Error, "Source mask must be NULL or a \"nifti\" object")
-    if (any(sapply(list(symmetric,nLevels,maxIterations,nBins,bendingEnergyWeight,jacobianWeight,inverseConsistencyWeight,finalInterpolation,verbose), length) != 1))
+    if (any(sapply(list(symmetric,nLevels,maxIterations,nBins,bendingEnergyWeight,jacobianWeight,inverseConsistencyWeight,finalInterpolation,verbose,estimateOnly), length) != 1))
         report(OL$Error, "Control parameters must all be of unit length")
     if (any(c(bendingEnergyWeight,jacobianWeight,inverseConsistencyWeight) < 0))
         report(OL$Error, "Penalty term weights must be nonnegative")
@@ -252,15 +271,25 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
     
     if (source@dim_[1] == target@dim_[1])
     {
-        returnValue <- .Call("reg_f3d_R", .fixTypes(source), .fixTypes(target), as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(inverseConsistencyWeight), as.numeric(abs(finalSpacing)), as.integer(finalInterpolation), .fixTypes(targetMask), .fixTypes(sourceMask), initAffine[[1]], initControl[[1]], as.integer(symmetric), as.integer(verbose), PACKAGE="RNiftyReg")
+        returnValue <- .Call("reg_f3d_R", .fixTypes(source), .fixTypes(target), as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(inverseConsistencyWeight), as.numeric(abs(finalSpacing)), as.integer(finalInterpolation), .fixTypes(targetMask), .fixTypes(sourceMask), initAffine[[1]], initControl[[1]], as.integer(symmetric), as.integer(verbose), as.integer(estimateOnly), PACKAGE="RNiftyReg")
         
-        dim(returnValue[[1]]) <- dim(target)
-        resultImage <- as.nifti(returnValue[[1]], target)
+        if (estimateOnly)
+            resultImage <- NULL
+        else
+        {
+            dim(returnValue[[1]]) <- dim(target)
+            resultImage <- as.nifti(returnValue[[1]], target)
+        }
         
         if (symmetric)
         {
-            dim(returnValue[[5]]) <- dim(source)
-            reverseImage <- as.nifti(returnValue[[5]], source)
+            if (estimateOnly)
+                reverseImage <- NULL
+            else
+            {
+                dim(returnValue[[5]]) <- dim(source)
+                reverseImage <- as.nifti(returnValue[[5]], source)
+            }
             
             dim(returnValue[[8]]) <- c(4,4)
             dim(returnValue[[2]]) <- c(prod(controlPointDims[1:4]), controlPointDims[5])
@@ -279,7 +308,8 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         nSourceDims <- source@dim_[1]
         finalDims <- c(dim(target), dim(source)[nSourceDims])
         nReps <- finalDims[length(finalDims)]
-        finalArray <- array(0, dim=finalDims)
+        if (!estimateOnly)
+            finalArray <- array(0, dim=finalDims)
         control <- iterations <- vector("list", nReps)
         
         if (length(initControl) == 1)
@@ -296,21 +326,30 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         {
             if (nSourceDims == 3)
             {
-                returnValue <- .Call("reg_f3d_R", .fixTypes(as.nifti(source[,,i],source)), .fixTypes(target), as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(inverseConsistencyWeight), as.numeric(abs(finalSpacing)), as.integer(finalInterpolation), .fixTypes(targetMask), .fixTypes(sourceMask), initAffine[[i]], initControl[[i]], as.integer(symmetric), as.integer(verbose), PACKAGE="RNiftyReg")
-                finalArray[,,i] <- returnValue[[1]]
+                returnValue <- .Call("reg_f3d_R", .fixTypes(as.nifti(source[,,i],source)), .fixTypes(target), as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(inverseConsistencyWeight), as.numeric(abs(finalSpacing)), as.integer(finalInterpolation), .fixTypes(targetMask), .fixTypes(sourceMask), initAffine[[i]], initControl[[i]], as.integer(symmetric), as.integer(verbose), as.integer(estimateOnly), PACKAGE="RNiftyReg")
+                
+                if (!estimateOnly)
+                    finalArray[,,i] <- returnValue[[1]]
             }
             else if (nSourceDims == 4)
             {
-                returnValue <- .Call("reg_f3d_R", .fixTypes(as.nifti(source[,,,i],source)), .fixTypes(target), as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(inverseConsistencyWeight), as.numeric(abs(finalSpacing)), as.integer(finalInterpolation), .fixTypes(targetMask), .fixTypes(sourceMask), initAffine[[i]], initControl[[i]], as.integer(symmetric), as.integer(verbose), PACKAGE="RNiftyReg")
-                finalArray[,,,i] <- returnValue[[1]]
+                returnValue <- .Call("reg_f3d_R", .fixTypes(as.nifti(source[,,,i],source)), .fixTypes(target), as.integer(nLevels), as.integer(maxIterations), as.integer(nBins), as.numeric(bendingEnergyWeight), as.numeric(jacobianWeight), as.numeric(inverseConsistencyWeight), as.numeric(abs(finalSpacing)), as.integer(finalInterpolation), .fixTypes(targetMask), .fixTypes(sourceMask), initAffine[[i]], initControl[[i]], as.integer(symmetric), as.integer(verbose), as.integer(estimateOnly), PACKAGE="RNiftyReg")
+                
+                if (!estimateOnly)
+                    finalArray[,,,i] <- returnValue[[1]]
             }
             
             control[[i]] <- .createControlPointImage(returnValue[[2]], controlPointDims, finalSpacing, returnValue[[3]])
             iterations[[i]] <- returnValue[[4]]
         }
         
-        resultImage <- as.nifti(finalArray, target)
-        resultImage@dim_[nSourceDims+1] <- nReps
+        if (estimateOnly)
+            resultImage <- NULL
+        else
+        {
+            resultImage <- as.nifti(finalArray, target)
+            resultImage@dim_[nSourceDims+1] <- nReps
+        }
     }
     
     resultImage <- .setImageMetadata(resultImage, source, finalInterpolation)
@@ -337,10 +376,10 @@ applyAffine <- function (affine, source, target, affineType = NULL, finalInterpo
     else
         attr(affine, "affineType") <- affineType
     
-    return (niftyreg.linear(source, target, targetMask=NULL, initAffine=affine, scope="affine", nLevels=0, finalInterpolation=finalInterpolation, verbose=FALSE))
+    return (niftyreg.linear(source, target, targetMask=NULL, initAffine=affine, scope="affine", nLevels=0, finalInterpolation=finalInterpolation, verbose=FALSE, estimateOnly=FALSE))
 }
 
 applyControlPoints <- function (controlPointImage, source, target, finalInterpolation = 3)
 {
-    return (niftyreg.nonlinear(source, target, targetMask=NULL, initControl=controlPointImage, symmetric=FALSE, nLevels=0, finalInterpolation=finalInterpolation, verbose=FALSE))
+    return (niftyreg.nonlinear(source, target, targetMask=NULL, initControl=controlPointImage, symmetric=FALSE, nLevels=0, finalInterpolation=finalInterpolation, verbose=FALSE, estimateOnly=FALSE))
 }

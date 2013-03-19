@@ -19,7 +19,7 @@
 #include "substitutions.h"
 
 extern "C"
-SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose)
+SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose, SEXP estimateOnly)
 {
     int i, j, levels = *(INTEGER(nLevels));
     SEXP returnValue, completedIterations;
@@ -46,7 +46,7 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIt
     
     int regType = (strcmp(CHAR(STRING_ELT(type,0)),"rigid")==0 ? TYPE_RIGID : TYPE_AFFINE);
     
-    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1));
+    aladin_result result = do_reg_aladin(sourceImage, targetImage, regType, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(useBlockPercentage)), *(INTEGER(finalInterpolation)), targetMaskImage, affineTransformation, (*(INTEGER(verbose)) == 1), (*(INTEGER(estimateOnly)) == 1));
     
     PROTECT(returnValue = NEW_LIST(3));
     
@@ -69,7 +69,8 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIt
     nifti_image_free(targetImage);
     if (targetMaskImage != NULL)
         nifti_image_free(targetMaskImage);
-    nifti_image_free(result.image);
+    if (result.image != NULL)
+        nifti_image_free(result.image);
     free(result.affine);
     if (result.completedIterations != NULL)
         free(result.completedIterations);
@@ -80,7 +81,7 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIt
 }
 
 extern "C"
-SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP inverseConsistencyWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP sourceMask, SEXP affineComponents, SEXP initControl, SEXP symmetric, SEXP verbose)
+SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP inverseConsistencyWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP sourceMask, SEXP affineComponents, SEXP initControl, SEXP symmetric, SEXP verbose, SEXP estimateOnly)
 {
     int i, j, levels = *(INTEGER(nLevels));
     SEXP returnValue, completedIterations;
@@ -116,7 +117,7 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
     for (i = 0; i < 3; i++)
         spacing[i] = (float) REAL(finalSpacing)[i];
         
-    f3d_result result = do_reg_f3d(sourceImage, targetImage, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(finalInterpolation)), sourceMaskImage, targetMaskImage, controlPointImage, affineTransformation, *(INTEGER(nBins)), spacing, (float) *(REAL(bendingEnergyWeight)), (float) *(REAL(jacobianWeight)), (float) *(REAL(inverseConsistencyWeight)), useSymmetricAlgorithm, (*(INTEGER(verbose)) == 1));
+    f3d_result result = do_reg_f3d(sourceImage, targetImage, *(INTEGER(nLevels)), *(INTEGER(maxIterations)), *(INTEGER(finalInterpolation)), sourceMaskImage, targetMaskImage, controlPointImage, affineTransformation, *(INTEGER(nBins)), spacing, (float) *(REAL(bendingEnergyWeight)), (float) *(REAL(jacobianWeight)), (float) *(REAL(inverseConsistencyWeight)), useSymmetricAlgorithm, (*(INTEGER(verbose)) == 1), (*(INTEGER(estimateOnly)) == 1));
     
     if (useSymmetricAlgorithm)
         PROTECT(returnValue = NEW_LIST(8));
@@ -153,7 +154,8 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
         nifti_image_free(targetMaskImage);
     if (controlPointImage != NULL)
         nifti_image_free(controlPointImage);
-    nifti_image_free(result.forwardImage);
+    if (result.forwardImage != NULL)
+        nifti_image_free(result.forwardImage);
     nifti_image_free(result.forwardControlPoints);
     if (result.completedIterations != NULL)
         free(result.completedIterations);
@@ -167,6 +169,12 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
 
 void convert_and_insert_image (nifti_image *image, SEXP list, int index)
 {
+    if (image == NULL)
+    {
+        SET_ELEMENT(list, index, R_NilValue);
+        return;
+    }
+    
     SEXP data;
     
     if (image->datatype == DT_INT32)
@@ -418,7 +426,7 @@ nifti_image * resample_image (nifti_image *sourceImage, nifti_image *targetImage
 }
 
 // Run the "aladin" registration algorithm
-aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose)
+aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage, int type, int nLevels, int maxIterations, int useBlockPercentage, int finalInterpolation, nifti_image *targetMaskImage, mat44 *affineTransformation, bool verbose, bool estimateOnly)
 {
     if (affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
@@ -475,7 +483,10 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
         memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
     
         // Store the results
-        result.image = copy_complete_nifti_image(reg->GetFinalWarpedImage());
+        if (estimateOnly)
+            result.image = NULL;
+        else
+            result.image = copy_complete_nifti_image(reg->GetFinalWarpedImage());
         result.affine = (mat44 *) calloc(1, sizeof(mat44));
         memcpy(result.affine, reg->GetTransformationMatrix(), sizeof(mat44));
         result.completedIterations = completedIterations;
@@ -486,7 +497,7 @@ aladin_result do_reg_aladin (nifti_image *sourceImage, nifti_image *targetImage,
     return result;
 }
 
-f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int nLevels, int maxIterations, int finalInterpolation, nifti_image *sourceMaskImage, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, float *spacing, float bendingEnergyWeight, float jacobianWeight, float inverseConsistencyWeight, bool symmetric, bool verbose)
+f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int nLevels, int maxIterations, int finalInterpolation, nifti_image *sourceMaskImage, nifti_image *targetMaskImage, nifti_image *controlPointImage, mat44 *affineTransformation, int nBins, float *spacing, float bendingEnergyWeight, float jacobianWeight, float inverseConsistencyWeight, bool symmetric, bool verbose, bool estimateOnly)
 {
     if (controlPointImage == NULL && affineTransformation == NULL)
         affineTransformation = create_init_affine(sourceImage, targetImage);
@@ -602,12 +613,17 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int n
         int *completedIterations = (int *) calloc(nLevels, sizeof(int));
         memcpy(completedIterations, reg->GetCompletedIterations(), nLevels*sizeof(int));
         
-        result.forwardImage = reg->GetWarpedImage()[0];
+        result.forwardImage = NULL;
+        result.reverseImage = NULL;
+        
+        if (!estimateOnly)
+            result.forwardImage = reg->GetWarpedImage()[0];
         result.forwardControlPoints = reg->GetControlPointPositionImage();
         if (symmetric)
         {
             result.initAffine = affineTransformation;
-            result.reverseImage = reg->GetWarpedImage()[1];
+            if (!estimateOnly)
+                result.reverseImage = reg->GetWarpedImage()[1];
             result.reverseControlPoints = reg->GetBackwardControlPointPositionImage();
         }
         else
