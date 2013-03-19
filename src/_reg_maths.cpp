@@ -11,19 +11,33 @@
 #define mat(i,j,dim) mat[i*dim+j]
 
 /* *************************************************************** */
+#ifdef RNIFTYREG
+
+// Rmath.h redefines "pythag", but the R function it points to is defunct
+#include <Rmath.h>
+#undef pythag
+
+#define SIGN(a,b) fsign(a,b)
+#define FMAX(a,b) fmax2(a,b)
+#define IMIN(a,b) imin2(a,b)
+#define SQR(a) R_pow_di(a,2)
+
+#else
+
 #define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
 
-double maxarg1,maxarg2;
+static double maxarg1,maxarg2;
 #define FMAX(a,b) (maxarg1=(a),maxarg2=(b),(maxarg1) > (maxarg2) ?\
 (maxarg1) : (maxarg2))
 
-int iminarg1,iminarg2;
+static int iminarg1,iminarg2;
 #define IMIN(a,b) (iminarg1=(a),iminarg2=(b),(iminarg1) < (iminarg2) ?\
 (iminarg1) : (iminarg2))
 
-double sqrarg;
+static double sqrarg;
 #define SQR(a) ((sqrarg=(a)) == 0.0 ? 0.0 : sqrarg*sqrarg)
 
+#endif
 /* *************************************************************** */
 /* *************************************************************** */
 template <class T>
