@@ -68,6 +68,13 @@ convertAffine <- function (affine, source, target, newType = c("niftyreg","fsl")
     }
 }
 
+invertAffine <- function (affine)
+{
+    newAffine <- solve(affine)
+    attr(newAffine, "affineType") <- attr(affine, "affineType")
+    return (newAffine)
+}
+
 decomposeAffine <- function (affine, source = NULL, target = NULL, type = NULL)
 {
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
