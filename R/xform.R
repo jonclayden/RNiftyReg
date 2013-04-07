@@ -1,11 +1,11 @@
-xformToAffine <- function (image, useQuaternionFirst = TRUE)
+xformToAffine <- function (image, useQuaternionFirst = TRUE, keepOrigin = TRUE)
 {
     if (!is.nifti(image))
         report(OL$Error, "The specified image is not a \"nifti\" object")
     
     # With no information, assume Analyze orientation and zero origin
     if (image@qform_code <= 0 && image@sform_code <= 0)
-        return (diag(c(-1, 1, 1, 1)))
+        matrix <- diag(c(-1, 1, 1, 1))
     else if ((useQuaternionFirst && image@qform_code > 0) || image@sform_code <= 0)
     {
         matrix <- diag(4)
@@ -31,9 +31,12 @@ xformToAffine <- function (image, useQuaternionFirst = TRUE)
         # should be treated as 1: this formulation does that (the 0.1 is arbitrary)
         qfactor <- sign(image@pixdim[1] + 0.1)
         matrix[1:3,1:3] <- matrix[1:3,1:3] * rep(c(abs(image@pixdim[2:3]), qfactor*abs(image@pixdim[4])), each=3)
-        
-        return (matrix)
     }
     else
-        return (rbind(image@srow_x, image@srow_y, image@srow_z, c(0,0,0,1)))
+        matrix <- rbind(image@srow_x, image@srow_y, image@srow_z, c(0,0,0,1))
+    
+    if (!keepOrigin)
+        matrix[1:3,4] <- 0
+    
+    return (matrix)
 }
