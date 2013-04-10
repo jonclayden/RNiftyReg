@@ -364,7 +364,7 @@ mat44 * create_init_affine (nifti_image *sourceImage, nifti_image *targetImage)
     return affineTransformation;
 }
 
-nifti_image * resample_image (nifti_image *sourceImage, nifti_image *targetImage, nifti_image *controlPointImage, mat44 *affineTransformation, int finalInterpolation)
+nifti_image * get_deformation_field (nifti_image *targetImage, nifti_image *controlPointImage, mat44 *affineTransformation)
 {
     // Allocate a deformation field image
     nifti_image *deformationFieldImage = nifti_copy_nim_info(targetImage);
@@ -402,6 +402,14 @@ nifti_image * resample_image (nifti_image *sourceImage, nifti_image *targetImage
         // Calculate deformation field from the affine matrix
         reg_affine_positionField(affineTransformation, targetImage, deformationFieldImage);
     }
+    
+    return deformationFieldImage;
+}
+
+nifti_image * resample_image (nifti_image *sourceImage, nifti_image *targetImage, nifti_image *controlPointImage, mat44 *affineTransformation, int finalInterpolation)
+{
+    // Get the deformation field
+    nifti_image *deformationFieldImage = get_deformation_field(targetImage, controlPointImage, affineTransformation);
     
     // Allocate result image
     nifti_image *resultImage = nifti_copy_nim_info(targetImage);
