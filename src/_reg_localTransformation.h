@@ -25,16 +25,6 @@
 	#include <emmintrin.h>
 #endif
 
-#ifdef RNIFTYREG
-
-// Expose extra functions required by RNiftyReg
-template <class DTYPE>
-void Get_BSplineBasisValues(DTYPE basis, DTYPE *values);
-
-template <class DTYPE>
-void get_GridValues(int startX, int startY, int startZ, nifti_image *splineControlPoint, DTYPE *splineX, DTYPE *splineY, DTYPE *splineZ, DTYPE *dispX, DTYPE *dispY, DTYPE *dispZ, bool affineInit);
-
-#endif
 
 /* *********************************************** */
 /* ****      CUBIC SPLINE BASED FUNCTIONS     **** */

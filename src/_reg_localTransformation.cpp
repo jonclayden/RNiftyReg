@@ -60,12 +60,6 @@ void Get_BSplineBasisValues(DTYPE basis, DTYPE *values)
 }
 /* *************************************************************** */
 /* *************************************************************** */
-#ifdef RNIFTYREG
-// Force the existence of this form of the above function
-template void Get_BSplineBasisValues<double>(double basis, double *values);
-#endif
-/* *************************************************************** */
-/* *************************************************************** */
 template<class DTYPE>
 void Get_BSplineBasisValues(DTYPE basis, DTYPE *values, DTYPE *first)
 {

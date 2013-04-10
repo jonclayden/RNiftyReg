@@ -15,9 +15,6 @@
 #include <Rdefines.h>
 #include <Rinternals.h>
 
-#include <Rmath.h>
-#undef dt
-
 #include "niftyreg.h"
 #include "substitutions.h"
 
@@ -168,104 +165,6 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
     UNPROTECT(1);
     
     return returnValue;
-}
-
-extern "C"
-SEXP cp_transform_R (SEXP control, SEXP source, SEXP target, SEXP points)
-{
-    // nifti_image *sourceImage = s4_image_to_struct(source);
-    nifti_image *targetImage = s4_image_to_struct(target);
-    nifti_image *controlPointImage = s4_image_to_struct(control);
-    
-    // nifti_image *deformationFieldImage = get_deformation_field(targetImage, controlPointImage, NULL);
-    // nifti_image_free(controlPointImage);
-    
-    double *inputPointer = REAL(points);
-    int *points_dim = INTEGER(getAttrib(points, R_DimSymbol));
-    
-    SEXP transformedPoints;
-    PROTECT(transformedPoints = allocMatrix(REALSXP, points_dim[0], points_dim[1]));
-    double *outputPointer = REAL(transformedPoints);
-    
-    double temp[4];
-    double zBasis[4];
-    double xControlPointCoordinates[64];
-    double yControlPointCoordinates[64];
-    double zControlPointCoordinates[64];
-    int coord;
-
-    double *controlPointPtrX = (double *) controlPointImage->data;
-    double *controlPointPtrY = &controlPointPtrX[controlPointImage->nx * controlPointImage->ny * controlPointImage->nz];
-    double *controlPointPtrZ = &controlPointPtrY[controlPointImage->nx * controlPointImage->ny * controlPointImage->nz];
-    
-    double gridVoxelSpacing[3];
-    gridVoxelSpacing[0] = controlPointImage->dx / targetImage->dx;
-    gridVoxelSpacing[1] = controlPointImage->dy / targetImage->dy;
-    gridVoxelSpacing[2] = controlPointImage->dz / targetImage->dz;
-
-    int i, j, xPre, yPre, zPre;
-    double x, y, z, basis, oldBasis;
-    double real[3], yzBasis[16], xyzBasis[64];
-    
-    // This code is adapted from reg_spline_getDeformationField3D()
-    for (i=0; i<points_dim[0]; i++)
-    {
-        oldBasis = 1.1;
-        x = inputPointer[i];
-        y = inputPointer[i + points_dim[0]];
-        z = inputPointer[i + 2*points_dim[0]];
-        xPre = (int) z / gridVoxelSpacing[0];
-        yPre = (int) z / gridVoxelSpacing[1];
-        zPre = (int) z / gridVoxelSpacing[2];
-        
-        basis = fmax2(z / gridVoxelSpacing[2] - (double) zPre, 0.0);
-        Get_BSplineBasisValues<double>(basis, zBasis);
-        
-        basis = fmax2(y / gridVoxelSpacing[1] - (double) yPre, 0.0);
-        Get_BSplineBasisValues<double>(basis, temp);
-        coord = 0;
-        for (j=0; j<4; j++)
-        {
-            yzBasis[coord++] = temp[0] * zBasis[j];
-            yzBasis[coord++] = temp[1] * zBasis[j];
-            yzBasis[coord++] = temp[2] * zBasis[j];
-            yzBasis[coord++] = temp[3] * zBasis[j];
-        } 
-        
-        basis = fmax2(x / gridVoxelSpacing[0] - (double) xPre, 0);
-        Get_BSplineBasisValues<double>(basis, temp);
-        coord = 0;
-        for (j=0; j<16; j++)
-        {
-            xyzBasis[coord++] = temp[0] * yzBasis[j];
-            xyzBasis[coord++] = temp[1] * yzBasis[j];
-            xyzBasis[coord++] = temp[2] * yzBasis[j];
-            xyzBasis[coord++] = temp[3] * yzBasis[j];
-        }
-        
-        if(basis <= oldBasis || x == 0.0)
-            get_GridValues<double>(xPre, yPre, zPre, controlPointImage, controlPointPtrX, controlPointPtrY, controlPointPtrZ, xControlPointCoordinates, yControlPointCoordinates, zControlPointCoordinates, false);
-        
-        oldBasis = basis;
-        real[0] = 0.0;
-        real[1] = 0.0;
-        real[2] = 0.0;
-
-        for(j=0; j<64; j++)
-        {
-            real[0] += xControlPointCoordinates[j] * xyzBasis[j];
-            real[1] += yControlPointCoordinates[j] * xyzBasis[j];
-            real[2] += zControlPointCoordinates[j] * xyzBasis[j];
-        }
-        
-        outputPointer[i] = real[0];
-        outputPointer[i + points_dim[0]] = real[1];
-        outputPointer[i + 2*points_dim[0]] = real[2];
-    }
-    
-    UNPROTECT(1);
-    
-    return transformedPoints;
 }
 
 void convert_and_insert_image (nifti_image *image, SEXP list, int index)
