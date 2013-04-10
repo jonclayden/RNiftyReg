@@ -1,6 +1,7 @@
 #ifndef NIFTYREG_H
 #define NIFTYREG_H
 
+// Declare return types
 typedef struct {
     nifti_image *image;
     mat44 *affine;
@@ -16,12 +17,17 @@ typedef struct {
     int *completedIterations;
 } f3d_result;
 
+// Declare functions exposed to R
 extern "C"
 SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose, SEXP estimateOnly);
 
 extern "C"
 SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP inverseConsistencyWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP sourceMask, SEXP affineComponents, SEXP initControl, SEXP symmetric, SEXP verbose, SEXP estimateOnly);
 
+extern "C"
+SEXP cp_transform_R (SEXP controlPointImage, SEXP source, SEXP target, SEXP points);
+
+// Declare internal functions
 void convert_and_insert_image (nifti_image *image, SEXP list, int index);
 
 void convert_and_insert_xform (nifti_image *image, SEXP list, int index);
