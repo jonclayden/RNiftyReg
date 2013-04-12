@@ -31,12 +31,10 @@ writeAffine <- function (affine, fileName)
     writeLines(lines, fileName)
 }
 
-convertAffine <- function (affine, source, target, newType = c("niftyreg","fsl"), currentType = NULL)
+convertAffine <- function (affine, source = NULL, target = NULL, newType = c("niftyreg","fsl"), currentType = NULL)
 {
     if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
         report(OL$Error, "Specified affine matrix is not valid")
-    if (!is.nifti(source) || !is.nifti(target))
-        report(OL$Error, "Source and target images must be specified as \"nifti\" objects")
     
     newType <- match.arg(newType)
     
@@ -77,17 +75,7 @@ invertAffine <- function (affine)
 
 decomposeAffine <- function (affine, source = NULL, target = NULL, type = NULL)
 {
-    if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
-        report(OL$Error, "Specified affine matrix is not valid")
-    if (is.null(type))
-    {
-        type <- attr(affine, "affineType")
-        if (is.null(type))
-            report(OL$Error, "The current affine type was not specified and is not stored with the matrix")
-    }
-    
-    if (type == "niftyreg")
-        affine <- convertAffine(affine, source, target, "fsl", "niftyreg")
+    affine <- convertAffine(affine, source, target, "fsl", type)
     
     # Full matrix is rotationX %*% rotationY %*% rotationZ %*% skew %*% scale
     submatrix <- affine[1:3,1:3]

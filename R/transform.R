@@ -1,19 +1,9 @@
 transformWithAffine <- function (points, affine, voxel = FALSE, source = NULL, target = NULL, type = NULL)
 {
-    if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
-        report(OL$Error, "Specified affine matrix is not valid")
-    if (is.null(type))
-    {
-        type <- attr(affine, "affineType")
-        if (is.null(type))
-            report(OL$Error, "The current affine type was not specified and is not stored with the matrix")
-    }
-    
-    if (type == "niftyreg")
-        affine <- convertAffine(affine, source, target, "fsl", "niftyreg")
+    affine <- convertAffine(affine, source, target, "fsl", type)
     
     if (voxel)
-        points <- transformVoxelToWorld(points, source, useOrigin=FALSE)
+        points <- transformVoxelToWorld(points, source, simple=TRUE)
     
     if (!is.matrix(points))
         points <- matrix(points, nrow=1)
@@ -28,29 +18,71 @@ transformWithAffine <- function (points, affine, voxel = FALSE, source = NULL, t
     newPoints <- drop(t(newPoints[1:3,,drop=FALSE]))
     
     if (voxel)
-        newPoints <- transformWorldToVoxel(newPoints, target, useOrigin=FALSE)
+        newPoints <- transformWorldToVoxel(newPoints, target, simple=TRUE)
     
     return (newPoints)
 }
 
-transformVoxelToWorld <- function (points, image, useOrigin = TRUE, ...)
+transformVoxelToWorld <- function (points, image, simple = FALSE, ...)
 {
     if (!is.nifti(image))
         report(OL$Error, "The specified image is not a \"nifti\" object")
     if (image@dim_[1] != 3)
         report(OL$Error, "Only three-dimensional images can be used at present")
     
-    affine <- xformToAffine(image, keepOrigin=useOrigin, ...)
-    return (transformWithAffine(points-1, affine))
+    if (simple)
+    {
+        if (!is.matrix(points))
+            points <- matrix(points, nrow=1)
+        return (drop(apply(points-1, 1, function(x) x*abs(image@pixdim[2:4]))))
+    }
+    else
+    {
+        affine <- xformToAffine(image, ...)
+        return (transformWithAffine(points-1, affine, type="fsl"))
+    }
 }
 
-transformWorldToVoxel <- function (points, image, useOrigin = TRUE, ...)
+transformWorldToVoxel <- function (points, image, simple = FALSE, ...)
 {
     if (!is.nifti(image))
         report(OL$Error, "The specified image is not a \"nifti\" object")
     if (image@dim_[1] != 3)
         report(OL$Error, "Only three-dimensional images can be used at present")
     
-    affine <- solve(xformToAffine(image, keepOrigin=useOrigin, ...))
-    return (transformWithAffine(points, affine) + 1)
+    if (simple)
+    {
+        if (!is.matrix(points))
+            points <- matrix(points, nrow=1)
+        return (drop(apply(points, 1, function(x) x/abs(image@pixdim[2:4])) + 1))
+    }
+    else
+    {
+        affine <- solve(xformToAffine(image, ...))
+        return (transformWithAffine(points, affine, type="fsl") + 1)
+    }
+}
+
+transformWithControlPoints <- function (points, controlPointImage, voxel = FALSE, source = NULL, target = NULL)
+{
+    if (!is.nifti(controlPointImage))
+        report(OL$Error, "Control point image must be specified as a \"nifti\" object")
+    
+    if (voxel)
+        points <- transformVoxelToWorld(points, source)
+    
+    if (!is.matrix(points))
+        points <- matrix(points, nrow=1)
+    
+    nDims <- ncol(points)
+    if (nDims != 2 && nDims != 3)
+        report(OL$Error, "Points must be two or three dimensional")
+    
+    # This function takes world coordinates but returns voxels
+    newPoints <- drop(.Call("cp_transform_R", .fixTypes(controlPointImage), .fixTypes(target), points, PACKAGE="RNiftyReg"))
+    
+    if (!voxel)
+        newPoints <- transformVoxelToWorld(newPoints, target)
+    
+    return (newPoints)
 }
