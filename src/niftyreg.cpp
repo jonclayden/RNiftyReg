@@ -172,7 +172,7 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
 }
 
 extern "C"
-SEXP cp_transform_R (SEXP control, SEXP target, SEXP points)
+SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
 {
     int i, j, k, x, y, z, stepSign;
     size_t v, closestVoxel;
@@ -223,7 +223,7 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points)
         for (j=0; j<3; j++)
             closestLoc[j] = deformationPointer[closestVoxel + j*nVoxels];
         
-        if (closestDistance == 0.0)
+        if (asLogical(useNearest) || closestDistance == 0.0)
         {
             for (j=0; j<3; j++)
                 outputPointer[i + j*pointsDim[0]] = (double) closestIndex[j] + 1.0;

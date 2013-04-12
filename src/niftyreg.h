@@ -25,7 +25,7 @@ extern "C"
 SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP inverseConsistencyWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP sourceMask, SEXP affineComponents, SEXP initControl, SEXP symmetric, SEXP verbose, SEXP estimateOnly);
 
 extern "C"
-SEXP cp_transform_R (SEXP controlPointImage, SEXP target, SEXP points);
+SEXP cp_transform_R (SEXP controlPointImage, SEXP target, SEXP points, SEXP useNearest);
 
 // Declare internal functions
 void convert_and_insert_image (nifti_image *image, SEXP list, int index);

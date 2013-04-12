@@ -1,9 +1,8 @@
-transformWithAffine <- function (points, affine, voxel = FALSE, source = NULL, target = NULL, type = NULL)
+transformWithAffine <- function (points, affine, source = NULL, target = NULL, type = NULL)
 {
     affine <- convertAffine(affine, source, target, "fsl", type)
     
-    if (voxel)
-        points <- transformVoxelToWorld(points, source, simple=TRUE)
+    points <- transformVoxelToWorld(points, source, simple=TRUE)
     
     if (!is.matrix(points))
         points <- matrix(points, nrow=1)
@@ -16,9 +15,7 @@ transformWithAffine <- function (points, affine, voxel = FALSE, source = NULL, t
         points <- cbind(points, 1)
     newPoints <- affine %*% t(points)
     newPoints <- drop(t(newPoints[1:3,,drop=FALSE]))
-    
-    if (voxel)
-        newPoints <- transformWorldToVoxel(newPoints, target, simple=TRUE)
+    newPoints <- transformWorldToVoxel(newPoints, target, simple=TRUE)
     
     return (newPoints)
 }
@@ -63,13 +60,12 @@ transformWorldToVoxel <- function (points, image, simple = FALSE, ...)
     }
 }
 
-transformWithControlPoints <- function (points, controlPointImage, voxel = FALSE, source = NULL, target = NULL)
+transformWithControlPoints <- function (points, controlPointImage, source = NULL, target = NULL, nearest = FALSE)
 {
     if (!is.nifti(controlPointImage))
         report(OL$Error, "Control point image must be specified as a \"nifti\" object")
     
-    if (voxel)
-        points <- transformVoxelToWorld(points, source)
+    points <- transformVoxelToWorld(points, source)
     
     if (!is.matrix(points))
         points <- matrix(points, nrow=1)
@@ -79,10 +75,7 @@ transformWithControlPoints <- function (points, controlPointImage, voxel = FALSE
         report(OL$Error, "Points must be two or three dimensional")
     
     # This function takes world coordinates but returns voxels
-    newPoints <- drop(.Call("cp_transform_R", .fixTypes(controlPointImage), .fixTypes(target), points, PACKAGE="RNiftyReg"))
-    
-    if (!voxel)
-        newPoints <- transformVoxelToWorld(newPoints, target)
+    newPoints <- drop(.Call("cp_transform_R", .fixTypes(controlPointImage), .fixTypes(target), points, as.logical(nearest), PACKAGE="RNiftyReg"))
     
     return (newPoints)
 }
