@@ -15,8 +15,12 @@
 #include <Rdefines.h>
 #include <Rinternals.h>
 
+#include <Rmath.h>
+#undef dt
+
 #include "niftyreg.h"
 #include "substitutions.h"
+#include "index.h"
 
 extern "C"
 SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIterations, SEXP useBlockPercentage, SEXP finalInterpolation, SEXP targetMask, SEXP affineComponents, SEXP verbose, SEXP estimateOnly)
@@ -165,6 +169,94 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
     UNPROTECT(1);
     
     return returnValue;
+}
+
+extern "C"
+SEXP cp_transform_R (SEXP control, SEXP target, SEXP points)
+{
+    int i, j, k, x, y, z, stepSign;
+    size_t v, closestVoxel;
+    double currentDistance, closestDistance;
+    double currentPoint[3];
+    int closestIndex[3], currentIndex[3];
+    double closestLoc[3], currentStep[3], stepToPoint[3];
+    
+    double *inputPointer = REAL(points);
+    int *pointsDim = INTEGER(getAttrib(points, R_DimSymbol));
+    
+    nifti_image *targetImage = s4_image_to_struct(target);
+    nifti_image *controlPointImage = s4_image_to_struct(control);
+    nifti_image *deformationFieldImage = get_deformation_field(targetImage, controlPointImage, NULL);
+    nifti_image_free(targetImage);
+    nifti_image_free(controlPointImage);
+    
+    int deformationDims[3] = { deformationFieldImage->nx, deformationFieldImage->ny, deformationFieldImage->nz };
+    size_t nVoxels = (size_t) deformationDims[0] * deformationDims[1] * deformationDims[2];
+    double *deformationPointer = (double *) deformationFieldImage->data;
+    
+    SEXP transformedPoints;
+    PROTECT(transformedPoints = allocMatrix(REALSXP, pointsDim[0], pointsDim[1]));
+    double *outputPointer = REAL(transformedPoints);
+    
+    for (i=0; i<pointsDim[0]; i++)
+    {
+        closestDistance = R_PosInf;
+        
+        for (j=0; j<3; j++)
+            currentPoint[j] = inputPointer[i + j*pointsDim[0]];
+        
+        for (v=0; v<nVoxels; v++)
+        {
+            currentDistance = 0;
+            for (j=0; j<3; j++)
+                currentDistance += R_pow_di(deformationPointer[v + j*nVoxels] - currentPoint[j], 2);
+            currentDistance = sqrt(currentDistance);
+            
+            if (currentDistance < closestDistance)
+            {
+                closestDistance = currentDistance;
+                closestVoxel = v;
+            }
+        }
+        
+        vector_to_matrix_loc(closestVoxel, deformationDims, 3, closestIndex);
+        for (j=0; j<3; j++)
+            closestLoc[j] = deformationPointer[closestVoxel + j*nVoxels];
+        
+        if (closestDistance == 0.0)
+        {
+            for (j=0; j<3; j++)
+                outputPointer[i + j*pointsDim[0]] = (double) closestIndex[j] + 1.0;
+        }
+        else
+        {
+            for (j=0; j<3; j++)
+            {
+                memcpy(currentIndex, closestIndex, 3*sizeof(int));
+                
+                currentIndex[j]++;
+                matrix_to_vector_loc(currentIndex, deformationDims, 3, &v);
+                stepSign = (int) sign(deformationPointer[v + j*nVoxels] - closestLoc[j]);
+                if (stepSign < 0)
+                {
+                    currentIndex[j] -= 2;
+                    matrix_to_vector_loc(currentIndex, deformationDims, 3, &v);
+                }
+                
+                for (k=0; k<3; k++)
+                {
+                    currentStep[k] = deformationPointer[v + k*nVoxels] - closestLoc[k];
+                    stepToPoint[k] = currentPoint[k] - closestLoc[k];
+                }
+                
+                outputPointer[i + j*pointsDim[0]] = (double) closestIndex[j] + stepSign * inner_product(currentStep,stepToPoint,3) / (vector_length(currentStep,3) * vector_length(stepToPoint,3)) + 1.0;
+            }
+        }
+    }
+    
+    UNPROTECT(1);
+    
+    return transformedPoints;
 }
 
 void convert_and_insert_image (nifti_image *image, SEXP list, int index)
