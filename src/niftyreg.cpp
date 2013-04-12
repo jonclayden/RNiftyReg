@@ -532,7 +532,13 @@ f3d_result do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, int n
     {
         result.initAffine = NULL;
         result.forwardImage = resample_image(sourceImage, targetImage, controlPointImage, affineTransformation, finalInterpolation);
-        result.forwardControlPoints = copy_complete_nifti_image(controlPointImage);
+        if (controlPointImage != NULL)
+            result.forwardControlPoints = copy_complete_nifti_image(controlPointImage);
+        else
+        {
+            reg_createControlPointGrid<PRECISION_TYPE>(&result.forwardControlPoints, targetImage, spacing);
+            reg_bspline_initialiseControlPointGridWithAffine(affineTransformation, result.forwardControlPoints);
+        }
         result.reverseImage = NULL;
         result.reverseControlPoints = NULL;
         result.completedIterations = NULL;
