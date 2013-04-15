@@ -176,6 +176,7 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
 {
     int i, j, k, l;
     size_t v, w, closestVoxel;
+    R_len_t resultLength;
     double currentDistance, closestDistance;
     int closestIndex[3], currentIndex[3], offset[3];
     double currentPoint[3], closestLoc[3];
@@ -204,13 +205,13 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
     {
         closestDistance = R_PosInf;
         
-        for (j=0; j<3; j++)
+        for (j=0; j<nDims; j++)
             currentPoint[j] = inputPointer[i + j*nPoints];
         
         for (v=0; v<nVoxels; v++)
         {
             currentDistance = 0;
-            for (j=0; j<3; j++)
+            for (j=0; j<nDims; j++)
                 currentDistance += R_pow_di(deformationPointer[v + j*nVoxels] - currentPoint[j], 2);
             currentDistance = sqrt(currentDistance);
             
@@ -221,8 +222,8 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
             }
         }
         
-        vector_to_matrix_loc(closestVoxel, deformationDims, 3, closestIndex);
-        for (j=0; j<3; j++)
+        vector_to_matrix_loc(closestVoxel, deformationDims, nDims, closestIndex);
+        for (j=0; j<nDims; j++)
             closestLoc[j] = deformationPointer[closestVoxel + j*nVoxels];
         
         if (asLogical(useNearest) || closestDistance == 0.0)
@@ -230,20 +231,21 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
             PROTECT(currentResult = allocVector(REALSXP,nDims));
             p = REAL(currentResult);
             
-            for (j=0; j<3; j++)
+            for (j=0; j<nDims; j++)
                 p[j] = (double) closestIndex[j] + 1.0;
         }
         else
         {
-            PROTECT(currentResult = allocVector(REALSXP,6*64));
+            resultLength = (R_len_t) R_pow_di(4.0, nDims) * 2 * nDims;
+            PROTECT(currentResult = allocVector(REALSXP,resultLength));
             p = REAL(currentResult);
             
-            for (j=0; j<3; j++)
+            for (j=0; j<nDims; j++)
             {
-                memcpy(currentIndex, closestIndex, 3*sizeof(int));
+                memcpy(currentIndex, closestIndex, nDims*sizeof(int));
                 
                 currentIndex[j]++;
-                matrix_to_vector_loc(currentIndex, deformationDims, 3, &v);
+                matrix_to_vector_loc(currentIndex, deformationDims, nDims, &v);
                 offset[j] = (int) sign(deformationPointer[v + j*nVoxels] - closestLoc[j]);
                 offset[j] = (offset[j] >= 0 ? 0 : offset[j]);
             }
@@ -256,18 +258,32 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
                 {
                     currentIndex[1] = closestIndex[1] + k + offset[1] - 1;
                     
-                    for (l=0; l<4; l++)
+                    if (nDims == 2)
                     {
-                        currentIndex[2] = closestIndex[2] + l + offset[2] - 1;
-                        matrix_to_vector_loc(currentIndex, deformationDims, 3, &v);
+                        currentIndex[2] = 0;
+                        matrix_to_vector_loc(currentIndex, deformationDims, nDims, &v);
+                    
+                        w = (size_t) j + k*4;
+                        p[2*nDims*w] = deformationPointer[v];
+                        p[2*nDims*w + 1] = deformationPointer[v + nVoxels];
+                        p[2*nDims*w + 2] = (double) currentIndex[0] + 1.0;
+                        p[2*nDims*w + 3] = (double) currentIndex[1] + 1.0;
+                    }
+                    else
+                    {
+                        for (l=0; l<4; l++)
+                        {
+                            currentIndex[2] = closestIndex[2] + l + offset[2] - 1;
+                            matrix_to_vector_loc(currentIndex, deformationDims, nDims, &v);
                         
-                        w = (size_t) j + k*4 + l*16;
-                        p[w*6] = deformationPointer[v];
-                        p[w*6 + 1] = deformationPointer[v + nVoxels];
-                        p[w*6 + 2] = deformationPointer[v + 2*nVoxels];
-                        p[w*6 + 3] = (double) currentIndex[0] + 1.0;
-                        p[w*6 + 4] = (double) currentIndex[1] + 1.0;
-                        p[w*6 + 5] = (double) currentIndex[2] + 1.0;
+                            w = (size_t) j + k*4 + l*16;
+                            p[2*nDims*w] = deformationPointer[v];
+                            p[2*nDims*w + 1] = deformationPointer[v + nVoxels];
+                            p[2*nDims*w + 2] = deformationPointer[v + 2*nVoxels];
+                            p[2*nDims*w + 3] = (double) currentIndex[0] + 1.0;
+                            p[2*nDims*w + 4] = (double) currentIndex[1] + 1.0;
+                            p[2*nDims*w + 5] = (double) currentIndex[2] + 1.0;
+                        }
                     }
                 }
             }

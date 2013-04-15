@@ -10,10 +10,12 @@
     if (nDims != 2 && nDims != 3)
         report(OL$Error, "Points must be two or three dimensional")
     
-    for (i in (nDims+1):4)
-        points <- cbind(points, 1)
+    if (nDims == 2)
+        affine <- matrix(affine[c(1,2,4,5,6,8,13,14,16)], ncol=3, nrow=3)
+    
+    points <- cbind(points, 1)
     newPoints <- affine %*% t(points)
-    newPoints <- drop(t(newPoints[1:3,,drop=FALSE]))
+    newPoints <- drop(t(newPoints[1:nDims,,drop=FALSE]))
     
     return (newPoints)
 }
@@ -32,14 +34,13 @@ transformVoxelToWorld <- function (points, image, simple = FALSE, ...)
 {
     if (!is.nifti(image))
         report(OL$Error, "The specified image is not a \"nifti\" object")
-    if (image@dim_[1] != 3)
-        report(OL$Error, "Only three-dimensional images can be used at present")
     
     if (simple)
     {
         if (!is.matrix(points))
             points <- matrix(points, nrow=1)
-        return (drop(apply(points-1, 1, function(x) x*abs(image@pixdim[2:4]))))
+        voxelDims <- image@pixdim[seq_len(ncol(points))+1]
+        return (drop(apply(points-1, 1, function(x) x*abs(voxelDims))))
     }
     else
     {
@@ -52,14 +53,13 @@ transformWorldToVoxel <- function (points, image, simple = FALSE, ...)
 {
     if (!is.nifti(image))
         report(OL$Error, "The specified image is not a \"nifti\" object")
-    if (image@dim_[1] != 3)
-        report(OL$Error, "Only three-dimensional images can be used at present")
     
     if (simple)
     {
         if (!is.matrix(points))
             points <- matrix(points, nrow=1)
-        return (drop(apply(points, 1, function(x) x/abs(image@pixdim[2:4])) + 1))
+        voxelDims <- image@pixdim[seq_len(ncol(points))+1]
+        return (drop(apply(points, 1, function(x) x/abs(voxelDims)) + 1))
     }
     else
     {
@@ -95,7 +95,7 @@ transformWithControlPoints <- function (points, controlPointImage, source = NULL
             if (nDims == 2)
             {
                 colnames(data) <- c("sx", "sy", "tx", "ty")
-                fit <- lm(cbind(tx,ty,tz) ~ bs(sx) * bs(sy), data=data)
+                fit <- lm(cbind(tx,ty) ~ bs(sx) * bs(sy), data=data)
                 return (drop(predict(fit, data.frame(sx=points[i,1],sy=points[i,2]))))
             }
             else
