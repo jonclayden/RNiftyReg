@@ -174,15 +174,18 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
 extern "C"
 SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
 {
-    int i, j, k, x, y, z, stepSign;
-    size_t v, closestVoxel;
+    int i, j, k, l;
+    size_t v, w, closestVoxel;
     double currentDistance, closestDistance;
-    double currentPoint[3];
-    int closestIndex[3], currentIndex[3];
-    double closestLoc[3], currentStep[3], stepToPoint[3];
+    int closestIndex[3], currentIndex[3], offset[3];
+    double currentPoint[3], closestLoc[3];
+    
+    SEXP currentResult;
+    double *p;
     
     double *inputPointer = REAL(points);
-    int *pointsDim = INTEGER(getAttrib(points, R_DimSymbol));
+    int nPoints = INTEGER(getAttrib(points, R_DimSymbol))[0];
+    int nDims = INTEGER(getAttrib(points, R_DimSymbol))[1];
     
     nifti_image *targetImage = s4_image_to_struct(target);
     nifti_image *controlPointImage = s4_image_to_struct(control);
@@ -194,16 +197,15 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
     size_t nVoxels = (size_t) deformationDims[0] * deformationDims[1] * deformationDims[2];
     double *deformationPointer = (double *) deformationFieldImage->data;
     
-    SEXP transformedPoints;
-    PROTECT(transformedPoints = allocMatrix(REALSXP, pointsDim[0], pointsDim[1]));
-    double *outputPointer = REAL(transformedPoints);
+    SEXP resultList;
+    PROTECT(resultList = NEW_LIST(nPoints));
     
-    for (i=0; i<pointsDim[0]; i++)
+    for (i=0; i<nPoints; i++)
     {
         closestDistance = R_PosInf;
         
         for (j=0; j<3; j++)
-            currentPoint[j] = inputPointer[i + j*pointsDim[0]];
+            currentPoint[j] = inputPointer[i + j*nPoints];
         
         for (v=0; v<nVoxels; v++)
         {
@@ -225,38 +227,59 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
         
         if (asLogical(useNearest) || closestDistance == 0.0)
         {
+            PROTECT(currentResult = allocVector(REALSXP,nDims));
+            p = REAL(currentResult);
+            
             for (j=0; j<3; j++)
-                outputPointer[i + j*pointsDim[0]] = (double) closestIndex[j] + 1.0;
+                p[j] = (double) closestIndex[j] + 1.0;
         }
         else
         {
+            PROTECT(currentResult = allocVector(REALSXP,6*64));
+            p = REAL(currentResult);
+            
             for (j=0; j<3; j++)
             {
                 memcpy(currentIndex, closestIndex, 3*sizeof(int));
                 
                 currentIndex[j]++;
                 matrix_to_vector_loc(currentIndex, deformationDims, 3, &v);
-                stepSign = (int) sign(deformationPointer[v + j*nVoxels] - closestLoc[j]);
-                if (stepSign < 0)
-                {
-                    currentIndex[j] -= 2;
-                    matrix_to_vector_loc(currentIndex, deformationDims, 3, &v);
-                }
+                offset[j] = (int) sign(deformationPointer[v + j*nVoxels] - closestLoc[j]);
+                offset[j] = (offset[j] >= 0 ? 0 : offset[j]);
+            }
+            
+            for (j=0; j<4; j++)
+            {
+                currentIndex[0] = closestIndex[0] + j + offset[0] - 1;
                 
-                for (k=0; k<3; k++)
+                for (k=0; k<4; k++)
                 {
-                    currentStep[k] = deformationPointer[v + k*nVoxels] - closestLoc[k];
-                    stepToPoint[k] = currentPoint[k] - closestLoc[k];
+                    currentIndex[1] = closestIndex[1] + k + offset[1] - 1;
+                    
+                    for (l=0; l<4; l++)
+                    {
+                        currentIndex[2] = closestIndex[2] + l + offset[2] - 1;
+                        matrix_to_vector_loc(currentIndex, deformationDims, 3, &v);
+                        
+                        w = (size_t) j + k*4 + l*16;
+                        p[w*6] = deformationPointer[v];
+                        p[w*6 + 1] = deformationPointer[v + nVoxels];
+                        p[w*6 + 2] = deformationPointer[v + 2*nVoxels];
+                        p[w*6 + 3] = (double) currentIndex[0] + 1.0;
+                        p[w*6 + 4] = (double) currentIndex[1] + 1.0;
+                        p[w*6 + 5] = (double) currentIndex[2] + 1.0;
+                    }
                 }
-                
-                outputPointer[i + j*pointsDim[0]] = (double) closestIndex[j] + stepSign * inner_product(currentStep,stepToPoint,3) / (vector_length(currentStep,3) * vector_length(stepToPoint,3)) + 1.0;
             }
         }
+        
+        SET_ELEMENT(resultList, i, currentResult);
+        UNPROTECT(1);
     }
     
     UNPROTECT(1);
     
-    return transformedPoints;
+    return resultList;
 }
 
 void convert_and_insert_image (nifti_image *image, SEXP list, int index)
