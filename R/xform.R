@@ -1,4 +1,4 @@
-xformToAffine <- function (image, useQuaternionFirst = TRUE, keepOrigin = TRUE)
+xformToAffine <- function (image, useQuaternionFirst = TRUE)
 {
     if (!is.nifti(image))
         report(OL$Error, "The specified image is not a \"nifti\" object")
@@ -34,9 +34,6 @@ xformToAffine <- function (image, useQuaternionFirst = TRUE, keepOrigin = TRUE)
     }
     else
         matrix <- rbind(image@srow_x, image@srow_y, image@srow_z, c(0,0,0,1))
-    
-    if (!keepOrigin)
-        matrix[1:3,4] <- 0
     
     return (matrix)
 }
