@@ -12,7 +12,7 @@ readAffine(fileName, type = NULL)
 
 \arguments{
   \item{fileName}{A string giving the file name to read the affine matrix from.}
-  \item{type}{The type of the affine matrix, which describes what convention is it is stored with. Currently valid values are \code{"niftyreg"} (which is also believed to correspond to the convention used by the SPM software), and \code{"fsl"} (for FSL FLIRT). If \code{NULL}, the function will look in the file for a comment specifying the type.}
+  \item{type}{The type of the affine matrix, which describes what convention is it is stored with. Currently valid values are \code{"niftyreg"} and \code{"fsl"} (for FSL FLIRT). If \code{NULL}, the function will look in the file for a comment specifying the type.}
 }
 
 \value{An affine matrix with \code{affineType} attribute set appropriately.}

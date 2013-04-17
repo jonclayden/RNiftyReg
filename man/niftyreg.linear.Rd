@@ -65,4 +65,4 @@ S. Ourselin, R. Stefanescu & X. Pennec (2002). Robust registration of multi-moda
 
 \author{Jon Clayden <jon.clayden+rniftyreg@gmail.com>}
 
-\seealso{\code{\link{niftyreg}}, which can be used as an interface to this function, and \code{\link{niftyreg.nonlinear}} for nonlinear registration. See \code{nifti} (no relation!), in the \code{oro.nifti} package, for creating the image objects passed to this function. Useful related functions are \code{as.nifti}, \code{readNIfTI} and \code{writeNIfTI}.}
+\seealso{\code{\link{niftyreg}}, which can be used as an interface to this function, and \code{\link{niftyreg.nonlinear}} for nonlinear registration. Also, \code{\link{transformWithAffine}} for transforming points, rather than images, using the estimated affine matrices. See \code{nifti} (no relation!), in the \code{oro.nifti} package, for creating the image objects passed to this function. Useful related functions are \code{as.nifti}, \code{readNIfTI} and \code{writeNIfTI}.}

@@ -15,7 +15,7 @@ convertAffine(affine, source, target, newType = c("niftyreg","fsl"),
   \item{affine}{A 4x4 matrix representing an affine transformation matrix.}
   \item{source}{A \code{"nifti"} object representing the source image for the transformation.}
   \item{target}{A \code{"nifti"} object representing the target image for the transformation.}
-  \item{newType}{The convention type to convert to. Currently valid values are \code{"niftyreg"} (which is believed to correspond to the convention used by the SPM software), and \code{"fsl"} (for FSL FLIRT).}
+  \item{newType}{The convention type to convert to. Currently valid values are \code{"niftyreg"} and \code{"fsl"} (for FSL FLIRT).}
   \item{currentType}{The current type of the affine matrix, which can be either of the valid values for \code{newType}. If \code{NULL}, the code attempts to determine the current type from the \code{affineType} attribute of the matrix.}
 }
 

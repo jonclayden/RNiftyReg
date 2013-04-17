@@ -73,4 +73,4 @@ M. Modat, G.R. Ridgway, Z.A. Taylor, M. Lehmann, J. Barnes, D.J. Hawkes, N.C. Fo
 
 \author{Jon Clayden <jon.clayden+rniftyreg@gmail.com>}
 
-\seealso{\code{\link{niftyreg}}, which can be used as an interface to this function, and \code{\link{niftyreg.linear}} for linear registration. See \code{nifti} (no relation!), in the \code{oro.nifti} package, for creating the image objects passed to this function. Useful related functions are \code{as.nifti}, \code{readNIfTI} and \code{writeNIfTI}.}
+\seealso{\code{\link{niftyreg}}, which can be used as an interface to this function, and \code{\link{niftyreg.linear}} for linear registration. Also, \code{\link{transformWithControlPoints}} for transforming points, rather than images, using the estimated control points. See \code{nifti} (no relation!), in the \code{oro.nifti} package, for creating the image objects passed to this function. Useful related functions are \code{as.nifti}, \code{readNIfTI} and \code{writeNIfTI}.}
