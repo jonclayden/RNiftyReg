@@ -31,7 +31,7 @@ A list with components
 \note{
 The decomposition is not perfect, and there is one particular degenerate case when the pitch angle is very close to \code{pi/2} radians, known as ``Gimbal lock''. In this case the yaw angle is arbitrarily set to zero.
 
-Affine matrices embodying rigid-body transformations include only 6 degrees of freedom, rather than the full 12, so skews will always be zero and scales will always be unity (to within rounding error).
+Affine matrices embodying rigid-body transformations include only 6 degrees of freedom, rather than the full 12, so skews will always be zero and scales will always be unity (to within rounding error). Likewise, affine matrices derived from 2D registration will not include components relating to the Z direction.
 }
 
 \author{Jon Clayden <jon.clayden+rniftyreg@gmail.com>}

@@ -11,7 +11,7 @@ transformWithAffine(points, affine, source, target, type = NULL)
 }
 
 \arguments{
-  \item{points}{A vector giving the coordinates of a point, or matrix with one point per row. These must be given as voxel-based locations: see \code{\link{transformWorldToVoxel}} for a function to convert from ``real world'' coordinates.}
+  \item{points}{A vector giving the coordinates of a point, or a matrix with one point per row. These must be given as voxel-based locations: see \code{\link{transformWorldToVoxel}} for a function to convert from ``real world'' coordinates.}
   \item{affine}{A 4x4 matrix representing an affine transformation matrix.}
   \item{source}{A \code{"nifti"} object representing the source image for the transformation.}
   \item{target}{A \code{"nifti"} object representing the target image for the transformation.}
