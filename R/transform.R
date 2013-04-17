@@ -20,7 +20,7 @@
     return (newPoints)
 }
 
-transformWithAffine <- function (points, affine, source = NULL, target = NULL, type = NULL)
+transformWithAffine <- function (points, affine, source, target, type = NULL)
 {
     affine <- convertAffine(affine, source, target, "fsl", type)
     points <- transformVoxelToWorld(points, source, simple=TRUE)
@@ -68,7 +68,7 @@ transformWorldToVoxel <- function (points, image, simple = FALSE, ...)
     }
 }
 
-transformWithControlPoints <- function (points, controlPointImage, source = NULL, target = NULL, nearest = FALSE)
+transformWithControlPoints <- function (points, controlPointImage, source, target, nearest = FALSE)
 {
     library("splines")
     
