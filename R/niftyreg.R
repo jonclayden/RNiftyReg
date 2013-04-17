@@ -383,3 +383,27 @@ applyControlPoints <- function (controlPointImage, source, target, finalInterpol
 {
     return (niftyreg.nonlinear(source, target, targetMask=NULL, initControl=controlPointImage, symmetric=FALSE, nLevels=0, finalInterpolation=finalInterpolation, verbose=FALSE, estimateOnly=FALSE))
 }
+
+getDeformationField <- function (target, affine = NULL, controlPointImage = NULL, jacobian = TRUE)
+{
+    if (missing(target))
+        report(OL$Error, "Target image must be given")
+    if (!is.nifti(target))
+        report(OL$Error, "Target image must be given as a \"nifti\" object")
+    if (is.null(affine) && is.null(controlPointImage))
+        report(OL$Error, "Affine matrix or control point image must be specified")
+    if (!is.null(controlPointImage) && !is.nifti(controlPointImage))
+        report(OL$Error, "Control points must be specified as a \"nifti\" object")
+    
+    returnValue <- .Call("get_deformation_field_R", affine, .fixTypes(controlPointImage), .fixTypes(target), jacobian, PACKAGE="RNiftyReg")
+    
+    nDims <- target@dim_[1]
+    dimIndex <- 1 + seq_len(nDims)
+    padding <- rep(1, 4-nDims)
+    
+    result <- list(deformationField=.createControlPointImage(returnValue[[1]], c(target@dim_[dimIndex],padding,nDims), c(target@pixdim[dimIndex],padding,1), returnValue[[2]]))
+    if (jacobian)
+        result$jacobian <- .createControlPointImage(returnValue[[3]], target@dim_[dimIndex], target@pixdim[dimIndex], returnValue[[4]])
+    
+    return (result)
+}

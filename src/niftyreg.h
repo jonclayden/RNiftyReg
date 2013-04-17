@@ -25,6 +25,9 @@ extern "C"
 SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP nBins, SEXP bendingEnergyWeight, SEXP jacobianWeight, SEXP inverseConsistencyWeight, SEXP finalSpacing, SEXP finalInterpolation, SEXP targetMask, SEXP sourceMask, SEXP affineComponents, SEXP initControl, SEXP symmetric, SEXP verbose, SEXP estimateOnly);
 
 extern "C"
+SEXP get_deformation_field_R (SEXP affine, SEXP control, SEXP target, SEXP jacobian);
+
+extern "C"
 SEXP cp_transform_R (SEXP controlPointImage, SEXP target, SEXP points, SEXP useNearest);
 
 // Declare internal functions

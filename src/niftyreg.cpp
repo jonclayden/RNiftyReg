@@ -172,6 +172,63 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
 }
 
 extern "C"
+SEXP get_deformation_field_R (SEXP affine, SEXP control, SEXP target, SEXP jacobian)
+{
+    int i, j;
+    nifti_image *targetImage, *controlPointImage, *deformationFieldImage, *jacobianImage;
+    mat44 *affineTransformation;
+    SEXP returnValue;
+    
+    targetImage = s4_image_to_struct(target);
+    
+    if (isNull(control))
+    {
+        affineTransformation = (mat44 *) calloc(1, sizeof(mat44));
+        for (i = 0; i < 4; i++)
+        {
+            for (j = 0; j < 4; j++)
+                affineTransformation->m[i][j] = (float) REAL(affine)[(j*4)+i];
+        }
+        
+        deformationFieldImage = get_deformation_field(targetImage, NULL, affineTransformation);
+        free(affineTransformation);
+    }
+    else
+    {
+        controlPointImage = s4_image_to_struct(control);
+        deformationFieldImage = get_deformation_field(targetImage, controlPointImage, NULL);
+        nifti_image_free(controlPointImage);
+    }
+    
+    PROTECT(returnValue = NEW_LIST(2 + 2*asLogical(jacobian)));
+    convert_and_insert_image(deformationFieldImage, returnValue, 0);
+    convert_and_insert_xform(deformationFieldImage, returnValue, 1);
+    
+    if (asLogical(jacobian))
+    {
+        jacobianImage = nifti_copy_nim_info(targetImage);
+        jacobianImage->cal_min = 0;
+        jacobianImage->cal_max = 0;
+        jacobianImage->scl_slope = 1.0;
+        jacobianImage->scl_inter = 0.0;
+        jacobianImage->datatype = NIFTI_TYPE_FLOAT64;
+        jacobianImage->nbyper = 8;
+        jacobianImage->data = (void *) calloc(jacobianImage->nvox, jacobianImage->nbyper);
+
+        reg_defField_getJacobianMap(deformationFieldImage, jacobianImage);
+        convert_and_insert_image(jacobianImage, returnValue, 2);
+        convert_and_insert_xform(jacobianImage, returnValue, 3);
+        nifti_image_free(jacobianImage);
+    }
+    
+    nifti_image_free(deformationFieldImage);
+    
+    UNPROTECT(1);
+    
+    return returnValue;
+}
+
+extern "C"
 SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
 {
     int i, j, k, l;
@@ -292,6 +349,8 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
         SET_ELEMENT(resultList, i, currentResult);
         UNPROTECT(1);
     }
+    
+    nifti_image_free(deformationFieldImage);
     
     UNPROTECT(1);
     
