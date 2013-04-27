@@ -40,7 +40,7 @@ transformVoxelToWorld <- function (points, image, simple = FALSE, ...)
         if (!is.matrix(points))
             points <- matrix(points, nrow=1)
         voxelDims <- image@pixdim[seq_len(ncol(points))+1]
-        return (drop(apply(points-1, 1, function(x) x*abs(voxelDims))))
+        return (drop(t(apply(points-1, 1, function(x) x*abs(voxelDims)))))
     }
     else
     {
@@ -59,7 +59,7 @@ transformWorldToVoxel <- function (points, image, simple = FALSE, ...)
         if (!is.matrix(points))
             points <- matrix(points, nrow=1)
         voxelDims <- image@pixdim[seq_len(ncol(points))+1]
-        return (drop(apply(points, 1, function(x) x/abs(voxelDims)) + 1))
+        return (drop(t(apply(points, 1, function(x) x/abs(voxelDims)) + 1)))
     }
     else
     {
