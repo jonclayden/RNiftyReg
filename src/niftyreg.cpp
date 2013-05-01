@@ -30,13 +30,13 @@ SEXP reg_aladin_R (SEXP source, SEXP target, SEXP type, SEXP nLevels, SEXP maxIt
     
     bool affineProvided = !isNull(affineComponents);
     
-    nifti_image *sourceImage = s4_image_to_struct(source);
-    nifti_image *targetImage = s4_image_to_struct(target);
+    nifti_image *sourceImage = s4_image_to_struct(source, true);
+    nifti_image *targetImage = s4_image_to_struct(target, (levels>0));
     nifti_image *targetMaskImage = NULL;
     mat44 *affineTransformation = NULL;
     
     if (!isNull(targetMask))
-        targetMaskImage = s4_image_to_struct(targetMask);
+        targetMaskImage = s4_image_to_struct(targetMask, true);
     
     if (affineProvided)
     {
@@ -93,19 +93,19 @@ SEXP reg_f3d_R (SEXP source, SEXP target, SEXP nLevels, SEXP maxIterations, SEXP
     bool affineProvided = !isNull(affineComponents);
     bool useSymmetricAlgorithm = (*(INTEGER(symmetric)) == 1);
     
-    nifti_image *sourceImage = s4_image_to_struct(source);
-    nifti_image *targetImage = s4_image_to_struct(target);
+    nifti_image *sourceImage = s4_image_to_struct(source, true);
+    nifti_image *targetImage = s4_image_to_struct(target, (levels>0));
     nifti_image *sourceMaskImage = NULL;
     nifti_image *targetMaskImage = NULL;
     nifti_image *controlPointImage = NULL;
     mat44 *affineTransformation = NULL;
     
     if (!isNull(sourceMask) && useSymmetricAlgorithm)
-        sourceMaskImage = s4_image_to_struct(sourceMask);
+        sourceMaskImage = s4_image_to_struct(sourceMask, true);
     if (!isNull(targetMask))
-        targetMaskImage = s4_image_to_struct(targetMask);
+        targetMaskImage = s4_image_to_struct(targetMask, true);
     if (!isNull(initControl))
-        controlPointImage = s4_image_to_struct(initControl);
+        controlPointImage = s4_image_to_struct(initControl, true);
     
     if (affineProvided)
     {
@@ -179,7 +179,7 @@ SEXP get_deformation_field_R (SEXP affine, SEXP control, SEXP target, SEXP jacob
     mat44 *affineTransformation;
     SEXP returnValue;
     
-    targetImage = s4_image_to_struct(target);
+    targetImage = s4_image_to_struct(target, false);
     
     if (isNull(control))
     {
@@ -195,7 +195,7 @@ SEXP get_deformation_field_R (SEXP affine, SEXP control, SEXP target, SEXP jacob
     }
     else
     {
-        controlPointImage = s4_image_to_struct(control);
+        controlPointImage = s4_image_to_struct(control, true);
         deformationFieldImage = get_deformation_field(targetImage, controlPointImage, NULL);
         nifti_image_free(controlPointImage);
     }
@@ -245,8 +245,8 @@ SEXP cp_transform_R (SEXP control, SEXP target, SEXP points, SEXP useNearest)
     int nPoints = INTEGER(getAttrib(points, R_DimSymbol))[0];
     int nDims = INTEGER(getAttrib(points, R_DimSymbol))[1];
     
-    nifti_image *targetImage = s4_image_to_struct(target);
-    nifti_image *controlPointImage = s4_image_to_struct(control);
+    nifti_image *targetImage = s4_image_to_struct(target, false);
+    nifti_image *controlPointImage = s4_image_to_struct(control, true);
     nifti_image *deformationFieldImage = get_deformation_field(targetImage, controlPointImage, NULL);
     nifti_image_free(targetImage);
     nifti_image_free(controlPointImage);
@@ -426,7 +426,7 @@ void convert_and_insert_affine (mat44 *affine, SEXP list, int index)
 }
 
 // Convert an S4 "nifti" object, as defined in the oro.nifti package, to a "nifti_image" struct
-nifti_image * s4_image_to_struct (SEXP object)
+nifti_image * s4_image_to_struct (SEXP object, bool copyData)
 {
     int i;
     nifti_1_header header;
@@ -497,12 +497,18 @@ nifti_image * s4_image_to_struct (SEXP object)
     
     nifti_image *image = nifti_convert_nhdr2nim(header, NULL);
     
-    size_t dataSize = nifti_get_volsize(image);
-    image->data = calloc(1, dataSize);
-    if (header.datatype == DT_INT32)
-        memcpy(image->data, INTEGER(GET_SLOT(object, install(".Data"))), dataSize);
+    SEXP data = GET_SLOT(object, install(".Data"));
+    if (!copyData || length(data) == 1)
+        image->data = NULL;
     else
-        memcpy(image->data, REAL(GET_SLOT(object, install(".Data"))), dataSize);
+    {
+        size_t dataSize = nifti_get_volsize(image);
+        image->data = calloc(1, dataSize);
+        if (header.datatype == DT_INT32)
+            memcpy(image->data, INTEGER(data), dataSize);
+        else
+            memcpy(image->data, REAL(data), dataSize);
+    }
     
     return image;
 }

@@ -37,7 +37,7 @@ void convert_and_insert_xform (nifti_image *image, SEXP list, int index);
 
 void convert_and_insert_affine (mat44 *affine, SEXP list, int index);
 
-nifti_image * s4_image_to_struct (SEXP object);
+nifti_image * s4_image_to_struct (SEXP object, bool copyData);
 
 nifti_image * copy_complete_nifti_image (nifti_image *source);
 
