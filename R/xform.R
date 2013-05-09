@@ -1,7 +1,6 @@
 xformToAffine <- function (image, useQuaternionFirst = TRUE)
 {
-    if (!is.nifti(image))
-        report(OL$Error, "The specified image is not a \"nifti\" object")
+    image <- as(image, "nifti")
     
     # With no information, assume Analyze orientation and zero origin
     if (image@qform_code <= 0 && image@sform_code <= 0)

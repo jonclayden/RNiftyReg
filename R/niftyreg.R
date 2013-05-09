@@ -78,8 +78,11 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
 {
     if (missing(source) || missing(target))
         report(OL$Error, "Source and target images must be given")
-    if (!is.nifti(source) || !is.nifti(target))
-        report(OL$Error, "Source and target images must be \"nifti\" objects")
+    else
+    {
+        source <- as(source, "nifti")
+        target <- as(target, "nifti")
+    }
     if (!(source@dim_[1] %in% c(2,3,4)))
         report(OL$Error, "Only 2D, 3D or 4D source images may be used")
     if (!(target@dim_[1] %in% c(2,3)))
@@ -88,8 +91,8 @@ niftyreg.linear <- function (source, target, targetMask = NULL, initAffine = NUL
         report(OL$Error, "4D to 2D registration cannot be performed")
     if (any(dim(source) < 4) || any(dim(target) < 4))
         report(OL$Error, "Images of fewer than 4 voxels in any dimension cannot be registered")
-    if (!is.null(targetMask) && !is.nifti(targetMask))
-        report(OL$Error, "Target mask must be NULL or a \"nifti\" object")
+    if (!is.null(targetMask))
+        targetMask <- as(targetMask, "nifti")
     if (any(sapply(list(nLevels,maxIterations,useBlockPercentage,finalInterpolation,verbose,estimateOnly), length) != 1))
         report(OL$Error, "Control parameters must all be of unit length")
     if (!(finalInterpolation %in% c(0,1,3)))
@@ -185,8 +188,11 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
 {
     if (missing(source) || missing(target))
         report(OL$Error, "Source and target images must be given")
-    if (!is.nifti(source) || !is.nifti(target))
-        report(OL$Error, "Source and target images must be \"nifti\" objects")
+    else
+    {
+        source <- as(source, "nifti")
+        target <- as(target, "nifti")
+    }
     if (!(source@dim_[1] %in% c(2,3,4)))
         report(OL$Error, "Only 2D, 3D or 4D source images may be used")
     if (!(target@dim_[1] %in% c(2,3)))
@@ -197,10 +203,10 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         report(OL$Error, "Source and target images must have the same dimensionality for symmetric registration")
     if (symmetric && !is.null(initControl))
         report(OL$Error, "The symmetric algorithm does not currently use an initial control point image")
-    if (!is.null(targetMask) && !is.nifti(targetMask))
-        report(OL$Error, "Target mask must be NULL or a \"nifti\" object")
-    if (!is.null(sourceMask) && !is.nifti(sourceMask))
-        report(OL$Error, "Source mask must be NULL or a \"nifti\" object")
+    if (!is.null(targetMask))
+        targetMask <- as(targetMask, "nifti")
+    if (!is.null(sourceMask))
+        sourceMask <- as(sourceMask, "nifti")
     if (any(sapply(list(symmetric,nLevels,maxIterations,nBins,bendingEnergyWeight,jacobianWeight,inverseConsistencyWeight,finalInterpolation,verbose,estimateOnly), length) != 1))
         report(OL$Error, "Control parameters must all be of unit length")
     if (any(c(bendingEnergyWeight,jacobianWeight,inverseConsistencyWeight) < 0))
@@ -218,9 +224,7 @@ niftyreg.nonlinear <- function (source, target, targetMask = NULL, initAffine = 
         initControl <- list(initControl)
     if (!is.null(initControl[[1]]))
     {
-        if (!is.nifti(initControl[[1]]))
-            report(OL$Error, "Initial control point images must be specified as \"nifti\" objects")
-        initControl <- lapply(initControl, .fixTypes)
+        initControl <- lapply(initControl, function(x) .fixTypes(as(x,"nifti")))
         finalSpacing <- initControl[[1]]@pixdim[2:4] / 2^max(0,nLevels-1)
         spacingUnit <- "mm"
         initAffine <- NULL
@@ -388,12 +392,12 @@ getDeformationField <- function (target, affine = NULL, controlPointImage = NULL
 {
     if (missing(target))
         report(OL$Error, "Target image must be given")
-    if (!is.nifti(target))
-        report(OL$Error, "Target image must be given as a \"nifti\" object")
+    else
+        target <- as(target, "nifti")
     if (is.null(affine) && is.null(controlPointImage))
         report(OL$Error, "Affine matrix or control point image must be specified")
-    if (!is.null(controlPointImage) && !is.nifti(controlPointImage))
-        report(OL$Error, "Control points must be specified as a \"nifti\" object")
+    if (!is.null(controlPointImage))
+        controlPointImage <- as(controlPointImage, "nifti")
     
     returnValue <- .Call("get_deformation_field_R", affine, .fixTypes(controlPointImage), .fixTypes(target), jacobian, PACKAGE="RNiftyReg")
     

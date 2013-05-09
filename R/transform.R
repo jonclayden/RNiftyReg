@@ -32,8 +32,7 @@ transformWithAffine <- function (points, affine, source, target, type = NULL)
 
 transformVoxelToWorld <- function (points, image, simple = FALSE, ...)
 {
-    if (!is.nifti(image))
-        report(OL$Error, "The specified image is not a \"nifti\" object")
+    image <- as(image, "nifti")
     
     if (simple)
     {
@@ -51,8 +50,7 @@ transformVoxelToWorld <- function (points, image, simple = FALSE, ...)
 
 transformWorldToVoxel <- function (points, image, simple = FALSE, ...)
 {
-    if (!is.nifti(image))
-        report(OL$Error, "The specified image is not a \"nifti\" object")
+    image <- as(image, "nifti")
     
     if (simple)
     {
@@ -72,8 +70,7 @@ transformWithControlPoints <- function (points, controlPointImage, source, targe
 {
     library("splines")
     
-    if (!is.nifti(controlPointImage))
-        report(OL$Error, "Control point image must be specified as a \"nifti\" object")
+    controlPointImage <- as(controlPointImage, "nifti")
     
     points <- transformVoxelToWorld(points, source)
     
