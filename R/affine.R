@@ -5,9 +5,7 @@ readAffine <- function (fileName, type = NULL)
     
     lines <- readLines(fileName)
     typeLine <- (lines %~% "\\# affineType\\: \\w+")
-    if (!any(typeLine) && is.null(type))
-        report(OL$Error, "Type is not stored in the file - it must be specified")
-    else if (is.null(type))
+    if (is.null(type) && any(typeLine))
         type <- match.arg(tolower(sub("\\# affineType\\: (\\w+)", "\\1", lines[typeLine][1], perl=TRUE)), c("niftyreg","fsl"))
     
     connection <- textConnection(lines[!typeLine])
