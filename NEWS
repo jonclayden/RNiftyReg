@@ -2,6 +2,24 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 1.1.0
+
+- A set of functions has been added for transforming points between spaces using
+  an affine or nonlinear transformation.
+- All registration functions gain an "estimateOnly" option, which can be used to
+  estimate a transformation without actually resampling the image.
+- The new getDeformationField() function can be used to obtain the deformation
+  field and/or Jacobian determinant map corresponding to a transformation.
+- The invertAffine() function has been added to invert an affine matrix while
+  preserving its "affineType" attribute.
+- RNiftyReg will now use OpenMP, if supported by the current build of R.
+- Image data is no longer copied between data structure types when not needed,
+  saving a bit of time and memory.
+- It is no longer an error in readAffine() if the affine type is not specified
+  or stored.
+
+=================================================================================
+
 VERSION 1.0.2
 
 - A further compiler-sensitive problem, which was causing the package to fail to
