@@ -13,6 +13,8 @@ VERSION 1.1.0
 - The invertAffine() function has been added to invert an affine matrix while
   preserving its "affineType" attribute.
 - RNiftyReg will now use OpenMP, if supported by the current build of R.
+- Image arguments are now coerced automatically to the "nifti" class if they are
+  not already of this type.
 - Image data is no longer copied between data structure types when not needed,
   saving a bit of time and memory.
 - It is no longer an error in readAffine() if the affine type is not specified
