@@ -2,6 +2,15 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 1.1.1
+
+- Under certain circumstances the NiftyReg C++ code could create a control point
+  image corresponding to an invalid "nifti" object, resulting in a spurious
+  error when running niftyreg.nonlinear(). This has been corrected. (Reported by
+  Andreas Heindl.)
+
+=================================================================================
+
 VERSION 1.1.0
 
 - A set of functions has been added for transforming points between spaces using
