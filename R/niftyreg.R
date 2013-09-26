@@ -32,6 +32,11 @@
 {
     dim(data) <- dim
     extendedDim <- c(length(dim), dim, rep(1,7-length(dim)))
+    
+    # The validity method for the "nifti" class requires this
+    if (xform[1] != 0 && xform[9] == 0)
+        xform[9] <- 1
+    
     image <- new("nifti", .Data=data, dim_=extendedDim, datatype=64L, bitpix=64, pixdim=c(xform[9],pixdim,1,1,0,0), xyzt_units=0, qform_code=xform[1], sform_code=xform[2], quatern_b=xform[3], quatern_c=xform[4], quatern_d=xform[5], qoffset_x=xform[6], qoffset_y=xform[7], qoffset_z=xform[8], srow_x=xform[10:13], srow_y=xform[14:17], srow_z=xform[18:21], cal_min=min(data,na.rm=TRUE), cal_max=max(data,na.rm=TRUE))
     
     return (image)
