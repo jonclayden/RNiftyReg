@@ -45,3 +45,13 @@ Please see \code{\link{niftyreg.linear}} or \code{\link{niftyreg.nonlinear}} for
 \author{Jon Clayden <jon.clayden+rniftyreg@gmail.com>}
 
 \seealso{\code{\link{niftyreg.linear}} and \code{\link{niftyreg.nonlinear}}, which do most of the work. See \code{nifti} (no relation!), in the \code{oro.nifti} package, for creating the image objects passed to this function. Useful related functions are \code{as.nifti}, \code{readNIfTI} and \code{writeNIfTI}.}
+
+\examples{
+\dontrun{
+source <- oro.nifti::readNIfTI(system.file("extdata","source.nii.gz",
+  package="RNiftyReg"))
+target <- oro.nifti::readNIfTI(system.file("extdata","target.nii.gz",
+  package="RNiftyReg"))
+
+result <- niftyreg(source, target, scope="affine")
+}}

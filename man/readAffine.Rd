@@ -20,3 +20,7 @@ readAffine(fileName, type = NULL)
 \author{Jon Clayden <jon.clayden+rniftyreg@gmail.com>}
 
 \seealso{\code{\link{read.table}}, \code{\link{writeAffine}}, \code{\link{convertAffine}}}
+
+\examples{
+print(readAffine(system.file("extdata","affine.txt",package="RNiftyReg")))
+}

@@ -19,3 +19,9 @@ invertAffine(affine)
 \author{Jon Clayden <jon.clayden+rniftyreg@gmail.com>}
 
 \seealso{\code{\link{solve}}}
+
+\examples{
+affine <- readAffine(system.file("extdata","affine.txt",package="RNiftyReg"))
+print(affine)
+print(invertAffine(affine))
+}
