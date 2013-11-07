@@ -2,6 +2,13 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 1.1.2
+
+- Some sample data has been added to the package, along with some code examples.
+- Code tweaks have been made for C++11 compatibility.
+
+=================================================================================
+
 VERSION 1.1.1
 
 - Under certain circumstances the NiftyReg C++ code could create a control point
