@@ -472,7 +472,7 @@ void reg_f3d_sym<T>::Initisalise_f3d()
     /* allocate the backward control point image */
 
     /* Convert the spacing from voxel to mm if necessary */
-    float spacingInMillimeter[3]={this->spacing[0],this->spacing[1],this->spacing[2]};
+    float spacingInMillimeter[3]={static_cast<float>(this->spacing[0]),static_cast<float>(this->spacing[1]),static_cast<float>(this->spacing[2])};
     if(this->usePyramid){
         if(spacingInMillimeter[0]<0) spacingInMillimeter[0] *= -1.0f * this->floatingPyramid[this->levelToPerform-1]->dx;
         if(spacingInMillimeter[1]<0) spacingInMillimeter[1] *= -1.0f * this->floatingPyramid[this->levelToPerform-1]->dy;
