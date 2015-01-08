@@ -15,9 +15,7 @@
 #define __REG_BLOCKMATCHING_H__
 
 #include "_reg_maths.h"
-#include "nifti1_io.h"
 #include <vector>
-#include <iostream>
 
 #define TOLERANCE 0.01
 #define MAX_ITERATIONS 30
@@ -26,7 +24,6 @@
 #define BLOCK_SIZE 64
 #define BLOCK_2D_SIZE 16
 #define OVERLAP_SIZE 3
-#define STEP_SIZE 1
 
 #define NUM_BLOCKS_TO_COMPARE 343 // We compare in a 7x7x7 neighborhood.
 #define NUM_BLOCKS_TO_COMPARE_2D 49
@@ -62,28 +59,33 @@
 /**
  * @brief Structure which contains the block matching parameters
  */
-struct _reg_blockMatchingParam{
-    int blockNumber[3];
-    int percent_to_keep;
+struct _reg_blockMatchingParam
+{
+   int blockNumber[3];
+   int percent_to_keep;
 
-    float *targetPosition;
-    float *resultPosition;
+   float *targetPosition;
+   float *resultPosition;
 
-    int activeBlockNumber;
-    int *activeBlock;
+   int activeBlockNumber;
+   int *activeBlock;
 
-    int definedActiveBlock;
+   int definedActiveBlock;
 
-    _reg_blockMatchingParam()
-        : targetPosition(0),
-          resultPosition(0),
-          activeBlock(0){}
+   int stepSize;
 
-    ~_reg_blockMatchingParam(){
-        if(targetPosition) free(targetPosition);
-        if(resultPosition) free(resultPosition);
-        if(activeBlock) free(activeBlock);
-    }
+   _reg_blockMatchingParam()
+      : targetPosition(0),
+        resultPosition(0),
+        activeBlock(0)
+   {}
+
+   ~_reg_blockMatchingParam()
+   {
+      if(targetPosition) free(targetPosition);
+      if(resultPosition) free(resultPosition);
+      if(activeBlock) free(activeBlock);
+   }
 };
 
 /** @brief This function initialise a _reg_blockMatchingParam structure
@@ -104,6 +106,7 @@ void initialise_block_matching_method(nifti_image * referenceImage,
                                       _reg_blockMatchingParam *params,
                                       int percentToKeep_block,
                                       int percentToKeep_opt,
+                                      int stepSize_block,
                                       int *mask,
                                       bool runningOnGPU = false);
 
@@ -115,11 +118,10 @@ void initialise_block_matching_method(nifti_image * referenceImage,
  * @param mask Maks array where only voxel defined as active are considered
  */
 extern "C++"
-template<typename PrecisionType>
-void block_matching_method(	nifti_image * referenceImage,
-                            nifti_image * warpedImage,
-                            _reg_blockMatchingParam *params,
-                            int *mask);
+void block_matching_method(nifti_image * referenceImage,
+                           nifti_image * warpedImage,
+                           _reg_blockMatchingParam *params,
+                           int *mask);
 
 /** @brief Apply the given affine transformation to a point
  * @todo I should remove this function as it is redondant
@@ -134,12 +136,13 @@ void apply_affine(mat44 * mat,
 /** @brief Find the optimal affine transformation that matches the points
  * in the target image to the point in the result image
  * @param params Block-matching structure that contains the relevant information
- * @param final Transformation matrix extracted from the block-matching
- * correspondences
+ * @param transformation_matrix Initial transformation matrix that is updated
  * @param affine Returns an affine transformation (12 DoFs) if set to true;
  * returns a rigid transformation (6 DoFs) otherwise
  */
-void optimize(_reg_blockMatchingParam *params, mat44 * final, bool affine = true);
+void optimize(_reg_blockMatchingParam *params,
+              mat44 * transformation_matrix,
+              bool affine = true);
 
 
 

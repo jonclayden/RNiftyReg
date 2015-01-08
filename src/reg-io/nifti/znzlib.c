@@ -23,10 +23,6 @@ NB: seeks for writable files with compression are quite restricted
 
 #include "znzlib.h"
 
-#ifdef RNIFTYREG
-#include "substitutions.h"
-#endif
-
 /*
 znzlib.c  (zipped or non-zipped library)
 

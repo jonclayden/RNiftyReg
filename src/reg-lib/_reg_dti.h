@@ -11,20 +11,21 @@
  *
  */
 
-#ifndef _REG_SSD_H
-#define _REG_SSD_H
+#ifndef _REG_DTI_H
+#define _REG_DTI_H
 
-#include "_reg_measure.h"
+//#include "_reg_measure.h"
+#include "_reg_ssd.h" // HERE
 
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/// @brief SSD measure of similarity classe
-class reg_ssd : public reg_measure
+/// @brief DTI related measure of similarity class
+class reg_dti : public reg_measure
 {
 public:
-   /// @brief reg_ssd class constructor
-   reg_ssd();
-   /// @brief Initialise the reg_ssd object
+   /// @brief reg_dti class constructor
+   reg_dti();
+//    /// @brief Initialise the reg_dti object
    void InitialiseMeasure(nifti_image *refImgPtr,
                           nifti_image *floImgPtr,
                           int *maskRefPtr,
@@ -35,61 +36,49 @@ public:
                           nifti_image *warRefImgPtr = NULL,
                           nifti_image *warRefGraPtr = NULL,
                           nifti_image *bckVoxBasedGraPtr = NULL);
-   /// @brief Returns the ssd value
+//    /// @brief Returns the value
    virtual double GetSimilarityMeasureValue();
-   /// @brief Compute the voxel based ssd gradient
+//    /// @brief Compute the voxel based gradient for DTI images
    virtual void GetVoxelBasedSimilarityMeasureGradient();
-   /// @brief Measure class desstructor
-   ~reg_ssd() {}
+   /// @brief reg_dti class destructor
+   ~reg_dti() {}
 protected:
-   float currentValue[255];
+   // Store the indicies of the DT components in the order XX,XY,YY,XZ,YZ,ZZ
+   unsigned int dtIndicies[6];
+   float currentValue;
 };
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 
 /** @brief Copmutes and returns the SSD between two input image
  * @param targetImage First input image to use to compute the metric
  * @param resultImage Second input image to use to compute the metric
- * @param activeTimePoint Specified which time point volumes have to be considered
- * @param jacobianDeterminantImage Image that contains the Jacobian
- * determinant of a transformation at every voxel position. This
- * image is used to modulate the SSD. The argument is ignored if the
- * pointer is set to NULL
  * @param mask Array that contains a mask to specify which voxel
  * should be considered. If set to NULL, all voxels are considered
- * @return Returns the computed sum squared difference
+ * @return Returns an L2 measure of the distance between the anisotropic components of the diffusion tensors
  */
 extern "C++" template <class DTYPE>
-double reg_getSSDValue(nifti_image *targetImage,
-                       nifti_image *resultImage,
-                       bool *activeTimePoint,
-                       nifti_image *jacobianDeterminantImage,
-                       int *mask,
-                       float *currentValue
-                      );
+double reg_getDTIMeasureValue(nifti_image *targetImage,
+                              nifti_image *resultImage,
+                              int *mask,
+                              unsigned int * dtIndicies
+                             );
 
 /** @brief Compute a voxel based gradient of the sum squared difference.
  * @param targetImage First input image to use to compute the metric
  * @param resultImage Second input image to use to compute the metric
- * @param activeTimePoint Specified which time point volumes have to be considered
  * @param resultImageGradient Spatial gradient of the input result image
- * @param ssdGradientImage Output image htat will be updated with the
- * value of the SSD gradient
- * @param jacobianDeterminantImage Image that contains the Jacobian
- * determinant of a transformation at every voxel position. This
- * image is used to modulate the SSD. The argument is ignored if the
- * pointer is set to NULL
+ * @param dtiGradientImage Output image that will be updated with the
+ * value of the dti measure gradient
  * @param maxSD Input scalar that contain the difference value between
  * the highest and the lowest intensity.
  * @param mask Array that contains a mask to specify which voxel
  * should be considered. If set to NULL, all voxels are considered
  */
 extern "C++" template <class DTYPE>
-void reg_getVoxelBasedSSDGradient(nifti_image *targetImage,
-                                  nifti_image *resultImage,
-                                  bool *activeTimePoint,
-                                  nifti_image *resultImageGradient,
-                                  nifti_image *ssdGradientImage,
-                                  nifti_image *jacobianDeterminantImage,
-                                  int *mask
-                                 );
+void reg_getVoxelBasedDTIMeasureGradient(nifti_image *referenceImage,
+      nifti_image *warpedImage,
+      nifti_image *warpedImageGradient,
+      nifti_image *dtiMeasureGradientImage,
+      int *mask,
+      unsigned int * dtIndicies);
 #endif

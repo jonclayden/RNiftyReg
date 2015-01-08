@@ -17,22 +17,21 @@
 #include "nifti1_io.h"
 #include <fstream>
 #include <limits>
-#include "_reg_maths.h"
+#include "_reg_tools.h"
 
 
 /** @brief This Function compute a deformation field based
  * on affine transformation matrix
  * @param affine This matrix contains the affine transformation
  * used to parametrise the transformation
- * @param referenceImage The image represents the reference space
- * of the transformation
  * @param deformationField Image that contains the deformation field
  * that is being updated
  */
 extern "C++"
-void reg_affine_positionField(mat44 *affine,
-                nifti_image *referenceImage,
-                nifti_image *deformationField);
+void reg_affine_getDeformationField(mat44 *affine,
+                                    nifti_image *deformationField,
+                                    bool compose=false,
+                                    int *mask = NULL);
 
 /** @brief Read a text file that contains a affine transformation
  * and store it into a mat44 structure. This function can also read
@@ -61,15 +60,15 @@ void reg_tool_ReadAffineFile(mat44 *mat,
  * @param filename Filename of the text file that contains the matrix to read
  */
 extern "C++"
-void reg_tool_ReadAffineFile(	mat44 *mat,
-                                char *filename);
+void reg_tool_ReadAffineFile(mat44 *mat,
+                             char *filename);
 
 /** @brief This function save a 4-by-4 matrix to the disk as a text file
  * @param mat Matrix to be saved on the disk
  * @param filename Name of the text file to save on the disk
  */
 extern "C++"
-void reg_tool_WriteAffineFile(	mat44 *mat,
-                                const char *fileName);
+void reg_tool_WriteAffineFile(mat44 *mat,
+                              const char *fileName);
 
 #endif

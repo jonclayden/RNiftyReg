@@ -1,14 +1,13 @@
 /*
- *  _reg_f3d_sym.h
+ * @file _reg_f3d_sym.h
+ * @author Marc Modat
+ * @date 10/11/2011
  *
- *
- *  Created by Marc Modat on 10/11/2011.
- *  Copyright (c) 2009, University College London. All rights reserved.
+ *  Copyright (c) 2011, University College London. All rights reserved.
  *  Centre for Medical Image Computing (CMIC)
  *  See the LICENSE.txt file in the nifty_reg root folder
  *
  */
-
 
 #ifndef _REG_F3D_SYM_H
 #define _REG_F3D_SYM_H
@@ -18,83 +17,89 @@
 template <class T>
 class reg_f3d_sym : public reg_f3d<T>
 {
-  protected:
-    nifti_image *floatingMaskImage;
-    int **floatingMaskPyramid;
-    int *currentFloatingMask;
-    int *backwardActiveVoxelNumber;
+protected:
+   // Optimiser related function
+   virtual void SetOptimiser();
 
-    nifti_image *backwardControlPointGrid;
-    nifti_image *backwardDeformationFieldImage;
-    nifti_image *backwardWarped;
-    nifti_image *backwardWarpedGradientImage;
-    nifti_image *backwardVoxelBasedMeasureGradientImage;
-    nifti_image *backwardNodeBasedGradientImage;
+   nifti_image *floatingMaskImage;
+   int **floatingMaskPyramid;
+   int *currentFloatingMask;
+   int *backwardActiveVoxelNumber;
 
-    T *backwardBestControlPointPosition;
-    T *backwardConjugateG;
-    T *backwardConjugateH;
+   nifti_image *backwardControlPointGrid;
+   nifti_image *backwardDeformationFieldImage;
+   nifti_image *backwardWarped;
+   nifti_image *backwardWarpedGradientImage;
+   nifti_image *backwardVoxelBasedMeasureGradientImage;
+   nifti_image *backwardTransformationGradient;
 
-    double *backwardProbaJointHistogram;
-    double *backwardLogJointHistogram;
-    double backwardEntropies[4];
+   double *backwardProbaJointHistogram;
+   double *backwardLogJointHistogram;
+   double backwardEntropies[4];
 
-    T inverseConsistencyWeight;
+   mat33 *backwardJacobianMatrix;
 
-    virtual void AllocateWarped();
-    virtual void ClearWarped();
-    virtual void AllocateDeformationField();
-    virtual void ClearDeformationField();
-    virtual void AllocateWarpedGradient();
-    virtual void ClearWarpedGradient();
-    virtual void AllocateVoxelBasedMeasureGradient();
-    virtual void ClearVoxelBasedMeasureGradient();
-    virtual void AllocateNodeBasedGradient();
-    virtual void ClearNodeBasedGradient();
-    virtual void AllocateConjugateGradientVariables();
-    virtual void ClearConjugateGradientVariables();
-    virtual void AllocateBestControlPointArray();
-    virtual void ClearBestControlPointArray();
-    virtual void AllocateJointHistogram();
-    virtual void ClearJointHistogram();
-    virtual void AllocateCurrentInputImage();
-    virtual void ClearCurrentInputImage();
+   T inverseConsistencyWeight;
+   double currentIC;
+   double bestIC;
 
-    virtual void SaveCurrentControlPoint();
-    virtual void RestoreCurrentControlPoint();
-    virtual double ComputeJacobianBasedPenaltyTerm(int);
-    virtual double ComputeBendingEnergyPenaltyTerm();
-    virtual double ComputeLinearEnergyPenaltyTerm();
-    virtual double ComputeL2NormDispPenaltyTerm();
-    virtual void GetDeformationField();
-    virtual void WarpFloatingImage(int);
-    virtual double ComputeSimilarityMeasure();
-    virtual void GetVoxelBasedGradient();
-    virtual void GetSimilarityMeasureGradient();
-    virtual void GetBendingEnergyGradient();
-    virtual void GetLinearEnergyGradient();
-    virtual void GetL2NormDispGradient();
-    virtual void GetJacobianBasedGradient();
-    virtual void ComputeConjugateGradient();
-    virtual T GetMaximalGradientLength();
-    virtual void SetGradientImageToZero();
-    virtual void UpdateControlPointPosition(T);
-    virtual void DisplayCurrentLevelParameters();
+   virtual void AllocateWarped();
+   virtual void ClearWarped();
+   virtual void AllocateDeformationField();
+   virtual void ClearDeformationField();
+   virtual void AllocateWarpedGradient();
+   virtual void ClearWarpedGradient();
+   virtual void AllocateVoxelBasedMeasureGradient();
+   virtual void ClearVoxelBasedMeasureGradient();
+   virtual void AllocateTransformationGradient();
+   virtual void ClearTransformationGradient();
+   virtual T InitialiseCurrentLevel();
+   virtual void ClearCurrentInputImage();
 
-    virtual void GetInverseConsistencyErrorField();
-    virtual double GetInverseConsistencyPenaltyTerm();
-    virtual void GetInverseConsistencyGradient();
+   virtual double ComputeJacobianBasedPenaltyTerm(int);
+   virtual double ComputeBendingEnergyPenaltyTerm();
+   virtual double ComputeLinearEnergyPenaltyTerm();
+   virtual double ComputeL2NormDispPenaltyTerm();
+   virtual void GetDeformationField();
+   virtual void WarpFloatingImage(int);
+   virtual void GetVoxelBasedGradient();
+   virtual void GetSimilarityMeasureGradient();
+   virtual void GetObjectiveFunctionGradient();
+   virtual void GetBendingEnergyGradient();
+   virtual void GetLinearEnergyGradient();
+   virtual void GetL2NormDispGradient();
+   virtual void GetJacobianBasedGradient();
+   virtual void SetGradientImageToZero();
+   virtual T NormaliseGradient();
+   virtual void SmoothGradient();
+   virtual void GetApproximatedGradient();
+   virtual void DisplayCurrentLevelParameters();
+   virtual void PrintInitialObjFunctionValue();
+   virtual void PrintCurrentObjFunctionValue(T);
+   virtual void UpdateBestObjFunctionValue();
+   virtual double GetObjectiveFunctionValue();
+
+   virtual void GetInverseConsistencyErrorField(bool forceAll);
+   virtual double GetInverseConsistencyPenaltyTerm();
+   virtual void GetInverseConsistencyGradient();
+
+   virtual void UpdateParameters(float);
+   virtual void InitialiseSimilarity();
 
 public:
-    virtual void SetFloatingMask(nifti_image *);
-    virtual void SetInverseConsistencyWeight(T);
+   virtual void SetFloatingMask(nifti_image *);
+   virtual void SetInverseConsistencyWeight(T);
 
-    reg_f3d_sym(int refTimePoint,int floTimePoint);
-    ~reg_f3d_sym();
-    virtual void CheckParameters_f3d();
-    virtual void Initisalise_f3d();
-    virtual nifti_image *GetBackwardControlPointPositionImage();
-    virtual nifti_image **GetWarpedImage();
+   reg_f3d_sym(int refTimePoint,int floTimePoint);
+   ~reg_f3d_sym();
+   void CheckParameters();
+   void Initialise();
+   nifti_image *GetBackwardControlPointPositionImage();
+   nifti_image **GetWarpedImage();
+   bool GetSymmetricStatus()
+   {
+      return true;
+   }
 };
 
 #include "_reg_f3d_sym.cpp"
