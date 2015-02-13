@@ -234,6 +234,8 @@ double reg_bspline_bendingEnergy(nifti_image *splineControlPoint)
         }
 
     }
+    
+    return 0.0;
 }
 /* *************************************************************** */
 /* *************************************************************** */
@@ -750,6 +752,8 @@ double reg_bspline_L2norm_displacement(nifti_image *splineControlPoint)
         fprintf(stderr,"[NiftyReg ERROR] The reg_bspline_L2norm_displacement is not computed\n");
         exit(1);
     }
+    
+    return 0.0;
 }
 /* *************************************************************** */
 /* *************************************************************** */

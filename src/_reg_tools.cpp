@@ -1858,6 +1858,8 @@ double reg_tools_getMeanRMS1(nifti_image *imageA, nifti_image *imageB)
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_getMeanRMS\tThe image data type is not supported\n");
         exit(1);
     }
+    
+    return 0.0;
 }
 /* *************************************************************** */
 double reg_tools_getMeanRMS(nifti_image *imageA, nifti_image *imageB)
@@ -1883,6 +1885,8 @@ double reg_tools_getMeanRMS(nifti_image *imageA, nifti_image *imageB)
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_getMeanRMS\tThe image data type is not supported\n");
         exit(1);
     }
+    
+    return 0.0;
 }
 /* *************************************************************** */
 /* *************************************************************** */
@@ -2039,6 +2043,8 @@ int reg_tools_nanMask_image1(nifti_image *image, nifti_image *maskImage, nifti_i
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_nanMask_image\tThe image data type is not supported\n");
         exit(1);
     }
+    
+    return 0;
 }
 /* *************************************************************** */
 int reg_tools_nanMask_image(nifti_image *image, nifti_image *maskImage, nifti_image *resultImage)
@@ -2082,6 +2088,8 @@ int reg_tools_nanMask_image(nifti_image *image, nifti_image *maskImage, nifti_im
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_nanMask_image\tThe image data type is not supported\n");
         exit(1);
     }
+    
+    return 0;
 }
 /* *************************************************************** */
 /* *************************************************************** */
@@ -2125,6 +2133,8 @@ float reg_tools_getMinValue(nifti_image *image)
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_getMinValue\tThe image data type is not supported\n");
         exit(1);
     }
+    
+    return 0.0;
 }
 /* *************************************************************** */
 /* *************************************************************** */
@@ -2168,6 +2178,8 @@ float reg_tools_getMaxValue(nifti_image *image)
         fprintf(stderr,"[NiftyReg ERROR] reg_tools_getMaxValue\tThe image data type is not supported\n");
         exit(1);
     }
+    
+    return 0.0;
 }
 /* *************************************************************** */
 /* *************************************************************** */
