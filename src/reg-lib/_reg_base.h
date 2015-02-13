@@ -21,7 +21,9 @@
 #include "_reg_KLdivergence.h"
 #include "_reg_lncc.h"
 #include "_reg_tools.h"
+#ifndef RNIFTYREG
 #include "_reg_ReadWriteImage.h"
+#endif
 #include "_reg_optimiser.h"
 #include "float.h"
 #include <limits>

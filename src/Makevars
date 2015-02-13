@@ -8,4 +8,4 @@ OBJECTS_LIB = reg-lib/_reg_blockMatching.o reg-lib/_reg_f3d.o reg-lib/_reg_KLdiv
 
 OBJECTS_IO = reg-io/nifti/nifti1_io.o reg-io/nifti/znzlib.o
 
-OBJECTS = niftyreg.o print.o exit.o index.o $(OBJECTS_LIB) $(OBJECTS_IO)
+OBJECTS = print.o exit.o index.o $(OBJECTS_LIB) $(OBJECTS_IO)
