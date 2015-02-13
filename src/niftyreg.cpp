@@ -463,10 +463,14 @@ nifti_image * s4_image_to_struct (SEXP object, bool copyData)
     header.cal_min = (float) *(REAL(GET_SLOT(object, install("cal_min"))));
     header.glmax = header.glmin = 0;
     
-    strcpy(header.descrip, CHAR(STRING_ELT(GET_SLOT(object, install("descrip")),0)));
-    strcpy(header.aux_file, CHAR(STRING_ELT(GET_SLOT(object, install("aux_file")),0)));
-    strcpy(header.intent_name, CHAR(STRING_ELT(GET_SLOT(object, install("intent_name")),0)));
-    strcpy(header.magic, CHAR(STRING_ELT(GET_SLOT(object, install("magic")),0)));
+    strncpy(header.descrip, CHAR(STRING_ELT(GET_SLOT(object, install("descrip")),0)), 79);
+    header.descrip[79] = '\0';
+    strncpy(header.aux_file, CHAR(STRING_ELT(GET_SLOT(object, install("aux_file")),0)), 23);
+    header.aux_file[23] = '\0';
+    strncpy(header.intent_name, CHAR(STRING_ELT(GET_SLOT(object, install("intent_name")),0)), 15);
+    header.intent_name[15] = '\0';
+    strncpy(header.magic, CHAR(STRING_ELT(GET_SLOT(object, install("magic")),0)), 3);
+    header.magic[3] = '\0';
     
     header.qform_code = (short) *(INTEGER(GET_SLOT(object, install("qform_code"))));
     header.sform_code = (short) *(INTEGER(GET_SLOT(object, install("sform_code"))));
