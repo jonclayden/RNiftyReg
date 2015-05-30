@@ -15,8 +15,8 @@
 
 #include "_reg_f3d2.h"
 
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 reg_f3d2<T>::reg_f3d2(int refTimePoint,int floTimePoint)
    :reg_f3d_sym<T>::reg_f3d_sym(refTimePoint,floTimePoint)
@@ -28,20 +28,20 @@ reg_f3d2<T>::reg_f3d2(int refTimePoint,int floTimePoint)
    this->BCHUpdateValue=0;
 
 #ifndef NDEBUG
-   printf("[NiftyReg DEBUG] reg_f3d2 constructor called\n");
+   reg_print_msg_debug("reg_f3d2 constructor called");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 reg_f3d2<T>::~reg_f3d2()
 {
 #ifndef NDEBUG
-   printf("[NiftyReg DEBUG] reg_f3d2 destructor called\n");
+   reg_print_msg_debug("reg_f3d2 destructor called");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d2<T>::UseBCHUpdate(int v)
 {
@@ -50,16 +50,16 @@ void reg_f3d2<T>::UseBCHUpdate(int v)
    this->BCHUpdateValue=v;
    return;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d2<T>::UseGradientCumulativeExp()
 {
    this->BCHUpdate = false;
    this->useGradientCumulativeExp = true;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 void reg_f3d2<T>::Initialise()
 {
@@ -72,21 +72,12 @@ void reg_f3d2<T>::Initialise()
    this->controlPointGrid->intent_p2=6;
    this->backwardControlPointGrid->intent_p2=6;
 
-#ifdef NDEBUG
-   if(this->verbose)
-   {
-#endif
-      printf("[%s]\n", this->executableName);
-#ifdef NDEBUG
-   }
-#endif
-
 #ifndef NDEBUG
-   printf("[NiftyReg DEBUG] reg_f3d2::Initialise_f3d() done\n");
+   reg_print_msg_debug("reg_f3d2::Initialise_f3d() done");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d2<T>::GetDeformationField()
 {
@@ -96,7 +87,9 @@ void reg_f3d2<T>::GetDeformationField()
    if(this->optimiser==NULL)
       updateStepNumber=false;
 #ifndef NDEBUG
-   printf("[NiftyReg DEBUG] Velocity integration forward. Step number update=%i\n",updateStepNumber);
+   char text[255];
+   sprintf(text, "Velocity integration forward. Step number update=%i",updateStepNumber);
+   reg_print_msg_debug(text);
 #endif
    // The forward transformation is computed using the scaling-and-squaring approach
    reg_spline_getDefFieldFromVelocityGrid(this->controlPointGrid,
@@ -104,7 +97,8 @@ void reg_f3d2<T>::GetDeformationField()
                                           updateStepNumber
                                           );
 #ifndef NDEBUG
-   printf("[NiftyReg DEBUG] Velocity integration backward. Step number update=%i\n",updateStepNumber);
+   sprintf(text, "Velocity integration backward. Step number update=%i",updateStepNumber);
+   reg_print_msg_debug(text);
 #endif
    // The number of step number is copied over from the forward transformation
    this->backwardControlPointGrid->intent_p2=this->controlPointGrid->intent_p2;
@@ -115,8 +109,8 @@ void reg_f3d2<T>::GetDeformationField()
                                           );
    return;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d2<T>::GetInverseConsistencyErrorField(bool forceAll)
 {
@@ -134,8 +128,8 @@ void reg_f3d2<T>::GetInverseConsistencyErrorField(bool forceAll)
    }
    reg_exit(1);
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d2<T>::GetInverseConsistencyGradient()
 {
@@ -147,8 +141,8 @@ void reg_f3d2<T>::GetInverseConsistencyGradient()
 
    return;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d2<T>::GetVoxelBasedGradient()
 {
@@ -157,8 +151,8 @@ void reg_f3d2<T>::GetVoxelBasedGradient()
    // Exponentiate the gradients if required
    this->ExponentiateGradient();
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d2<T>::ExponentiateGradient()
 {
@@ -167,7 +161,7 @@ void reg_f3d2<T>::ExponentiateGradient()
    /* /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\ */
    // Exponentiate the forward gradient using the backward transformation
 #ifndef NDEBUG
-   printf("[NiftyReg f3d2] Update the forward measure gradient using a Dartel like approach\n");
+   reg_print_msg_debug("Update the forward measure gradient using a Dartel like approach");
 #endif
    // Create all deformation field images needed for resampling
    nifti_image **tempDef=(nifti_image **)malloc(
@@ -218,7 +212,7 @@ void reg_f3d2<T>::ExponentiateGradient()
    /* /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\ */
    /* Exponentiate the backward gradient using the forward transformation */
 #ifndef NDEBUG
-   printf("[NiftyReg f3d2] Update the backward measure gradient using a Dartel like approach\n");
+   reg_print_msg_debug("Update the backward measure gradient using a Dartel like approach");
 #endif
    // Allocate a temporary gradient image to store the backward gradient
    tempGrad=nifti_copy_nim_info(this->backwardVoxelBasedMeasureGradientImage);
@@ -265,8 +259,8 @@ void reg_f3d2<T>::ExponentiateGradient()
 
    return;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d2<T>::UpdateParameters(float scale)
 {
@@ -288,9 +282,9 @@ void reg_f3d2<T>::UpdateParameters(float scale)
    if(this->BCHUpdate)
    {
       // Compute the BCH update
-      printf("USING BCH FORWARD - TESTING ONLY\n");
+      reg_print_msg_warn("USING BCH FORWARD - TESTING ONLY");
 #ifndef NDEBUG
-      printf("[NiftyReg f3d2] Update the forward control point grid using BCH approximation\n");
+      reg_print_msg_debug("Update the forward control point grid using BCH approximation");
 #endif
       compute_BCH_update(this->controlPointGrid,
                          forwardScaledGradient,
@@ -322,9 +316,9 @@ void reg_f3d2<T>::UpdateParameters(float scale)
    if(this->BCHUpdate)
    {
       // Compute the BCH update
-      printf("USING BCH BACKWARD - TESTING ONLY\n");
+      reg_print_msg_warn("USING BCH BACKWARD - TESTING ONLY");
 #ifndef NDEBUG
-      printf("[NiftyReg f3d2] Update the backward control point grid using BCH approximation\n");
+      reg_print_msg_debug("Update the backward control point grid using BCH approximation");
 #endif
       compute_BCH_update(this->backwardControlPointGrid,
                          backwardScaledGradient,
@@ -387,8 +381,8 @@ void reg_f3d2<T>::UpdateParameters(float scale)
 
    return;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 nifti_image **reg_f3d2<T>::GetWarpedImage()
 {
@@ -398,8 +392,9 @@ nifti_image **reg_f3d2<T>::GetWarpedImage()
          this->controlPointGrid==NULL ||
          this->backwardControlPointGrid==NULL)
    {
-      fprintf(stderr,"[NiftyReg ERROR] reg_f3d_sym::GetWarpedImage()\n");
-      fprintf(stderr," * The reference, floating and both control point grid images have to be defined\n");
+      reg_print_fct_error("reg_f3d2<T>::GetWarpedImage()");
+      reg_print_msg_error("The reference, floating and control point grid images have to be defined");
+      reg_exit(1);
    }
 
    // Set the input images
@@ -445,7 +440,7 @@ nifti_image **reg_f3d2<T>::GetWarpedImage()
    // Return the two final warped images
    return resultImage;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 
 #endif

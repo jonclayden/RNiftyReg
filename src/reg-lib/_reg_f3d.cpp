@@ -14,8 +14,8 @@
 
 #include "_reg_f3d.h"
 
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 reg_f3d<T>::reg_f3d(int refTimePoint,int floTimePoint)
    : reg_base<T>::reg_base(refTimePoint,floTimePoint)
@@ -24,7 +24,7 @@ reg_f3d<T>::reg_f3d(int refTimePoint,int floTimePoint)
    this->executableName=(char *)"NiftyReg F3D";
    this->inputControlPointGrid=NULL; // pointer to external
    this->controlPointGrid=NULL;
-   this->bendingEnergyWeight=0.005;
+   this->bendingEnergyWeight=0.01;
    this->linearEnergyWeight0=0.;
    this->linearEnergyWeight1=0.;
    this->L2NormWeight=0.;
@@ -46,8 +46,8 @@ reg_f3d<T>::reg_f3d(int refTimePoint,int floTimePoint)
    reg_print_fct_debug("reg_f3d<T>::reg_f3d");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 reg_f3d<T>::~reg_f3d()
 {
@@ -61,8 +61,8 @@ reg_f3d<T>::~reg_f3d()
    reg_print_fct_debug("reg_f3d<T>::~reg_f3d");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::SetControlPointGridImage(nifti_image *cp)
 {
@@ -71,7 +71,7 @@ void reg_f3d<T>::SetControlPointGridImage(nifti_image *cp)
    reg_print_fct_debug("reg_f3d<T>::SetControlPointGridImage");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::SetBendingEnergyWeight(T be)
 {
@@ -80,7 +80,7 @@ void reg_f3d<T>::SetBendingEnergyWeight(T be)
    reg_print_fct_debug("reg_f3d<T>::SetBendingEnergyWeight");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::SetLinearEnergyWeights(T w0, T w1)
 {
@@ -90,7 +90,7 @@ void reg_f3d<T>::SetLinearEnergyWeights(T w0, T w1)
    reg_print_fct_debug("reg_f3d<T>::SetLinearEnergyWeights");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::SetL2NormDisplacementWeight(T w)
 {
@@ -99,7 +99,7 @@ void reg_f3d<T>::SetL2NormDisplacementWeight(T w)
    reg_print_fct_debug("reg_f3d<T>::SetL2NormDisplacementWeight");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::SetJacobianLogWeight(T j)
 {
@@ -108,7 +108,7 @@ void reg_f3d<T>::SetJacobianLogWeight(T j)
    reg_print_fct_debug("reg_f3d<T>::SetJacobianLogWeight");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::ApproximateJacobianLog()
 {
@@ -117,7 +117,7 @@ void reg_f3d<T>::ApproximateJacobianLog()
    reg_print_fct_debug("reg_f3d<T>::ApproximateJacobianLog");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::DoNotApproximateJacobianLog()
 {
@@ -126,7 +126,7 @@ void reg_f3d<T>::DoNotApproximateJacobianLog()
    reg_print_fct_debug("reg_f3d<T>::DoNotApproximateJacobianLog");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::SetSpacing(unsigned int i, T s)
 {
@@ -135,7 +135,7 @@ void reg_f3d<T>::SetSpacing(unsigned int i, T s)
    reg_print_fct_debug("reg_f3d<T>::SetSpacing");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template <class T>
 T reg_f3d<T>::InitialiseCurrentLevel()
 {
@@ -148,7 +148,7 @@ T reg_f3d<T>::InitialiseCurrentLevel()
    if(this->gridRefinement==true)
    {
       if(this->currentLevel==0)
-         this->bendingEnergyWeight = this->bendingEnergyWeight / static_cast<T>(powf(16.0f, this->levelToPerform-1));
+         this->bendingEnergyWeight = this->bendingEnergyWeight / static_cast<T>(powf(16.0f, this->levelNumber-1));
       else
       {
          reg_spline_refineControlPointGrid(this->controlPointGrid,this->currentReference);
@@ -161,13 +161,14 @@ T reg_f3d<T>::InitialiseCurrentLevel()
 #endif
    return maxStepSize;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::AllocateTransformationGradient()
 {
    if(this->controlPointGrid==NULL)
    {
-      fprintf(stderr, "[NiftyReg ERROR] The control point image is not defined\n");
+      reg_print_fct_error("reg_f3d<T>::AllocateTransformationGradient()");
+      reg_print_msg_error("The control point image is not defined");
       reg_exit(1);
    }
    reg_f3d<T>::ClearTransformationGradient();
@@ -178,7 +179,7 @@ void reg_f3d<T>::AllocateTransformationGradient()
    reg_print_fct_debug("reg_f3d<T>::AllocateTransformationGradient");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::ClearTransformationGradient()
 {
@@ -191,7 +192,7 @@ void reg_f3d<T>::ClearTransformationGradient()
    reg_print_fct_debug("reg_f3d<T>::ClearTransformationGradient");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::CheckParameters()
 {
@@ -222,8 +223,8 @@ void reg_f3d<T>::CheckParameters()
    reg_print_fct_debug("reg_f3d<T>::CheckParameters");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::Initialise()
 {
@@ -296,100 +297,125 @@ void reg_f3d<T>::Initialise()
    if(this->verbose)
    {
 #endif
+      char text[255];
       // Print out some global information about the registration
-      printf("[%s] **************************************************\n", this->executableName);
-      printf("[%s] INPUT PARAMETERS\n", this->executableName);
-      printf("[%s] **************************************************\n", this->executableName);
-      printf("[%s] Reference image:\n", this->executableName);
-      printf("[%s] \t* name: %s\n", this->executableName, this->inputReference->fname);
-      printf("[%s] \t* image dimension: %i x %i x %i x %i\n", this->executableName,
+      reg_print_info(this->executableName, "***********************************************************");
+      reg_print_info(this->executableName, "INPUT PARAMETERS");
+      reg_print_info(this->executableName, "***********************************************************");
+      reg_print_info(this->executableName, "Reference image:");
+      sprintf(text, "\t* name: %s", this->inputReference->fname);
+      reg_print_info(this->executableName, text);
+      sprintf(text, "\t* image dimension: %i x %i x %i x %i",
              this->inputReference->nx, this->inputReference->ny,
              this->inputReference->nz, this->inputReference->nt);
-      printf("[%s] \t* image spacing: %g x %g x %g mm\n",
-             this->executableName, this->inputReference->dx,
+      reg_print_info(this->executableName, text);
+      sprintf(text, "\t* image spacing: %g x %g x %g mm",
+             this->inputReference->dx,
              this->inputReference->dy, this->inputReference->dz);
+      reg_print_info(this->executableName, text);
       for(int i=0; i<this->inputReference->nt; i++)
       {
-         printf("[%s] \t* intensity threshold for timepoint %i/%i: [%.2g %.2g]\n", this->executableName,
+         sprintf(text, "\t* intensity threshold for timepoint %i/%i: [%.2g %.2g]",
                 i+1, this->inputReference->nt, this->referenceThresholdLow[i],this->referenceThresholdUp[i]);
-         if(this->measure_nmi!=NULL)
-            if(this->measure_nmi->GetActiveTimepoints()[i])
-               printf("[%s] \t* binnining size for timepoint %i/%i: %i\n", this->executableName,
+         reg_print_info(this->executableName, text);
+         if(this->measure_nmi!=NULL){
+            if(this->measure_nmi->GetActiveTimepoints()[i]){
+               sprintf(text, "\t* binnining size for timepoint %i/%i: %i",
                       i+1, this->inputFloating->nt, this->measure_nmi->GetReferenceBinNumber()[i]-4);
+               reg_print_info(this->executableName, text);
+            }
+         }
       }
-      printf("[%s] \t* gaussian smoothing sigma: %g\n", this->executableName, this->referenceSmoothingSigma);
-      printf("[%s]\n", this->executableName);
-      printf("[%s] Floating image:\n", this->executableName);
-      printf("[%s] \t* name: %s\n", this->executableName, this->inputFloating->fname);
-      printf("[%s] \t* image dimension: %i x %i x %i x %i\n", this->executableName,
+      sprintf(text, "\t* gaussian smoothing sigma: %g", this->referenceSmoothingSigma);
+      reg_print_info(this->executableName, text);
+      reg_print_info(this->executableName, "");
+      reg_print_info(this->executableName, "Floating image:");
+      reg_print_info(this->executableName, text);
+      sprintf(text, "\t* name: %s", this->inputFloating->fname);
+      reg_print_info(this->executableName, text);
+      sprintf(text, "\t* image dimension: %i x %i x %i x %i",
              this->inputFloating->nx, this->inputFloating->ny,
              this->inputFloating->nz, this->inputFloating->nt);
-      printf("[%s] \t* image spacing: %g x %g x %g mm\n",
-             this->executableName, this->inputFloating->dx,
+      reg_print_info(this->executableName, text);
+      sprintf(text, "\t* image spacing: %g x %g x %g mm",
+             this->inputFloating->dx,
              this->inputFloating->dy, this->inputFloating->dz);
+      reg_print_info(this->executableName, text);
       for(int i=0; i<this->inputFloating->nt; i++)
       {
-         printf("[%s] \t* intensity threshold for timepoint %i/%i: [%.2g %.2g]\n", this->executableName,
+         sprintf(text, "\t* intensity threshold for timepoint %i/%i: [%.2g %.2g]",
                 i+1, this->inputFloating->nt, this->floatingThresholdLow[i],this->floatingThresholdUp[i]);
-         if(this->measure_nmi!=NULL)
-            if(this->measure_nmi->GetActiveTimepoints()[i])
-               printf("[%s] \t* binnining size for timepoint %i/%i: %i\n", this->executableName,
+         reg_print_info(this->executableName, text);
+         if(this->measure_nmi!=NULL){
+            if(this->measure_nmi->GetActiveTimepoints()[i]){
+               sprintf(text, "\t* binnining size for timepoint %i/%i: %i",
                       i+1, this->inputFloating->nt, this->measure_nmi->GetFloatingBinNumber()[i]-4);
+               reg_print_info(this->executableName, text);
+            }
+         }
       }
-      printf("[%s] \t* gaussian smoothing sigma: %g\n",
-             this->executableName, this->floatingSmoothingSigma);
-      printf("[%s]\n", this->executableName);
-      printf("[%s] Warped image padding value: %g\n", this->executableName, this->warpedPaddingValue);
-      printf("[%s]\n", this->executableName);
-      printf("[%s] Level number: %i\n", this->executableName, this->levelNumber);
-      if(this->levelNumber!=this->levelToPerform)
-         printf("[%s] \t* Level to perform: %i\n", this->executableName, this->levelToPerform);
-      printf("[%s]\n", this->executableName);
-      printf("[%s] Maximum iteration number per level: %i\n", this->executableName, (int)this->maxiterationNumber);
-      printf("[%s]\n", this->executableName);
-      printf("[%s] Final spacing in mm: %g %g %g\n", this->executableName,
-             this->spacing[0], this->spacing[1], this->spacing[2]);
-      printf("[%s]\n", this->executableName);
+      sprintf(text, "\t* gaussian smoothing sigma: %g", this->floatingSmoothingSigma);
+      reg_print_info(this->executableName, text);
+      reg_print_info(this->executableName, "");
+      sprintf(text, "Warped image padding value: %g", this->warpedPaddingValue);
+      reg_print_info(this->executableName, text);
+      reg_print_info(this->executableName, "");
+      sprintf(text, "Level number: %i", this->levelNumber);
+      reg_print_info(this->executableName, text);
+      if(this->levelNumber!=this->levelToPerform){
+         sprintf(text, "\t* Level to perform: %i", this->levelToPerform);
+         reg_print_info(this->executableName, text);
+      }
+      reg_print_info(this->executableName, "");
+      sprintf(text, "Maximum iteration number per level: %i", (int)this->maxiterationNumber);
+      reg_print_info(this->executableName, text);
+      reg_print_info(this->executableName, "");
+      sprintf(text, "Final spacing in mm: %g %g %g",
+              this->spacing[0], this->spacing[1], this->spacing[2]);
+      reg_print_info(this->executableName, text);
+      reg_print_info(this->executableName, "");
       if(this->measure_ssd!=NULL)
-         printf("[%s] The SSD is used as a similarity measure.\n", this->executableName);
+         reg_print_info(this->executableName, "The SSD is used as a similarity measure.");
       if(this->measure_kld!=NULL)
-         printf("[%s] The KL divergence is used as a similarity measure.\n", this->executableName);
+         reg_print_info(this->executableName, "The KL divergence is used as a similarity measure.");
       if(this->measure_lncc!=NULL)
-         printf("[%s] The LNCC is used as a similarity measure.\n", this->executableName);
+         reg_print_info(this->executableName, "The LNCC is used as a similarity measure.");
       if(this->measure_dti!=NULL)
-         printf("[%s] A DTI based measure is used as a similarity measure.\n", this->executableName);
+         reg_print_info(this->executableName, "A DTI based measure is used as a similarity measure.");
       if(this->measure_multichannel_nmi!=NULL)
-      {
-         printf("[%s] The multichannel NMI is used as a similarity measure.\n", this->executableName);
-//            if(this->approxParzenWindow)
-//                printf("[%s] The Parzen window joint histogram filling is approximated\n", this->executableName);
-//            else printf("[%s] The Parzen window joint histogram filling is not approximated\n", this->executableName);
-      }
+         reg_print_info(this->executableName, "The multichannel NMI is used as a similarity measure.");
       if(this->measure_nmi!=NULL || (this->measure_dti==NULL && this->measure_kld==NULL &&
                                      this->measure_lncc==NULL && this->measure_multichannel_nmi==NULL &&
                                      this->measure_nmi==NULL && this->measure_ssd==NULL) )
-      {
-         printf("[%s] The NMI is used as a similarity measure.\n", this->executableName);
-//            if(this->approxParzenWindow)
-//                printf("[%s] The Parzen window joint histogram filling is approximated\n", this->executableName);
-//            else printf("[%s] The Parzen window joint histogram filling is not approximated\n", this->executableName);
+         reg_print_info(this->executableName, "The NMI is used as a similarity measure.");
+      sprintf(text, "Similarity measure term weight: %g", this->similarityWeight);
+      reg_print_info(this->executableName, text);
+      reg_print_info(this->executableName, "");
+      if(this->bendingEnergyWeight>0){
+         sprintf(text, "Bending energy penalty term weight: %g", this->bendingEnergyWeight);
+         reg_print_info(this->executableName, text);
+         reg_print_info(this->executableName, "");
       }
-      printf("[%s] Similarity measure term weight: %g\n", this->executableName, this->similarityWeight);
-      printf("[%s]\n", this->executableName);
-      printf("[%s] Bending energy penalty term weight: %g\n", this->executableName, this->bendingEnergyWeight);
-      printf("[%s]\n", this->executableName);
-      printf("[%s] Linear energy penalty term weights: %g %g\n", this->executableName,
-             this->linearEnergyWeight0, this->linearEnergyWeight1);
-      printf("[%s]\n", this->executableName);
-      printf("[%s] L2 norm of the displacement penalty term weights: %g\n", this->executableName,
-             this->L2NormWeight);
-      printf("[%s]\n", this->executableName);
-      printf("[%s] Jacobian-based penalty term weight: %g\n", this->executableName, this->jacobianLogWeight);
-      if(this->jacobianLogWeight>0)
-      {
-         if(this->jacobianLogApproximation) printf("[%s] \t* Jacobian-based penalty term is approximated\n",
-                  this->executableName);
-         else printf("[%s] \t* Jacobian-based penalty term is not approximated\n", this->executableName);
+      if((this->linearEnergyWeight0+this->linearEnergyWeight1)>0){
+         sprintf(text, "Linear energy penalty term weights: %g %g",
+                 this->linearEnergyWeight0, this->linearEnergyWeight1);
+         reg_print_info(this->executableName, text);
+         reg_print_info(this->executableName, "");
+      }
+      if(this->L2NormWeight>0){
+         sprintf(text, "L2 norm of the displacement penalty term weight: %g",
+                 this->L2NormWeight);
+         reg_print_info(this->executableName, text);
+         reg_print_info(this->executableName, "");
+      }
+      if(this->jacobianLogWeight>0){
+         sprintf(text, "Jacobian-based penalty term weight: %g", this->jacobianLogWeight);
+         reg_print_info(this->executableName, text);
+         if(this->jacobianLogApproximation){
+            reg_print_info(this->executableName, "\t* Jacobian-based penalty term is approximated");
+         }
+         else reg_print_info(this->executableName, "\t* Jacobian-based penalty term is not approximated");
+         reg_print_info(this->executableName, "");
       }
 #ifdef NDEBUG
    }
@@ -400,8 +426,8 @@ void reg_f3d<T>::Initialise()
    reg_print_fct_debug("reg_f3d<T>::Initialise");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::GetDeformationField()
 {
@@ -415,8 +441,8 @@ void reg_f3d<T>::GetDeformationField()
    reg_print_fct_debug("reg_f3d<T>::GetDeformationField");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 double reg_f3d<T>::ComputeJacobianBasedPenaltyTerm(int type)
 {
@@ -454,7 +480,7 @@ double reg_f3d<T>::ComputeJacobianBasedPenaltyTerm(int type)
                                            this->jacobianLogApproximation);
       }
 #ifndef NDEBUG
-      printf("[NiftyReg DEBUG] Folding correction\n");
+      reg_print_msg_debug("Folding correction");
 #endif
       it++;
    }
@@ -463,13 +489,17 @@ double reg_f3d<T>::ComputeJacobianBasedPenaltyTerm(int type)
       if(value!=value)
       {
          this->optimiser->RestoreBestDOF();
-         fprintf(stderr, "[NiftyReg ERROR] The folding correction scheme failed\n");
+         reg_print_fct_warn("reg_f3d<T>::ComputeJacobianBasedPenaltyTerm()");
+         reg_print_msg_warn("The folding correction scheme failed");
       }
       else
       {
 #ifndef NDEBUG
-         if(it>0)
-            printf("[%s] Folding correction, %i step(s)\n", this->executableName, it);
+         if(it>0){
+            char text[255];
+            sprintf(text, "Folding correction, %i step(s)", it);
+            reg_print_msg_debug(text);
+         }
 #endif
       }
    }
@@ -478,8 +508,8 @@ double reg_f3d<T>::ComputeJacobianBasedPenaltyTerm(int type)
 #endif
    return (double)this->jacobianLogWeight * value;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 double reg_f3d<T>::ComputeBendingEnergyPenaltyTerm()
 {
@@ -491,8 +521,8 @@ double reg_f3d<T>::ComputeBendingEnergyPenaltyTerm()
 #endif
    return this->bendingEnergyWeight * value;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 double reg_f3d<T>::ComputeLinearEnergyPenaltyTerm()
 {
@@ -508,8 +538,8 @@ double reg_f3d<T>::ComputeLinearEnergyPenaltyTerm()
    return this->linearEnergyWeight0*values_le[0] +
           this->linearEnergyWeight1*values_le[1];
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 double reg_f3d<T>::ComputeL2NormDispPenaltyTerm()
 {
@@ -523,8 +553,8 @@ double reg_f3d<T>::ComputeL2NormDispPenaltyTerm()
 #endif
    return (double)this->L2NormWeight*values_l2;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::GetSimilarityMeasureGradient()
 {
@@ -584,8 +614,8 @@ void reg_f3d<T>::GetSimilarityMeasureGradient()
 #endif
    return;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::GetBendingEnergyGradient()
 {
@@ -598,8 +628,8 @@ void reg_f3d<T>::GetBendingEnergyGradient()
    reg_print_fct_debug("reg_f3d<T>::GetBendingEnergyGradient");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::GetLinearEnergyGradient()
 {
@@ -614,8 +644,8 @@ void reg_f3d<T>::GetLinearEnergyGradient()
    reg_print_fct_debug("reg_f3d<T>::GetLinearEnergyGradient");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::GetL2NormDispGradient()
 {
@@ -629,8 +659,8 @@ void reg_f3d<T>::GetL2NormDispGradient()
    reg_print_fct_debug("reg_f3d<T>::GetL2NormDispGradient");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::GetJacobianBasedGradient()
 {
@@ -645,8 +675,8 @@ void reg_f3d<T>::GetJacobianBasedGradient()
    reg_print_fct_debug("reg_f3d<T>::GetJacobianBasedGradient");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::SetGradientImageToZero()
 {
@@ -657,8 +687,8 @@ void reg_f3d<T>::SetGradientImageToZero()
    reg_print_fct_debug("reg_f3d<T>::SetGradientImageToZero");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 T reg_f3d<T>::NormaliseGradient()
 {
@@ -713,7 +743,9 @@ T reg_f3d<T>::NormaliseGradient()
       // The gradient is normalised if we are running f3d
       // It will be normalised later when running f3d_sym or f3d2
 #ifndef NDEBUG
-      printf("[NiftyReg DEBUG] Objective function gradient maximal length: %g\n",maxGradValue);
+      char text[255];
+      sprintf(text, "Objective function gradient maximal length: %g",maxGradValue);
+      reg_print_msg_debug(text);
 #endif
       ptrX = static_cast<T *>(this->transformationGradient->data);
       if(this->transformationGradient->nz>1)
@@ -768,8 +800,8 @@ T reg_f3d<T>::NormaliseGradient()
 #endif
    return maxGradValue;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::DisplayCurrentLevelParameters()
 {
@@ -777,29 +809,36 @@ void reg_f3d<T>::DisplayCurrentLevelParameters()
    if(this->verbose)
    {
 #endif
-      printf("[%s] **************************************************\n", this->executableName);
-      printf("[%s] Current level: %i / %i\n", this->executableName, this->currentLevel+1, this->levelNumber);
-      printf("[%s] Current reference image\n", this->executableName);
-      printf("[%s] \t* image dimension: %i x %i x %i x %i\n", this->executableName,
+      char text[255];
+      sprintf(text, "Current level: %i / %i", this->currentLevel+1, this->levelNumber);
+      reg_print_info(this->executableName, text);
+      reg_print_info(this->executableName, "Current reference image");
+      sprintf(text, "\t* image dimension: %i x %i x %i x %i",
              this->currentReference->nx, this->currentReference->ny,
              this->currentReference->nz,this->currentReference->nt);
-      printf("[%s] \t* image spacing: %g x %g x %g mm\n", this->executableName,
+      reg_print_info(this->executableName, text);
+      sprintf(text, "\t* image spacing: %g x %g x %g mm",
              this->currentReference->dx, this->currentReference->dy,
              this->currentReference->dz);
-      printf("[%s] Current floating image\n", this->executableName);
-      printf("[%s] \t* image dimension: %i x %i x %i x %i\n", this->executableName,
+      reg_print_info(this->executableName, text);
+      reg_print_info(this->executableName, "Current floating image");
+      sprintf(text, "\t* image dimension: %i x %i x %i x %i",
              this->currentFloating->nx, this->currentFloating->ny,
              this->currentFloating->nz,this->currentFloating->nt);
-      printf("[%s] \t* image spacing: %g x %g x %g mm\n", this->executableName,
+      reg_print_info(this->executableName, text);
+      sprintf(text, "\t* image spacing: %g x %g x %g mm",
              this->currentFloating->dx, this->currentFloating->dy,
              this->currentFloating->dz);
-      printf("[%s] Current control point image\n", this->executableName);
-      printf("[%s] \t* image dimension: %i x %i x %i\n", this->executableName,
+      reg_print_info(this->executableName, text);
+      reg_print_info(this->executableName, "Current control point image");
+      sprintf(text, "\t* image dimension: %i x %i x %i",
              this->controlPointGrid->nx, this->controlPointGrid->ny,
              this->controlPointGrid->nz);
-      printf("[%s] \t* image spacing: %g x %g x %g mm\n", this->executableName,
+      reg_print_info(this->executableName, text);
+      sprintf(text, "\t* image spacing: %g x %g x %g mm",
              this->controlPointGrid->dx, this->controlPointGrid->dy,
              this->controlPointGrid->dz);
+      reg_print_info(this->executableName, text);
 #ifdef NDEBUG
    }
 #endif
@@ -821,8 +860,8 @@ void reg_f3d<T>::DisplayCurrentLevelParameters()
    reg_print_fct_debug("reg_f3d<T>::DisplayCurrentLevelParameters");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 double reg_f3d<T>::GetObjectiveFunctionValue()
 {
@@ -846,12 +885,10 @@ double reg_f3d<T>::GetObjectiveFunctionValue()
       reg_print_msg_warn("No measure of similarity is part of the cost function");
    }
 #ifndef NDEBUG
-   printf("[NiftyReg DEBUG] (wMeasure) %g | (wBE) %g | (wLE) %g | (wL2) %g | (wJac) %g\n",
-          this->currentWMeasure,
-          this->currentWBE,
-          this->currentWLE,
-          this->currentWL2,
-          this->currentWJac);
+   char text[255];
+   sprintf(text, "(wMeasure) %g | (wBE) %g | (wLE) %g | (wL2) %g | (wJac) %g",
+           this->currentWMeasure, this->currentWBE, this->currentWLE, this->currentWL2, this->currentWJac);
+   reg_print_msg_debug(text);
 #endif
 
 #ifndef NDEBUG
@@ -860,8 +897,8 @@ double reg_f3d<T>::GetObjectiveFunctionValue()
    // Store the global objective function value
    return this->currentWMeasure - this->currentWBE - this->currentWLE - this->currentWL2 - this->currentWJac;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::UpdateParameters(float scale)
 {
@@ -918,8 +955,8 @@ void reg_f3d<T>::UpdateParameters(float scale)
    reg_print_fct_debug("reg_f3d<T>::UpdateParameters");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::SetOptimiser()
 {
@@ -939,8 +976,8 @@ void reg_f3d<T>::SetOptimiser()
    reg_print_fct_debug("reg_f3d<T>::SetOptimiser");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::SmoothGradient()
 {
@@ -956,8 +993,8 @@ void reg_f3d<T>::SmoothGradient()
    reg_print_fct_debug("reg_f3d<T>::SmoothGradient");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template <class T>
 void reg_f3d<T>::GetApproximatedGradient()
 {
@@ -979,8 +1016,8 @@ void reg_f3d<T>::GetApproximatedGradient()
    reg_print_fct_debug("reg_f3d<T>::GetApproximatedGradient");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 nifti_image **reg_f3d<T>::GetWarpedImage()
 {
@@ -989,13 +1026,16 @@ nifti_image **reg_f3d<T>::GetWarpedImage()
          this->inputFloating==NULL ||
          this->controlPointGrid==NULL)
    {
-      fprintf(stderr,"[NiftyReg ERROR] reg_f3d::GetWarpedImage()\n");
-      fprintf(stderr," * The reference, floating and control point grid images have to be defined\n");
+      reg_print_fct_error("reg_f3d<T>::GetWarpedImage()");
+      reg_print_msg_error("The reference, floating and control point grid images have to be defined");
+      reg_exit(1);
    }
 
    this->currentReference = this->inputReference;
    this->currentFloating = this->inputFloating;
    this->currentMask=NULL;
+
+   this->warpedPaddingValue=0.;
 
    reg_base<T>::AllocateWarped();
    reg_base<T>::AllocateDeformationField();
@@ -1019,8 +1059,8 @@ nifti_image **reg_f3d<T>::GetWarpedImage()
 #endif
    return resultImage;
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 nifti_image * reg_f3d<T>::GetControlPointPositionImage()
 {
@@ -1033,8 +1073,8 @@ nifti_image * reg_f3d<T>::GetControlPointPositionImage()
    reg_print_fct_debug("reg_f3d<T>::GetControlPointPositionImage");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::UpdateBestObjFunctionValue()
 {
@@ -1047,8 +1087,8 @@ void reg_f3d<T>::UpdateBestObjFunctionValue()
    reg_print_fct_debug("reg_f3d<T>::UpdateBestObjFunctionValue");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::PrintInitialObjFunctionValue()
 {
@@ -1056,39 +1096,42 @@ void reg_f3d<T>::PrintInitialObjFunctionValue()
 
    double bestValue=this->optimiser->GetBestObjFunctionValue();
 
-   printf("[%s] Initial objective function: %g = (wSIM)%g - (wBE)%g - (wLE)%g - (wL2)%g - (wJAC)%g\n",
-          this->executableName, bestValue, this->bestWMeasure, this->bestWBE, this->bestWLE, this->bestWL2, this->bestWJac);
+   char text[255];
+   sprintf(text, "Initial objective function: %g = (wSIM)%g - (wBE)%g - (wLE)%g - (wL2)%g - (wJAC)%g",
+          bestValue, this->bestWMeasure, this->bestWBE, this->bestWLE, this->bestWL2, this->bestWJac);
+   reg_print_info(this->executableName, text);
 #ifndef NDEBUG
    reg_print_fct_debug("reg_f3d<T>::PrintInitialObjFunctionValue");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::PrintCurrentObjFunctionValue(T currentSize)
 {
    if(!this->verbose) return;
 
-   printf("[%s] [%i] Current objective function: %g",
-          this->executableName,
+   char text[255];
+   sprintf(text, "[%i] Current objective function: %g",
           (int)this->optimiser->GetCurrentIterationNumber(),
           this->optimiser->GetBestObjFunctionValue());
-   printf(" = (wSIM)%g", this->bestWMeasure);
+   sprintf(text, "%s = (wSIM)%g", text, this->bestWMeasure);
    if(this->bendingEnergyWeight>0)
-      printf(" - (wBE)%.2e", this->bestWBE);
+      sprintf(text, "%s - (wBE)%.2e", text, this->bestWBE);
    if(this->linearEnergyWeight0>0 || this->linearEnergyWeight1>0)
-      printf(" - (wLE)%.2e", this->bestWLE);
+      sprintf(text, "%s - (wLE)%.2e", text, this->bestWLE);
    if(this->L2NormWeight>0)
-      printf(" - (wL2)%.2e", this->bestWL2);
+      sprintf(text, "%s - (wL2)%.2e", text, this->bestWL2);
    if(this->jacobianLogWeight>0)
-      printf(" - (wJAC)%.2e", this->bestWJac);
-   printf(" [+ %g mm]\n", currentSize);
+      sprintf(text, "%s - (wJAC)%.2e", text, this->bestWJac);
+   sprintf(text, "%s [+ %g mm]", text, currentSize);
+   reg_print_info(this->executableName, text);
 #ifndef NDEBUG
    reg_print_fct_debug("reg_f3d<T>::PrintCurrentObjFunctionValue");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::GetObjectiveFunctionGradient()
 {
@@ -1105,17 +1148,16 @@ void reg_f3d<T>::GetObjectiveFunctionGradient()
       {
          this->SetGradientImageToZero();
       }
-   }
-
-   if(!this->useApproxGradient)
-   {
       // Compute the penalty term gradients if required
       this->GetBendingEnergyGradient();
       this->GetJacobianBasedGradient();
       this->GetLinearEnergyGradient();
       this->GetL2NormDispGradient();
    }
-   else this->GetApproximatedGradient();
+   else
+   {
+      this->GetApproximatedGradient();
+   }
 
    this->optimiser->IncrementCurrentIterationNumber();
 
@@ -1125,8 +1167,8 @@ void reg_f3d<T>::GetObjectiveFunctionGradient()
    reg_print_fct_debug("reg_f3d<T>::GetObjectiveFunctionGradient");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 template<class T>
 void reg_f3d<T>::CorrectTransformation()
 {
@@ -1136,6 +1178,6 @@ void reg_f3d<T>::CorrectTransformation()
    reg_print_fct_debug("reg_f3d<T>::CorrectTransformation");
 #endif
 }
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
+/* *************************************************************** */
+/* *************************************************************** */
 #endif

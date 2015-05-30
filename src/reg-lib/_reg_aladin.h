@@ -24,205 +24,257 @@
 #include "float.h"
 #include <limits>
 
-template <class T>
+class Content;
+class Platform;
+class Kernel;
+
+template<class T>
 class reg_aladin
 {
 protected:
-   char *ExecutableName;
-   nifti_image *InputReference;
-   nifti_image *InputFloating;
-   nifti_image *InputReferenceMask;
-   nifti_image **ReferencePyramid;
-   nifti_image **FloatingPyramid;
-   int **ReferenceMaskPyramid;
-   nifti_image *CurrentReference;
-   nifti_image *CurrentFloating;
-   nifti_image *CurrentWarped;
-   nifti_image *deformationFieldImage;
-   int *CurrentReferenceMask;
-   int *activeVoxelNumber;
+	char *executableName;
+	nifti_image *InputReference;
+	nifti_image *InputFloating;
+	nifti_image *InputReferenceMask;
+	nifti_image **ReferencePyramid;
+	nifti_image **FloatingPyramid;
+	int **ReferenceMaskPyramid;
+	nifti_image *CurrentReference;
+	nifti_image *CurrentFloating;
+	nifti_image *CurrentWarped;
+	nifti_image *deformationFieldImage;
+	int *CurrentReferenceMask;
+	int *activeVoxelNumber;
 
-   char *InputTransformName;
-   mat44 *TransformationMatrix;
+	char *InputTransformName;
+	mat44 *TransformationMatrix;
 
-   bool Verbose;
+	bool Verbose;
 
-   unsigned int MaxIterations;
+	unsigned int MaxIterations;
 
-   unsigned int CurrentLevel;
-   unsigned int NumberOfLevels;
-   unsigned int LevelsToPerform;
+	unsigned int CurrentLevel;
+	unsigned int NumberOfLevels;
+	unsigned int LevelsToPerform;
 
-   bool PerformRigid;
-   bool PerformAffine;
+	bool PerformRigid;
+	bool PerformAffine;
+	bool ils;
+	bool cusvd;
+	int captureRangeVox;
 
-   int BlockPercentage;
-   int InlierLts;
-   int BlockStepSize;
-   _reg_blockMatchingParam blockMatchingParams;
+	int BlockPercentage;
+	int InlierLts;
+	int BlockStepSize;
+	_reg_blockMatchingParam *blockMatchingParams;
 
-   bool AlignCentre;
-   bool AlignCentreGravity;
+	bool AlignCentre;
+	bool AlignCentreGravity;
 
-   int Interpolation;
+	int Interpolation;
 
-   float FloatingSigma;
-   float ReferenceSigma;
+	float FloatingSigma;
+	float ReferenceSigma;
 
-   float ReferenceUpperThreshold;
-   float ReferenceLowerThreshold;
-   float FloatingUpperThreshold;
-   float FloatingLowerThreshold;
+	float ReferenceUpperThreshold;
+	float ReferenceLowerThreshold;
+	float FloatingUpperThreshold;
+	float FloatingLowerThreshold;
+	int clIdx;
 
-   bool TestMatrixConvergence(mat44 *mat);
+	Platform *platform;
 
-   virtual void InitialiseRegistration();
-   virtual void SetCurrentImages();
-   virtual void ClearCurrentInputImage();
-   virtual void AllocateWarpedImage();
-   virtual void ClearWarpedImage();
-   virtual void AllocateDeformationField();
-   virtual void ClearDeformationField();
+	bool TestMatrixConvergence(mat44 *mat);
 
-   virtual void InitialiseBlockMatching(int);
-   virtual void GetDeformationField();
-   virtual void GetWarpedImage(int);
-   virtual void UpdateTransformationMatrix(int);
+	virtual void InitialiseRegistration();
+	virtual void SetCurrentImages();
+	virtual void ClearCurrentInputImage();
+	virtual void AllocateWarpedImage();
+	virtual void ClearWarpedImage();
 
-   void (*funcProgressCallback)(float pcntProgress, void *params);
-   void *paramsProgressCallback;
+	virtual void GetDeformationField();
+	virtual void GetWarpedImage(int);
+	virtual void UpdateTransformationMatrix(int);
+
+	void (*funcProgressCallback)(float pcntProgress, void *params);
+	void *paramsProgressCallback;
+
+	//platform factory methods
+	virtual void initContent(nifti_image *ref,
+									 nifti_image *flo,
+									 int *mask,
+									 mat44 *transMat,
+									 size_t bytes,
+									 unsigned int blockPercentage,
+									 unsigned int inlierLts,
+									 unsigned int blockStepSize);
+	virtual void initContent(nifti_image *ref,
+									 nifti_image *flo,
+									 int *mask,
+									 mat44 *transMat,
+									 size_t bytes);
+	virtual void clearContent();
+	virtual void createKernels();
+	virtual void clearKernels();
 
 public:
-   reg_aladin();
-   virtual ~reg_aladin();
-   GetStringMacro(ExecutableName);
+	reg_aladin();
+	virtual ~reg_aladin();
+	GetStringMacro(executableName)
 
-   //No allocating of the images here...
-   void SetInputReference(nifti_image *input)
-   {
-      this->InputReference = input;
-   }
-   nifti_image* GetInputReference()
-   {
-      return this->InputReference;
-   }
+	int platformCode;
 
-   void SetInputFloating(nifti_image *input)
-   {
-      this->InputFloating=input;
-   }
-   nifti_image *GetInputFloating()
-   {
-      return this->InputFloating;
-   }
+	void setPlatformCode(const int platformCodeIn)
+	{
+		platformCode = platformCodeIn;
+	}
+	void setIls(const bool ilsIn)
+	{
+		ils = ilsIn;
+	}
+	void setCusvd(const bool cusvdIn)
+	{
+		cusvd = cusvdIn;
+	}
 
-   void SetInputMask(nifti_image *input)
-   {
-      this->InputReferenceMask=input;
-   }
-   nifti_image *GetInputMask()
-   {
-      return this->InputReferenceMask;
-   }
+	//No allocating of the images here...
+	void SetInputReference(nifti_image *input)
+	{
+		this->InputReference = input;
+	}
+	nifti_image *GetInputReference()
+	{
+		return this->InputReference;
+	}
+	void SetInputFloating(nifti_image *input)
+	{
+		this->InputFloating = input;
+	}
+	nifti_image *GetInputFloating()
+	{
+		return this->InputFloating;
+	}
 
-   void SetInputTransform(const char *filename);
-   mat44* GetInputTransform()
-   {
-      return this->InputTransform;
-   }
+	void SetInputMask(nifti_image *input)
+	{
+		this->InputReferenceMask = input;
+	}
+	nifti_image *GetInputMask()
+	{
+		return this->InputReferenceMask;
+	}
 
-   mat44* GetTransformationMatrix()
-   {
-      return this->TransformationMatrix;
-   }
-   nifti_image *GetFinalWarpedImage();
+	void SetInputTransform(const char *filename);
+	mat44 *GetInputTransform()
+	{
+		return this->InputTransform;
+	}
 
-   SetMacro(MaxIterations,unsigned int);
-   GetMacro(MaxIterations,unsigned int);
+	mat44 *GetTransformationMatrix()
+	{
+		return this->TransformationMatrix;
+	}
+	nifti_image *GetFinalWarpedImage();
 
-   SetMacro(NumberOfLevels,unsigned int);
-   GetMacro(NumberOfLevels,unsigned int);
+	SetMacro(MaxIterations,unsigned int)
+	GetMacro(MaxIterations,unsigned int)
 
-   SetMacro(LevelsToPerform,unsigned int);
-   GetMacro(LevelsToPerform,unsigned int);
+	SetMacro(NumberOfLevels,unsigned int)
+	GetMacro(NumberOfLevels,unsigned int)
 
-   SetMacro(BlockPercentage,int);
-   GetMacro(BlockPercentage,int);
+	SetMacro(LevelsToPerform,unsigned int)
+	GetMacro(LevelsToPerform,unsigned int)
 
-   SetMacro(BlockStepSize,int);
-   GetMacro(BlockStepSize,int);
+	SetMacro(BlockPercentage,int)
+	GetMacro(BlockPercentage,int)
 
-   SetMacro(InlierLts,float);
-   GetMacro(InlierLts,float);
+	SetMacro(BlockStepSize,int)
+	GetMacro(BlockStepSize,int)
 
-   SetMacro(ReferenceSigma,float);
-   GetMacro(ReferenceSigma,float);
+	SetMacro(InlierLts,float)
+	GetMacro(InlierLts,float)
 
-   SetMacro(ReferenceUpperThreshold,float);
-   GetMacro(ReferenceUpperThreshold,float);
-   SetMacro(ReferenceLowerThreshold,float);
-   GetMacro(ReferenceLowerThreshold,float);
+	SetMacro(ReferenceSigma,float)
+	GetMacro(ReferenceSigma,float)
 
-   SetMacro(FloatingUpperThreshold,float);
-   GetMacro(FloatingUpperThreshold,float);
-   SetMacro(FloatingLowerThreshold,float);
-   GetMacro(FloatingLowerThreshold,float);
+	SetMacro(ReferenceUpperThreshold,float)
+	GetMacro(ReferenceUpperThreshold,float)
+	SetMacro(ReferenceLowerThreshold,float)
+	GetMacro(ReferenceLowerThreshold,float)
 
-   SetMacro(FloatingSigma,float);
-   GetMacro(FloatingSigma,float);
+	SetMacro(FloatingUpperThreshold,float)
+	GetMacro(FloatingUpperThreshold,float)
+	SetMacro(FloatingLowerThreshold,float)
+	GetMacro(FloatingLowerThreshold,float)
 
-   SetMacro(PerformRigid,int);
-   GetMacro(PerformRigid,int);
-   BooleanMacro(PerformRigid, int);
+	SetMacro(FloatingSigma,float)
+	GetMacro(FloatingSigma,float)
 
-   SetMacro(PerformAffine,int);
-   GetMacro(PerformAffine,int);
-   BooleanMacro(PerformAffine, int);
+	SetMacro(PerformRigid,int)
+	GetMacro(PerformRigid,int)
+	BooleanMacro(PerformRigid, int)
 
-   GetMacro(AlignCentre,int);
-   SetMacro(AlignCentre,int);
-   BooleanMacro(AlignCentre, int);
+	SetMacro(PerformAffine,int)
+	GetMacro(PerformAffine,int)
+	BooleanMacro(PerformAffine, int)
 
-   GetMacro(AlignCentreGravity,int);
-   SetMacro(AlignCentreGravity,int);
-   BooleanMacro(AlignCentreGravity, int);
+	GetMacro(AlignCentre,int)
+	SetMacro(AlignCentre,int)
+	BooleanMacro(AlignCentre, int)
+	GetMacro(AlignCentreGravity,int)
+	SetMacro(AlignCentreGravity,int)
+	BooleanMacro(AlignCentreGravity, int)
 
-   SetClampMacro(Interpolation,int,0,3);
-   GetMacro(Interpolation, int);
+	SetClampMacro(Interpolation,int,0,3)
+	GetMacro(Interpolation, int)
 
-   virtual void SetInputFloatingMask (nifti_image*)
-   {
-      fprintf(stderr, "Floating mask not used in one way affine\n");
-   }
-   void SetInterpolationToNearestNeighbor()
-   {
-      this->SetInterpolation(0);
-   }
-   void SetInterpolationToTrilinear()
-   {
-      this->SetInterpolation(1);
-   }
-   void SetInterpolationToCubic()
-   {
-      this->SetInterpolation(3);
-   }
+	virtual void SetInputFloatingMask(nifti_image*)
+	{
+		reg_print_fct_warn("reg_aladin::SetInputFloatingMask()");
+		reg_print_msg_warn("Floating mask not used in the asymmetric global registration");
+	}
+	void SetInterpolationToNearestNeighbor()
+	{
+		this->SetInterpolation(0);
+	}
+	void SetInterpolationToTrilinear()
+	{
+		this->SetInterpolation(1);
+	}
+	void SetInterpolationToCubic()
+	{
+		this->SetInterpolation(3);
+	}
+	void setCaptureRangeVox(int captureRangeIn)
+	{
+		this->captureRangeVox = captureRangeIn;
+	}
 
-   virtual int Check();
-   virtual int Print();
-   virtual void Run();
+	void setClIdx(int clIdxIn) {
+		this->clIdx = clIdxIn;
+	}
+	virtual int Check();
+	virtual int Print();
+	virtual void Run();
 
-   virtual void DebugPrintLevelInfoStart();
-   virtual void DebugPrintLevelInfoEnd();
-   virtual void SetVerbose(bool _verbose);
+	virtual void DebugPrintLevelInfoStart();
+	virtual void DebugPrintLevelInfoEnd();
+	virtual void SetVerbose(bool _verbose);
 
-   void SetProgressCallbackFunction( void (*funcProgCallback)(float pcntProgress,
-                                     void *params),
-                                     void *paramsProgCallback )
-   {
-      funcProgressCallback = funcProgCallback;
-      paramsProgressCallback = paramsProgCallback;
-   }
+	void SetProgressCallbackFunction(void (*funcProgCallback)(float pcntProgress,
+																				 void *params),
+												void *paramsProgCallback)
+	{
+		funcProgressCallback = funcProgCallback;
+		paramsProgressCallback = paramsProgCallback;
+	}
+	Content *con;
 
+private:
+	Kernel *affineTransformation3DKernel,*blockMatchingKernel;
+	Kernel *optimiseKernel, *resamplingKernel;
+	void resolveMatrix(unsigned int iterations,
+							 const unsigned int optimizationFlag);
 };
 
 #include "_reg_aladin.cpp"
