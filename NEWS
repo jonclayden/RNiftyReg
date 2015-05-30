@@ -2,6 +2,13 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 1.1.3
+
+- The C++ code is now more careful to avoid buffer overruns when text fields in
+  a "nifti" object are too long.
+
+=================================================================================
+
 VERSION 1.1.2
 
 - Some sample data has been added to the package, along with some code examples.
