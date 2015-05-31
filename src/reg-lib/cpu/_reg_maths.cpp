@@ -7,7 +7,9 @@
 // Eigen headers are in there because of the nvcc preprocessing step
 #include "Eigen/Core"
 #include "Eigen/SVD"
+#ifndef RNIFTYREG
 #include "Eigen/unsupported/MatrixFunctions"
+#endif
 
 #define mat(i,j,dim) mat[i*dim+j]
 

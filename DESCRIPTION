@@ -7,6 +7,7 @@ Maintainer: Jon Clayden <code@clayden.org>
 Depends: R (>= 2.9.0)
 Imports: reportr, oro.nifti
 Suggests: splines
+LinkingTo: Rcpp, RcppEigen
 Description: Provides an R interface to the NiftyReg image registration tools <http://sourceforge.net/projects/niftyreg/>. Linear and nonlinear registration are supported.
 License: GPL-2
 URL: https://github.com/jonclayden/RNiftyReg

@@ -18,7 +18,7 @@
 /* *************************************************************** */
 template <class T>
 reg_f3d_sym<T>::reg_f3d_sym(int refTimePoint,int floTimePoint)
-   :reg_f3d<T>::reg_f3d(refTimePoint,floTimePoint)
+   :reg_f3d<T>(refTimePoint,floTimePoint)
 {
    this->executableName=(char *)"NiftyReg F3D SYM";
 

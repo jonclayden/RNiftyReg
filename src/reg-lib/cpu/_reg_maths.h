@@ -33,6 +33,19 @@ typedef enum
 } NREG_TRANS_TYPE;
 
 /* *************************************************************** */
+#ifdef RNIFTYREG
+// Rmath.h redefines "pythag", but the R function it points to is defunct
+#include <Rmath.h>
+#undef pythag
+#define reg_pow2(a)     R_pow_di(a,2)
+#define reg_ceil(a)     ceil(a)
+#define reg_round(a)    round(a)
+#define reg_floor(a)    floor(a)
+#define SIGN(a,b)       fsign(a,b)
+#define FMAX(a,b)       fmax2(a,b)
+#define IMIN(a,b)       imin2(a,b)
+#define SQR(a)          R_pow_di(a,2)
+#else
 #define reg_pow2(a) ((a)*(a))
 #define reg_ceil(a) (ceil(a))
 #define reg_round(a) ((a)>0.0 ?(int)((a)+0.5):(int)((a)-0.5))
@@ -45,10 +58,11 @@ typedef enum
 #define FMAX(a,b) (a > b ? a : b)
 #define IMIN(a,b) (a < b ? a : b)
 #define SQR(a) (a==0.0 ? 0.0 : a*a)
+#endif
 /* *************************************************************** */
 #ifdef RNIFTYREG
 #define R_NO_REMAP
-#include <R.h>  // This may have to change to Rcpp.h or RcppEigen.h later
+#include <RcppEigen.h>  // This may have to change to Rcpp.h or RcppEigen.h later
 #define reg_exit(val)                   Rf_error("[NiftyReg] Fatal error with code %d", val)
 #define reg_print_info(executable,text) Rprintf("[%s] %s\n", executable, text)
 #define reg_print_fct_debug(text)       Rprintf("[NiftyReg DEBUG] Function: %s called\n", text)

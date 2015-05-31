@@ -2636,9 +2636,9 @@ void reg_defField_compose3D(nifti_image *deformationField,
          //reg_mat44_mul(df_real2Voxel, realDef, voxel);
 
          // Linear interpolation to compute the new deformation
-         pre[0]=static_cast<int>reg_floor(voxel[0]);
-         pre[1]=static_cast<int>reg_floor(voxel[1]);
-         pre[2]=static_cast<int>reg_floor(voxel[2]);
+         pre[0]=static_cast<int>(reg_floor(voxel[0]));
+         pre[1]=static_cast<int>(reg_floor(voxel[1]));
+         pre[2]=static_cast<int>(reg_floor(voxel[2]));
          relX[1]=voxel[0]-static_cast<DTYPE>(pre[0]);
          relX[0]=1.-relX[1];
          relY[1]=voxel[1]-static_cast<DTYPE>(pre[1]);
