@@ -7,12 +7,12 @@
 using namespace Rcpp;
 
 // Convert an S4 "nifti" object, as defined in the oro.nifti package, to a "nifti_image" struct
-nifti_image * retrieveImageFromNiftiS4 (const RObject &object, bool copyData = true)
+nifti_image * retrieveImageFromNiftiS4 (const RObject &object, const bool copyData = true)
 {
     nifti_1_header header;
     header.sizeof_hdr = 348;
     
-    std::vector<short> dims = object.slot("dim_");
+    const std::vector<short> dims = object.slot("dim_");
     for (int i=0; i<8; i++)
         header.dim[i] = dims[i];
     
@@ -29,7 +29,7 @@ nifti_image * retrieveImageFromNiftiS4 (const RObject &object, bool copyData = t
     header.slice_code = object.slot("slice_code");
     header.slice_duration = object.slot("slice_duration");
     
-    std::vector<float> pixdims = object.slot("pixdim");
+    const std::vector<float> pixdims = object.slot("pixdim");
     for (int i=0; i<8; i++)
         header.pixdim[i] = pixdims[i];
     header.xyzt_units = object.slot("xyzt_units");
@@ -63,9 +63,9 @@ nifti_image * retrieveImageFromNiftiS4 (const RObject &object, bool copyData = t
     header.qoffset_y = object.slot("qoffset_y");
     header.qoffset_z = object.slot("qoffset_z");
     
-    std::vector<float> srow_x = object.slot("srow_x");
-    std::vector<float> srow_y = object.slot("srow_y");
-    std::vector<float> srow_z = object.slot("srow_z");
+    const std::vector<float> srow_x = object.slot("srow_x");
+    const std::vector<float> srow_y = object.slot("srow_y");
+    const std::vector<float> srow_z = object.slot("srow_z");
     for (int i=0; i<4; i++)
     {
         header.srow_x[i] = srow_x[i];
@@ -82,12 +82,12 @@ nifti_image * retrieveImageFromNiftiS4 (const RObject &object, bool copyData = t
     
     nifti_image *image = nifti_convert_nhdr2nim(header, NULL);
     
-    SEXP data = object.slot(".Data");
+    const SEXP data = object.slot(".Data");
     if (!copyData || Rf_length(data) == 1)
         image->data = NULL;
     else
     {
-        size_t dataSize = nifti_get_volsize(image);
+        const size_t dataSize = nifti_get_volsize(image);
         image->data = calloc(1, dataSize);
         if (header.datatype == DT_INT32)
             memcpy(image->data, INTEGER(data), dataSize);
@@ -100,7 +100,38 @@ nifti_image * retrieveImageFromNiftiS4 (const RObject &object, bool copyData = t
 
 nifti_image * retrieveImageFromArray (const RObject &object)
 {
-    return NULL;
+    int dims[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    const std::vector<int> dimVector = object.attr("dim");
+    
+    const int nDims = std::min(size_t(7), dimVector.size());
+    dims[0] = nDims;
+    for (int i=0; i<nDims; i++)
+        dims[i+1] = dimVector[i];
+    
+    short datatype = DT_UNKNOWN;
+    const int sexpType = object.sexp_type();
+    if (sexpType == INTSXP || sexpType == LGLSXP)
+        datatype = DT_INT32;
+    else if (sexpType == REALSXP)
+        datatype = DT_FLOAT64;
+    
+    nifti_image *image = nifti_make_new_nim(dims, datatype, TRUE);
+    
+    const size_t dataSize = nifti_get_volsize(image);
+    if (datatype == DT_INT32)
+        memcpy(image->data, INTEGER(object), dataSize);
+    else
+        memcpy(image->data, REAL(object), dataSize);
+    
+    if (object.hasAttribute("pixdim"))
+    {
+        const std::vector<float> pixdimVector = object.attr("dim");
+        const int pixdimLength = pixdimVector.size();
+        for (int i=0; i<std::min(pixdimLength,nDims); i++)
+            image->pixdim[i+1] = pixdimVector[i];
+    }
+    
+    return image;
 }
 
 nifti_image * retrieveImage (const SEXP _image, const bool readData = true)
