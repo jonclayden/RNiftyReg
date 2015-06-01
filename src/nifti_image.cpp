@@ -103,7 +103,7 @@ nifti_image * retrieveImageFromArray (const RObject &object)
     int dims[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     const std::vector<int> dimVector = object.attr("dim");
     
-    const int nDims = std::min(size_t(7), dimVector.size());
+    const int nDims = std::min(7, int(dimVector.size()));
     dims[0] = nDims;
     for (int i=0; i<nDims; i++)
         dims[i+1] = dimVector[i];
