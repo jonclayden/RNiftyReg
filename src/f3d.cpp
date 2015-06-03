@@ -1,8 +1,5 @@
 #include <RcppEigen.h>
 
-// #include "_reg_tools.h"
-// #include "_reg_aladin.h"
-// #include "_reg_aladin_sym.h"
 #include "_reg_f3d.h"
 #include "_reg_f3d_sym.h"
 #include "_reg_localTransformation.h"
@@ -13,7 +10,7 @@
 #include "AffineMatrix.h"
 #include "DeformationField.h"
 
-f3dResult do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, const int nLevels, const int maxIterations, const int interpolation, nifti_image *sourceMaskImage, nifti_image *targetMaskImage, nifti_image *controlPointImage, AffineMatrix *initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float jacobianWeight, const float inverseConsistencyWeight, const bool symmetric, const bool verbose, const bool estimateOnly)
+F3dResult regF3d (nifti_image *sourceImage, nifti_image *targetImage, const int nLevels, const int maxIterations, const int interpolation, nifti_image *sourceMaskImage, nifti_image *targetMaskImage, nifti_image *controlPointImage, AffineMatrix *initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float jacobianWeight, const float inverseConsistencyWeight, const bool symmetric, const bool verbose, const bool estimateOnly)
 {
     if (controlPointImage == NULL && initAffine == NULL)
         initAffine = new AffineMatrix(sourceImage, targetImage);
@@ -34,7 +31,7 @@ f3dResult do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, const 
             reg_tools_changeDatatype<double>(targetImage);
     }
     
-    f3dResult result;
+    F3dResult result;
     
     if (nLevels == 0)
     {
