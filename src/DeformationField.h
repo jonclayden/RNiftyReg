@@ -98,7 +98,9 @@ public:
         nifti_image_free(deformationFieldImage);
     }
     
-    nifti_image * resampleImage (nifti_image * sourceImage, const int interpolation)
+    nifti_image * getFieldImage () const { return deformationFieldImage; }
+    
+    nifti_image * resampleImage (nifti_image * sourceImage, const int interpolation) const
     {
         // Allocate result image
         nifti_image *resultImage = nifti_copy_nim_info(targetImage);
