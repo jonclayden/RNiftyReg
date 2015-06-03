@@ -10,4 +10,4 @@ OBJECTS_LIB = reg-lib/_reg_aladin.o reg-lib/_reg_aladin_sym.o reg-lib/_reg_base.
 
 OBJECTS_IO_NIFTI = reg-io/nifti/nifti1_io.o reg-io/nifti/znzlib.o
 
-OBJECTS = main.o nifti_image.o aladin.o print.o exit.o index.o $(OBJECTS_LIB) $(OBJECTS_LIB_CPU) $(OBJECTS_IO_NIFTI)
+OBJECTS = main.o nifti_image.o aladin.o f3d.o $(OBJECTS_LIB) $(OBJECTS_LIB_CPU) $(OBJECTS_IO_NIFTI)
