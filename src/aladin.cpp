@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "aladin.h"
+#include "AffineMatrix.h"
 #include "DeformationField.h"
 
 // Run the "aladin" registration algorithm
