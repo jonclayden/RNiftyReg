@@ -95,6 +95,10 @@ protected:
 
    double bestWMeasure;
    double currentWMeasure;
+   
+#ifdef RNIFTYREG
+    std::vector<int> completedIterations;
+#endif
 
    virtual void AllocateWarped();
    virtual void ClearWarped();
@@ -242,6 +246,13 @@ public:
    void UseNeareatNeighborInterpolation();
    void UseLinearInterpolation();
    void UseCubicSplineInterpolation();
+   
+#ifdef RNIFTYREG
+   std::vector<int> GetCompletedIterations()
+   {
+       return this->completedIterations;
+   }
+#endif
 
    virtual void CheckParameters();
    void Run();

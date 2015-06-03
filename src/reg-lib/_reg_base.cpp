@@ -1238,6 +1238,11 @@ void reg_base<T>::Run()
                }
             }
          } // while
+         
+#ifdef RNIFTYREG
+         completedIterations[this->currentLevel] = this->optimiser->GetCurrentIterationNumber();
+#endif
+         
          if(perturbation<this->perturbationNumber)
          {
 
