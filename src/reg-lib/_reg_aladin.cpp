@@ -615,13 +615,21 @@ void reg_aladin<T>::resolveMatrix(unsigned int iterations, const unsigned int op
 
 		iteration++;
 	}
+    
+#ifdef RNIFTYREG
+    this->completedIterations[this->CurrentLevel] = iteration;
+#endif
 }
 /* *************************************************************** */
 template<class T>
 void reg_aladin<T>::Run()
 {
 	this->InitialiseRegistration();
-
+    
+#ifdef RNIFTYREG
+    this->completedIterations.resize(this->LevelsToPerform, 0);
+#endif
+    
 	//Main loop over the levels:
 	for (this->CurrentLevel = 0; this->CurrentLevel < this->LevelsToPerform; this->CurrentLevel++) {
 		this->initContent(this->ReferencePyramid[CurrentLevel], this->FloatingPyramid[CurrentLevel],

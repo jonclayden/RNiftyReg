@@ -48,6 +48,10 @@ protected:
 
 	char *InputTransformName;
 	mat44 *TransformationMatrix;
+    
+#ifdef RNIFTYREG
+    std::vector<int> completedIterations;
+#endif    
 
 	bool Verbose;
 
@@ -169,7 +173,17 @@ public:
 	{
 		return this->InputTransform;
 	}
-
+    
+#ifdef RNIFTYREG
+    std::vector<int> GetCompletedIterations()
+    {
+        return this->completedIterations;
+    }
+    void SetTransformationMatrix (mat44 *matrix)
+    {
+        this->TransformationMatrix = matrix;
+    }
+#endif
 	mat44 *GetTransformationMatrix()
 	{
 		return this->TransformationMatrix;
