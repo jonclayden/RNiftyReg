@@ -7,7 +7,7 @@
 using namespace Rcpp;
 
 // Convert an S4 "nifti" object, as defined in the oro.nifti package, to a "nifti_image" struct
-nifti_image * retrieveImageFromNiftiS4 (const RObject &object, const bool copyData = true)
+nifti_image * retrieveImageFromNiftiS4 (const RObject &object, const bool copyData)
 {
     nifti_1_header header;
     header.sizeof_hdr = 348;
@@ -114,6 +114,8 @@ nifti_image * retrieveImageFromArray (const RObject &object)
         datatype = DT_INT32;
     else if (sexpType == REALSXP)
         datatype = DT_FLOAT64;
+    else
+        throw std::runtime_error("Array elements must be numeric");
     
     nifti_image *image = nifti_make_new_nim(dims, datatype, TRUE);
     
@@ -134,10 +136,13 @@ nifti_image * retrieveImageFromArray (const RObject &object)
     return image;
 }
 
-nifti_image * retrieveImage (const SEXP _image, const bool readData = true)
+nifti_image * retrieveImage (const SEXP _image, const bool readData)
 {
     nifti_image *image = NULL;
-    if (Rf_isString(_image))
+    
+    if (Rf_isNull(_image))
+        return NULL;
+    else if (Rf_isString(_image))
     {
         std::string path = as<std::string>(_image);
         image = nifti_image_read(path.c_str(), int(readData));
@@ -159,4 +164,14 @@ nifti_image * retrieveImage (const SEXP _image, const bool readData = true)
     }
     
     return image;
+}
+
+nifti_image * copyCompleteImage (const nifti_image *source)
+{
+    size_t dataSize = nifti_get_volsize(source);
+    nifti_image *result = nifti_copy_nim_info(source);
+    result->data = calloc(1, dataSize);
+    memcpy(result->data, source->data, dataSize);
+    
+    return result;
 }
