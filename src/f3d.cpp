@@ -38,7 +38,6 @@ f3dResult do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, const 
     
     if (nLevels == 0)
     {
-        // result.initAffine = NULL;
         if (controlPointImage != NULL)
         {
             result.forwardControlPoints = copyCompleteImage(controlPointImage);
@@ -132,13 +131,10 @@ f3dResult do_reg_f3d (nifti_image *sourceImage, nifti_image *targetImage, const 
         result.forwardControlPoints = reg->GetControlPointPositionImage();
         if (symmetric)
         {
-            // result.initAffine = initAffine;
             if (!estimateOnly)
                 result.reverseImage = reg->GetWarpedImage()[1];
             result.reverseControlPoints = reg->GetBackwardControlPointPositionImage();
         }
-        // else
-            // result.initAffine = NULL;
         result.iterations = reg->GetCompletedIterations();
         
         // Erase the registration object

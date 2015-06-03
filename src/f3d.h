@@ -5,7 +5,6 @@
 #include "AffineMatrix.h"
 
 struct f3dResult {
-    // AffineMatrix *initAffine;
     nifti_image *forwardImage;
     nifti_image *forwardControlPoints;
     nifti_image *reverseImage;
