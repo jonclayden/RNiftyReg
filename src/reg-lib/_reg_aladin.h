@@ -49,6 +49,10 @@ protected:
 	char *InputTransformName;
 	mat44 *TransformationMatrix;
     
+#ifdef RNIFTYREG
+    std::vector<int> completedIterations;
+#endif
+
 	bool Verbose;
 
 	unsigned int MaxIterations;
@@ -171,6 +175,10 @@ public:
 	}
     
 #ifdef RNIFTYREG
+    std::vector<int> GetCompletedIterations()
+    {
+        return this->completedIterations;
+    }
     void SetTransformationMatrix (mat44 *matrix)
     {
         this->TransformationMatrix = matrix;
