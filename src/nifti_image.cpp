@@ -26,13 +26,13 @@ nifti_image * retrieveImageFromNiftiS4 (const RObject &object, const bool copyDa
     
     header.slice_start = object.slot("slice_start");
     header.slice_end = object.slot("slice_end");
-    header.slice_code = object.slot("slice_code");
+    header.slice_code = as<int>(object.slot("slice_code"));
     header.slice_duration = object.slot("slice_duration");
     
     const std::vector<float> pixdims = object.slot("pixdim");
     for (int i=0; i<8; i++)
         header.pixdim[i] = pixdims[i];
-    header.xyzt_units = object.slot("xyzt_units");
+    header.xyzt_units = as<int>(object.slot("xyzt_units"));
     
     header.vox_offset = object.slot("vox_offset");
     
@@ -127,7 +127,7 @@ nifti_image * retrieveImageFromArray (const RObject &object)
     
     if (object.hasAttribute("pixdim"))
     {
-        const std::vector<float> pixdimVector = object.attr("dim");
+        const std::vector<float> pixdimVector = object.attr("pixdim");
         const int pixdimLength = pixdimVector.size();
         for (int i=0; i<std::min(pixdimLength,nDims); i++)
             image->pixdim[i+1] = pixdimVector[i];
@@ -152,8 +152,8 @@ nifti_image * retrieveImage (const SEXP _image, const bool readData)
         RObject imageObject(_image);
         if (imageObject.hasAttribute(".nifti_image_ptr"))
         {
-            XPtr<nifti_image> imagePtr(SEXP(imageObject.attr(".nifti_image_ptr")));
-            image = imagePtr;
+            XPtr<NiftiImage> imagePtr(SEXP(imageObject.attr(".nifti_image_ptr")));
+            image = *imagePtr;
         }
         else if (imageObject.inherits("nifti"))
             image = retrieveImageFromNiftiS4(imageObject, readData);
@@ -174,4 +174,93 @@ nifti_image * copyCompleteImage (const nifti_image *source)
     memcpy(result->data, source->data, dataSize);
     
     return result;
+}
+
+template <typename SourceType, typename TargetType>
+TargetType convertValue (SourceType value)
+{
+    return static_cast<TargetType>(value);
+}
+
+template <typename SourceType, int SexpType>
+RObject imageDataToArray (const nifti_image *source)
+{
+    if (source == NULL)
+        return RObject();
+    else
+    {
+        SourceType *original = static_cast<SourceType *>(source->data);
+        Rcpp::Vector<SexpType> array(static_cast<int>(source->nvox));
+        
+        if (SexpType == INTSXP || SexpType == LGLSXP)
+            std::transform(original, original + source->nvox, array.begin(), convertValue<SourceType,int>);
+        else if (SexpType == REALSXP)
+            std::transform(original, original + source->nvox, array.begin(), convertValue<SourceType,double>);
+        else
+            throw std::runtime_error("Only numeric arrays can be created");
+        
+        return array;
+    }
+}
+
+RObject imageToArray (nifti_image *source)
+{
+    RObject array;
+    
+    switch (source->datatype)
+    {
+        case DT_UINT8:
+        array = imageDataToArray<uint8_t,INTSXP>(source);
+        break;
+        
+        case DT_INT16:
+        array = imageDataToArray<int16_t,INTSXP>(source);
+        break;
+        
+        case DT_INT32:
+        array = imageDataToArray<int32_t,INTSXP>(source);
+        break;
+        
+        case DT_FLOAT32:
+        array = imageDataToArray<float,REALSXP>(source);
+        break;
+        
+        case DT_FLOAT64:
+        array = imageDataToArray<double,REALSXP>(source);
+        break;
+        
+        case DT_INT8:
+        array = imageDataToArray<int8_t,INTSXP>(source);
+        break;
+        
+        case DT_UINT16:
+        array = imageDataToArray<uint16_t,INTSXP>(source);
+        break;
+        
+        case DT_UINT32:
+        array = imageDataToArray<uint32_t,INTSXP>(source);
+        break;
+        
+        case DT_INT64:
+        array = imageDataToArray<int64_t,INTSXP>(source);
+        break;
+        
+        case DT_UINT64:
+        array = imageDataToArray<uint64_t,INTSXP>(source);
+        break;
+        
+        default:
+        throw std::runtime_error("Unsupported data type (" + std::string(nifti_datatype_string(source->datatype)) + ")");
+    }
+    
+    const int nDims = source->dim[0];
+    IntegerVector dim(source->dim+1, source->dim+1+nDims);
+    array.attr("dim") = dim;
+    DoubleVector pixdim(source->pixdim+1, source->pixdim+1+nDims);
+    array.attr("pixdim") = pixdim;
+    
+    NiftiImage *wrappedSource = new NiftiImage(source);
+    array.attr(".nifti_image_ptr") = XPtr<NiftiImage>(wrappedSource);
+    
+    return array;
 }
