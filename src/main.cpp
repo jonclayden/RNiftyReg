@@ -33,6 +33,6 @@ BEGIN_RCPP
     
     delete initAffine;
     
-    return R_NilValue;
+    return List::create(Named("image")=imageToArray(result.image), Named("affine")=(*result.affine), Named("iterations")=result.iterations);
 END_RCPP
 }
