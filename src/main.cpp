@@ -20,8 +20,10 @@ BEGIN_RCPP
     
     LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
     
-    AffineMatrix *initAffine = NULL;
-    if (!Rf_isNull(_initAffine))
+    AffineMatrix *initAffine;
+    if (Rf_isNull(_initAffine))
+        initAffine = new AffineMatrix(sourceImage, targetImage);
+    else
         initAffine = new AffineMatrix(_initAffine);
     
     AladinResult result = regAladin(sourceImage, targetImage, scope, as<bool>(_symmetric), as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, initAffine, as<bool>(_verbose), as<bool>(_estimateOnly));

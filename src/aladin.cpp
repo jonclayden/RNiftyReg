@@ -11,9 +11,6 @@
 // Run the "aladin" registration algorithm
 AladinResult regAladin (nifti_image *sourceImage, nifti_image *targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, nifti_image *sourceMaskImage, nifti_image *targetMaskImage, AffineMatrix *initAffine, const bool verbose, const bool estimateOnly)
 {
-    if (initAffine == NULL)
-        initAffine = new AffineMatrix(sourceImage, targetImage);
-    
     // Binarise the mask images
     if (sourceMaskImage != NULL)
         reg_tools_binarise_image(sourceMaskImage);
