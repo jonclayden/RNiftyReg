@@ -1,6 +1,7 @@
 #include <RcppEigen.h>
 
 #include "nifti1_io.h"
+#include "_reg_tools.h"
 
 #include "nifti_image.h"
 
@@ -152,7 +153,7 @@ nifti_image * retrieveImage (const SEXP _image, const bool readData)
     else if (Rf_isString(_image))
     {
         std::string path = as<std::string>(_image);
-        image = nifti_image_read(path.c_str(), int(readData));
+        image = nifti_image_read(path.c_str(), readData);
     }
     else
     {
@@ -169,6 +170,9 @@ nifti_image * retrieveImage (const SEXP _image, const bool readData)
         else
             throw std::runtime_error("Cannot convert object of class \"" + as<std::string>(imageObject.attr("class")) + "\" to a nifti_image");
     }
+    
+    if (image != NULL)
+        reg_checkAndCorrectDimension(image);
     
     return image;
 }

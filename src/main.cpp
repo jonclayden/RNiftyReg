@@ -18,6 +18,11 @@ BEGIN_RCPP
     nifti_image *sourceMask = retrieveImage(_sourceMask);
     nifti_image *targetMask = retrieveImage(_targetMask);
     
+    if (sourceImage == NULL)
+        throw std::runtime_error("Cannot read or retrieve source image");
+    if (targetImage == NULL)
+        throw std::runtime_error("Cannot read or retrieve target image");
+    
     LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
     
     AffineMatrix *initAffine;

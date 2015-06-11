@@ -182,7 +182,8 @@ public:
     void SetTransformationMatrix (mat44 *matrix)
     {
         delete this->TransformationMatrix;
-        this->TransformationMatrix = matrix;
+        this->TransformationMatrix = new mat44;
+        memcpy(this->TransformationMatrix, matrix, sizeof(mat44));
     }
 #endif
 	mat44 *GetTransformationMatrix()
