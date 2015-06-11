@@ -51,16 +51,8 @@ AladinResult regAladin (nifti_image *sourceImage, nifti_image *targetImage, cons
         reg->SetInlierLts(50.0);
         reg->SetInterpolation(interpolation);
         reg->setPlatformCode(NR_PLATFORM_CPU);
-        // reg->setIls(false);
         reg->setCaptureRangeVox(3);
-        // reg->setClIdx(-1);
-        // reg->setCusvd(false);
-
-        // reg->SetReferenceLowerThreshold(-std::numeric_limits<PRECISION_TYPE>::max());
-        // reg->SetReferenceUpperThreshold(std::numeric_limits<PRECISION_TYPE>::max());
-        // reg->SetFloatingLowerThreshold(-std::numeric_limits<PRECISION_TYPE>::max());
-        // reg->SetFloatingUpperThreshold(std::numeric_limits<PRECISION_TYPE>::max());
-    
+        
         // Set the reference and floating images
         reg->SetInputReference(targetImage);
         reg->SetInputFloating(sourceImage);
