@@ -412,8 +412,15 @@ void reg_aladin<T>::InitialiseRegistration()
 		}
 		reg_tool_ReadAffineFile(this->TransformationMatrix, this->InputTransformName);
 	}
+#ifdef RNIFTYREG
+    else if (this->TransformationMatrix == NULL)
+#else
 	else  // No input affine transformation
-	{
+#endif
+    {
+#ifdef RNIFTYREG
+        this->TransformationMatrix = new mat44;
+#endif
 		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < 4; j++) {
 				this->TransformationMatrix->m[i][j] = 0.0;

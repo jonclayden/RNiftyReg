@@ -181,6 +181,7 @@ public:
     }
     void SetTransformationMatrix (mat44 *matrix)
     {
+        delete this->TransformationMatrix;
         this->TransformationMatrix = matrix;
     }
 #endif

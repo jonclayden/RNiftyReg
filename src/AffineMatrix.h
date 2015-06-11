@@ -30,7 +30,8 @@ public:
     AffineMatrix (const nifti_image *sourceImage, const nifti_image *targetImage)
         : Rcpp::NumericMatrix(4,4)
     {
-        std::fill(this->begin(), this->end(), 1.0);
+        std::fill(this->begin(), this->end(), 0.0);
+        (*this)(0,0) = (*this)(1,1) = (*this)(2,2) = (*this)(3,3) = 1.0;
         
         mat44 *sourceMatrix, *targetMatrix;
         float sourceCentre[3], targetCentre[3], sourceRealPosition[3], targetRealPosition[3];
@@ -61,7 +62,7 @@ public:
         (*this)(2,3) = sourceRealPosition[2] - targetRealPosition[2];
     }
     
-    inline operator mat44() const
+    operator mat44 () const
     {
         mat44 matrix;
         for (int i=0; i<4; i++)
