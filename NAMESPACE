@@ -2,5 +2,6 @@ useDynLib("RNiftyReg")
 
 import(reportr)
 importFrom(oro.nifti, nifti, is.nifti, as.nifti, convert.datatype)
+importFrom(Rcpp, evalCpp)
 
 exportPattern("^[^\\.]")

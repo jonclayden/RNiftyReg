@@ -227,7 +227,7 @@ void initialise_block_matching_method(nifti_image * target, _reg_blockMatchingPa
 	char text[255];
 	sprintf(text,"There are %i active block(s) out of %i.",
 			  params->activeBlockNumber, params->blockNumber[0] * params->blockNumber[1] * params->blockNumber[2]);
-	reg_print_msg_debug(text)
+	reg_print_msg_debug(text);
 #endif
 	if (target->nz > 1) {
 		params->targetPosition = (float *) malloc(params->activeBlockNumber * 3 * sizeof(float));

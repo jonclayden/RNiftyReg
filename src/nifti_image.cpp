@@ -82,7 +82,7 @@ nifti_image * retrieveImageFromNiftiS4 (const RObject &object, const bool copyDa
     
     nifti_image *image = nifti_convert_nhdr2nim(header, NULL);
     
-    const SEXP data = object.slot(".Data");
+    const SEXP data = PROTECT(object.slot(".Data"));
     if (!copyData || Rf_length(data) == 1)
         image->data = NULL;
     else
@@ -90,10 +90,17 @@ nifti_image * retrieveImageFromNiftiS4 (const RObject &object, const bool copyDa
         const size_t dataSize = nifti_get_volsize(image);
         image->data = calloc(1, dataSize);
         if (header.datatype == DT_INT32)
-            memcpy(image->data, INTEGER(data), dataSize);
+        {
+            IntegerVector intData(data);
+            std::copy(intData.begin(), intData.end(), static_cast<int32_t*>(image->data));
+        }
         else
-            memcpy(image->data, REAL(data), dataSize);
+        {
+            DoubleVector doubleData(data);
+            std::copy(doubleData.begin(), doubleData.end(), static_cast<double*>(image->data));
+        }
     }
+    UNPROTECT(1);
     
     return image;
 }
