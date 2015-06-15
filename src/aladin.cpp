@@ -12,9 +12,9 @@
 AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const AffineMatrix &initAffine, const bool verbose, const bool estimateOnly)
 {
     // Binarise the mask images
-    if (sourceMaskImage != NULL)
+    if (!sourceMaskImage.isNull())
         reg_tools_binarise_image(sourceMaskImage);
-    if (targetMaskImage != NULL)
+    if (!targetMaskImage.isNull())
         reg_tools_binarise_image(targetMaskImage);
     
     // The source data type is changed for interpolation precision if necessary
