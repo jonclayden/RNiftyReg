@@ -8,7 +8,7 @@
 using namespace Rcpp;
 
 // Convert an S4 "nifti" object, as defined in the oro.nifti package, to a "nifti_image" struct
-nifti_image * retrieveImageFromNiftiS4 (const RObject &object, const bool copyData)
+NiftiImage retrieveImageFromNiftiS4 (const RObject &object, const bool copyData)
 {
     nifti_1_header header;
     header.sizeof_hdr = 348;
@@ -103,10 +103,10 @@ nifti_image * retrieveImageFromNiftiS4 (const RObject &object, const bool copyDa
     }
     UNPROTECT(1);
     
-    return image;
+    return NiftiImage(image);
 }
 
-nifti_image * retrieveImageFromArray (const RObject &object)
+NiftiImage retrieveImageFromArray (const RObject &object)
 {
     int dims[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     const std::vector<int> dimVector = object.attr("dim");
@@ -141,19 +141,19 @@ nifti_image * retrieveImageFromArray (const RObject &object)
             image->pixdim[i+1] = pixdimVector[i];
     }
     
-    return image;
+    return NiftiImage(image);
 }
 
-nifti_image * retrieveImage (const SEXP _image, const bool readData)
+NiftiImage retrieveImage (const SEXP _image, const bool readData)
 {
-    nifti_image *image = NULL;
+    NiftiImage image;
     
     if (Rf_isNull(_image))
-        return NULL;
+        return image;
     else if (Rf_isString(_image))
     {
         std::string path = as<std::string>(_image);
-        image = nifti_image_read(path.c_str(), readData);
+        image = NiftiImage(nifti_image_read(path.c_str(), readData));
     }
     else
     {
@@ -171,20 +171,10 @@ nifti_image * retrieveImage (const SEXP _image, const bool readData)
             throw std::runtime_error("Cannot convert object of class \"" + as<std::string>(imageObject.attr("class")) + "\" to a nifti_image");
     }
     
-    if (image != NULL)
+    if (!image.isNull())
         reg_checkAndCorrectDimension(image);
     
     return image;
-}
-
-nifti_image * copyCompleteImage (const nifti_image *source)
-{
-    size_t dataSize = nifti_get_volsize(source);
-    nifti_image *result = nifti_copy_nim_info(source);
-    result->data = calloc(1, dataSize);
-    memcpy(result->data, source->data, dataSize);
-    
-    return result;
 }
 
 template <typename SourceType, typename TargetType>

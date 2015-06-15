@@ -9,11 +9,25 @@ class NiftiImage
 protected:
     nifti_image *image;
     
+    void copy (const NiftiImage &source)
+    {
+        nifti_image *sourceStruct = source;
+        size_t dataSize = nifti_get_volsize(sourceStruct);
+        image = nifti_copy_nim_info(sourceStruct);
+        image->data = calloc(1, dataSize);
+        memcpy(image->data, sourceStruct->data, dataSize);
+    }
+    
 public:
     NiftiImage ()
         : image(NULL) {}
     
-    NiftiImage (nifti_image *image)
+    NiftiImage (const NiftiImage &source)
+    {
+        copy(source);
+    }
+    
+    NiftiImage (nifti_image * const image)
         : image(image) {}
     
     ~NiftiImage ()
@@ -21,19 +35,22 @@ public:
         nifti_image_free(image);
     }
     
-    operator nifti_image* () const
+    operator nifti_image* () const { return image; }
+    
+    NiftiImage & operator= (const NiftiImage &source)
     {
-        return image;
+        copy(source);
+        return *this;
     }
+    
+    bool isNull () const { return (image == NULL); }
 };
 
-nifti_image * retrieveImageFromNiftiS4 (const Rcpp::RObject &object, const bool copyData = true);
+NiftiImage retrieveImageFromNiftiS4 (const Rcpp::RObject &object, const bool copyData = true);
 
-nifti_image * retrieveImageFromArray (const Rcpp::RObject &object);
+NiftiImage retrieveImageFromArray (const Rcpp::RObject &object);
 
-nifti_image * retrieveImage (const SEXP _image, const bool readData = true);
-
-nifti_image * copyCompleteImage (const nifti_image *source);
+NiftiImage retrieveImage (const SEXP _image, const bool readData = true);
 
 Rcpp::RObject imageToArray (nifti_image *source);
 
