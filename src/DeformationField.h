@@ -12,44 +12,43 @@
 class DeformationField
 {
 protected:
-    nifti_image *deformationFieldImage;
-    nifti_image *targetImage;
+    NiftiImage deformationFieldImage;
+    NiftiImage targetImage;
     
     void initImages (nifti_image *targetImage)
     {
-        this->targetImage = targetImage;
+        this->targetImage = NiftiImage(targetImage);
         
         // Create a deformation field
-        nifti_image *deformationFieldImage = nifti_copy_nim_info(targetImage);
-        deformationFieldImage->dim[0] = deformationFieldImage->ndim = 5;
-        deformationFieldImage->dim[1] = deformationFieldImage->nx = targetImage->nx;
-        deformationFieldImage->dim[2] = deformationFieldImage->ny = targetImage->ny;
-        deformationFieldImage->dim[3] = deformationFieldImage->nz = targetImage->nz;
-        deformationFieldImage->dim[4] = deformationFieldImage->nt = 1;
-        deformationFieldImage->pixdim[4] = deformationFieldImage->dt = 1.0;
-        deformationFieldImage->dim[5] = deformationFieldImage->nu = (targetImage->nz>1 ? 3 : 2);
-        deformationFieldImage->dim[6] = deformationFieldImage->nv = 1;
-        deformationFieldImage->dim[7] = deformationFieldImage->nw = 1;
-        deformationFieldImage->nvox = size_t(deformationFieldImage->nx *
-            deformationFieldImage->ny * deformationFieldImage->nz *
-            deformationFieldImage->nt * deformationFieldImage->nu);
-        deformationFieldImage->scl_slope = 1.0f;
-        deformationFieldImage->scl_inter = 0.0f;
+        nifti_image *deformationField = nifti_copy_nim_info(targetImage);
+        deformationField->dim[0] = deformationField->ndim = 5;
+        deformationField->dim[1] = deformationField->nx = targetImage->nx;
+        deformationField->dim[2] = deformationField->ny = targetImage->ny;
+        deformationField->dim[3] = deformationField->nz = targetImage->nz;
+        deformationField->dim[4] = deformationField->nt = 1;
+        deformationField->pixdim[4] = deformationField->dt = 1.0;
+        deformationField->dim[5] = deformationField->nu = (targetImage->nz>1 ? 3 : 2);
+        deformationField->dim[6] = deformationField->nv = 1;
+        deformationField->dim[7] = deformationField->nw = 1;
+        deformationField->nvox = size_t(deformationField->nx *
+            deformationField->ny * deformationField->nz *
+            deformationField->nt * deformationField->nu);
+        deformationField->scl_slope = 1.0f;
+        deformationField->scl_inter = 0.0f;
         
-        deformationFieldImage->datatype = (sizeof(PRECISION_TYPE)==4 ? NIFTI_TYPE_FLOAT32 : NIFTI_TYPE_FLOAT64);
-        deformationFieldImage->nbyper = sizeof(PRECISION_TYPE);
-        deformationFieldImage->data = (void *) calloc(deformationFieldImage->nvox, deformationFieldImage->nbyper);
+        deformationField->datatype = (sizeof(PRECISION_TYPE)==4 ? NIFTI_TYPE_FLOAT32 : NIFTI_TYPE_FLOAT64);
+        deformationField->nbyper = sizeof(PRECISION_TYPE);
+        deformationField->data = (void *) calloc(deformationField->nvox, deformationField->nbyper);
 
         // Initialise the deformation field with an identity transformation
-        reg_tools_multiplyValueToImage(deformationFieldImage, deformationFieldImage, 0.0f);
-        reg_getDeformationFromDisplacement(deformationFieldImage);
-        deformationFieldImage->intent_p1 = DEF_FIELD;
+        reg_tools_multiplyValueToImage(deformationField, deformationField, 0.0f);
+        reg_getDeformationFromDisplacement(deformationField);
+        deformationField->intent_p1 = DEF_FIELD;
+        
+        this->deformationFieldImage = NiftiImage(deformationField);
     }
     
 public:
-    DeformationField ()
-        : deformationFieldImage(NULL) {}
-    
     DeformationField (nifti_image *targetImage, const AffineMatrix &affine)
     {
         initImages(targetImage);
@@ -72,7 +71,7 @@ public:
             reg_getDeformationFromDisplacement(transformationImage);
             case DEF_VEL_FIELD:
             {
-                nifti_image *tempFlowField = copyCompleteImage(deformationFieldImage);
+                nifti_image *tempFlowField = deformationFieldImage;
                 reg_defField_compose(transformationImage, tempFlowField, NULL);
                 tempFlowField->intent_p1 = transformationImage->intent_p1;
                 tempFlowField->intent_p2 = transformationImage->intent_p2;
@@ -98,9 +97,9 @@ public:
         nifti_image_free(deformationFieldImage);
     }
     
-    nifti_image * getFieldImage () const { return deformationFieldImage; }
+    NiftiImage getFieldImage () const { return deformationFieldImage; }
     
-    nifti_image * resampleImage (nifti_image * sourceImage, const int interpolation) const
+    NiftiImage resampleImage (nifti_image *sourceImage, const int interpolation) const
     {
         // Allocate result image
         nifti_image *resultImage = nifti_copy_nim_info(targetImage);
@@ -118,7 +117,7 @@ public:
         // Resample source image to target space
         reg_resampleImage(sourceImage, resultImage, deformationFieldImage, NULL, interpolation, 0);
     
-        return resultImage;
+        return NiftiImage(resultImage);
     }
 };
 

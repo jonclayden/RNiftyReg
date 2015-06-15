@@ -13,33 +13,26 @@ using namespace Rcpp;
 RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _initAffine, SEXP _verbose, SEXP _estimateOnly)
 {
 BEGIN_RCPP
-    nifti_image *sourceImage = retrieveImage(_source);
-    nifti_image *targetImage = retrieveImage(_target);
-    nifti_image *sourceMask = retrieveImage(_sourceMask);
-    nifti_image *targetMask = retrieveImage(_targetMask);
+    NiftiImage sourceImage = retrieveImage(_source);
+    NiftiImage targetImage = retrieveImage(_target);
+    NiftiImage sourceMask = retrieveImage(_sourceMask);
+    NiftiImage targetMask = retrieveImage(_targetMask);
     
-    if (sourceImage == NULL)
+    if (sourceImage.isNull())
         throw std::runtime_error("Cannot read or retrieve source image");
-    if (targetImage == NULL)
+    if (targetImage.isNull())
         throw std::runtime_error("Cannot read or retrieve target image");
     
     LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
     
-    AffineMatrix *initAffine;
+    AffineMatrix initAffine;
     if (Rf_isNull(_initAffine))
-        initAffine = new AffineMatrix(sourceImage, targetImage);
+        initAffine = AffineMatrix(sourceImage, targetImage);
     else
-        initAffine = new AffineMatrix(_initAffine);
+        initAffine = AffineMatrix(_initAffine);
     
     AladinResult result = regAladin(sourceImage, targetImage, scope, as<bool>(_symmetric), as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, initAffine, as<bool>(_verbose), as<bool>(_estimateOnly));
     
-    nifti_image_free(sourceImage);
-    nifti_image_free(targetImage);
-    nifti_image_free(sourceMask);
-    nifti_image_free(targetMask);
-    
-    delete initAffine;
-    
-    return List::create(Named("image")=imageToArray(result.image), Named("affine")=(*result.affine), Named("iterations")=result.iterations);
+    return List::create(Named("image")=imageToArray(result.image), Named("affine")=result.affine, Named("iterations")=result.iterations);
 END_RCPP
 }

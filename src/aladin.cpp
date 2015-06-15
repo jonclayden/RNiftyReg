@@ -9,7 +9,7 @@
 #include "DeformationField.h"
 
 // Run the "aladin" registration algorithm
-AladinResult regAladin (nifti_image *sourceImage, nifti_image *targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, nifti_image *sourceMaskImage, nifti_image *targetMaskImage, AffineMatrix *initAffine, const bool verbose, const bool estimateOnly)
+AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const AffineMatrix &initAffine, const bool verbose, const bool estimateOnly)
 {
     // Binarise the mask images
     if (sourceMaskImage != NULL)
@@ -25,7 +25,7 @@ AladinResult regAladin (nifti_image *sourceImage, nifti_image *targetImage, cons
     
     if (nLevels == 0)
     {
-        DeformationField deformationField(targetImage, *initAffine);
+        DeformationField deformationField(targetImage, initAffine);
         result.image = deformationField.resampleImage(sourceImage, interpolation);
         result.affine = initAffine;
     }
@@ -58,7 +58,7 @@ AladinResult regAladin (nifti_image *sourceImage, nifti_image *targetImage, cons
         reg->SetInputFloating(sourceImage);
     
         // Set the initial affine transformation
-        mat44 affineMatrix = *initAffine;
+        mat44 affineMatrix = initAffine;
         reg->SetTransformationMatrix(&affineMatrix);
     
         // Set the masks if defined
@@ -71,11 +71,9 @@ AladinResult regAladin (nifti_image *sourceImage, nifti_image *targetImage, cons
         reg->Run();
     
         // Store the results
-        if (estimateOnly)
-            result.image = NULL;
-        else
-            result.image = copyCompleteImage(reg->GetFinalWarpedImage());
-        result.affine = new AffineMatrix(*reg->GetTransformationMatrix());
+        if (!estimateOnly)
+            result.image = NiftiImage(reg->GetFinalWarpedImage());
+        result.affine = AffineMatrix(*reg->GetTransformationMatrix());
         result.iterations = reg->GetCompletedIterations();
     
         delete reg;

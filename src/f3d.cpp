@@ -37,14 +37,14 @@ F3dResult regF3d (nifti_image *sourceImage, nifti_image *targetImage, const int 
     {
         if (controlPointImage != NULL)
         {
-            result.forwardControlPoints = copyCompleteImage(controlPointImage);
+            result.forwardControlPoints = controlPointImage;
             DeformationField deformationField(targetImage, controlPointImage);
             result.forwardImage = deformationField.resampleImage(sourceImage, interpolation);
         }
         else
         {
             DeformationField deformationField(targetImage, *initAffine);
-            result.forwardControlPoints = copyCompleteImage(deformationField.getFieldImage());
+            result.forwardControlPoints = deformationField.getFieldImage();
             result.forwardImage = deformationField.resampleImage(sourceImage, interpolation);
         }
         result.reverseImage = NULL;
