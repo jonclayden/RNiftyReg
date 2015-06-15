@@ -1,7 +1,7 @@
 #include <RcppEigen.h>
 
 #include "config.h"
-#include "nifti_image.h"
+#include "NiftiImage.h"
 #include "aladin.h"
 
 // Registration types (degrees of freedom)

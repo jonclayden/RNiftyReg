@@ -6,7 +6,7 @@
 #include "_reg_localTransformation.h"
 #include "_reg_globalTransformation.h"
 #include "_reg_resampling.h"
-#include "nifti_image.h"
+#include "NiftiImage.h"
 #include "aladin.h"
 
 class DeformationField

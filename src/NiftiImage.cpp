@@ -3,7 +3,7 @@
 #include "nifti1_io.h"
 #include "_reg_tools.h"
 
-#include "nifti_image.h"
+#include "NiftiImage.h"
 
 using namespace Rcpp;
 
