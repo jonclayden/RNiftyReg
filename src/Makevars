@@ -1,8 +1,8 @@
 PKG_CFLAGS = $(SHLIB_OPENMP_CFLAGS)
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
-PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"`
+PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` -lz
 
-PKG_CPPFLAGS = -DNDEBUG -DRNIFTYREG -I. -Ireg-lib -Ireg-lib/cpu -Ireg-io/nifti
+PKG_CPPFLAGS = -DNDEBUG -DRNIFTYREG -DHAVE_ZLIB -I. -Ireg-lib -Ireg-lib/cpu -Ireg-io/nifti
 
 OBJECTS_LIB_CPU = reg-lib/cpu/_reg_blockMatching.o reg-lib/cpu/_reg_dti.o reg-lib/cpu/_reg_femTransformation.o reg-lib/cpu/_reg_globalTransformation.o reg-lib/cpu/_reg_KLdivergence.o reg-lib/cpu/_reg_lncc.o reg-lib/cpu/_reg_localTransformation.o reg-lib/cpu/_reg_maths.o reg-lib/cpu/_reg_nmi.o reg-lib/cpu/_reg_optimiser.o reg-lib/cpu/_reg_polyAffine.o reg-lib/cpu/_reg_resampling.o reg-lib/cpu/_reg_ssd.o reg-lib/cpu/_reg_thinPlateSpline.o reg-lib/cpu/_reg_tools.o reg-lib/cpu/CPUKernelFactory.o reg-lib/cpu/CPUKernels.o
 

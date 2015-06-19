@@ -154,6 +154,8 @@ NiftiImage retrieveImage (const SEXP _image, const bool readData)
     {
         std::string path = as<std::string>(_image);
         image = NiftiImage(nifti_image_read(path.c_str(), readData));
+        if (image.isNull())
+            throw std::runtime_error("Failed to read image");
     }
     else
     {
@@ -216,6 +218,11 @@ void addAttributes (RObject &object, nifti_image *source, const bool realDim = t
     
     DoubleVector pixdim(source->pixdim+1, source->pixdim+1+nDims);
     object.attr("pixdim") = pixdim;
+    
+    CharacterVector pixunits(2);
+    pixunits[0] = nifti_units_string(source->xyz_units);
+    pixunits[1] = nifti_units_string(source->time_units);
+    object.attr("pixunits") = pixunits;
     
     NiftiImage *wrappedSource = new NiftiImage(source);
     object.attr(".nifti_image_ptr") = XPtr<NiftiImage>(wrappedSource);

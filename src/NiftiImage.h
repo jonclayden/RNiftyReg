@@ -12,10 +12,13 @@ protected:
     void copy (const NiftiImage &source)
     {
         nifti_image *sourceStruct = source;
-        size_t dataSize = nifti_get_volsize(sourceStruct);
-        image = nifti_copy_nim_info(sourceStruct);
-        image->data = calloc(1, dataSize);
-        memcpy(image->data, sourceStruct->data, dataSize);
+        if (sourceStruct != NULL)
+        {
+            size_t dataSize = nifti_get_volsize(sourceStruct);
+            image = nifti_copy_nim_info(sourceStruct);
+            image->data = calloc(1, dataSize);
+            memcpy(image->data, sourceStruct->data, dataSize);
+        }
     }
     
 public:
