@@ -10,17 +10,12 @@
 #include "AffineMatrix.h"
 #include "DeformationField.h"
 
-F3dResult regF3d (nifti_image *sourceImage, nifti_image *targetImage, const int nLevels, const int maxIterations, const int interpolation, nifti_image *sourceMaskImage, nifti_image *targetMaskImage, nifti_image *controlPointImage, AffineMatrix *initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float jacobianWeight, const float inverseConsistencyWeight, const bool symmetric, const bool verbose, const bool estimateOnly)
+F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, const int nLevels, const int maxIterations, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const NiftiImage &initControlPoints, const AffineMatrix &initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float jacobianWeight, const float inverseConsistencyWeight, const bool symmetric, const bool verbose, const bool estimateOnly)
 {
-    if (controlPointImage == NULL && initAffine == NULL)
-        initAffine = new AffineMatrix(sourceImage, targetImage);
-    else if (controlPointImage != NULL)
-        initAffine = NULL;
-    
     // Binarise the mask images
-    if (sourceMaskImage != NULL)
+    if (!sourceMaskImage.isNull())
         reg_tools_binarise_image(sourceMaskImage);
-    if (targetMaskImage != NULL)
+    if (!targetMaskImage.isNull())
         reg_tools_binarise_image(targetMaskImage);
     
     // Change data types for interpolation precision if necessary
@@ -35,20 +30,18 @@ F3dResult regF3d (nifti_image *sourceImage, nifti_image *targetImage, const int 
     
     if (nLevels == 0)
     {
-        if (controlPointImage != NULL)
+        if (!initControlPoints.isNull())
         {
-            result.forwardControlPoints = controlPointImage;
-            DeformationField deformationField(targetImage, controlPointImage);
+            result.forwardControlPoints = initControlPoints;
+            DeformationField deformationField(targetImage, initControlPoints);
             result.forwardImage = deformationField.resampleImage(sourceImage, interpolation);
         }
         else
         {
-            DeformationField deformationField(targetImage, *initAffine);
+            DeformationField deformationField(targetImage, initAffine);
             result.forwardControlPoints = deformationField.getFieldImage();
             result.forwardImage = deformationField.resampleImage(sourceImage, interpolation);
         }
-        result.reverseImage = NULL;
-        result.reverseControlPoints = NULL;
     }
     else
     {
@@ -75,16 +68,17 @@ F3dResult regF3d (nifti_image *sourceImage, nifti_image *targetImage, const int 
         else
             reg->DoNotPrintOutInformation();
         
-        if (targetMaskImage != NULL)
+        if (!sourceMaskImage.isNull())
+            reg->SetFloatingMask(sourceMaskImage);
+        if (!targetMaskImage.isNull())
             reg->SetReferenceMask(targetMaskImage);
         
-        if (controlPointImage != NULL)
-            reg->SetControlPointGridImage(controlPointImage);
-        
         mat44 affineMatrix;
-        if (initAffine != NULL)
+        if (!initControlPoints.isNull())
+            reg->SetControlPointGridImage(initControlPoints);
+        else
         {
-            affineMatrix = *initAffine;
+            affineMatrix = initAffine;
             reg->SetAffineTransformation(&affineMatrix);
         }
         
@@ -93,10 +87,14 @@ F3dResult regF3d (nifti_image *sourceImage, nifti_image *targetImage, const int 
         reg->SetL2NormDisplacementWeight(0.0);
         reg->SetJacobianLogWeight(jacobianWeight);
         
+        // Only relevant to the symmetric version of the algorithm
+        if (symmetric)
+            reg->SetInverseConsistencyWeight(inverseConsistencyWeight);
+        
         reg->SetMaximalIterationNumber(maxIterations);
         
         for (int i = 0; i < 3; i++)
-            reg->SetSpacing((unsigned) i, (PRECISION_TYPE) spacing[i]);
+            reg->SetSpacing(unsigned(i), PRECISION_TYPE(spacing[i]));
         
         reg->SetLevelNumber(nLevels);
         reg->SetLevelToPerform(nLevels);
@@ -108,29 +106,17 @@ F3dResult regF3d (nifti_image *sourceImage, nifti_image *targetImage, const int 
         else
             reg->UseNeareatNeighborInterpolation();
         
-        // Parameters only relevant to the symmetric version of the algorithm
-        if (symmetric)
-        {
-            if (sourceMaskImage != NULL)
-                reg->SetFloatingMask(sourceMaskImage);
-            
-            reg->SetInverseConsistencyWeight(inverseConsistencyWeight);
-        }
-        
         // Run the registration
         reg->Run();
         
-        result.forwardImage = NULL;
-        result.reverseImage = NULL;
-        
         if (!estimateOnly)
-            result.forwardImage = reg->GetWarpedImage()[0];
-        result.forwardControlPoints = reg->GetControlPointPositionImage();
+            result.forwardImage = NiftiImage(reg->GetWarpedImage()[0]);
+        result.forwardControlPoints = NiftiImage(reg->GetControlPointPositionImage());
         if (symmetric)
         {
             if (!estimateOnly)
-                result.reverseImage = reg->GetWarpedImage()[1];
-            result.reverseControlPoints = reg->GetBackwardControlPointPositionImage();
+                result.reverseImage = NiftiImage(reg->GetWarpedImage()[1]);
+            result.reverseControlPoints = NiftiImage(reg->GetBackwardControlPointPositionImage());
         }
         result.iterations = reg->GetCompletedIterations();
         

@@ -1135,6 +1135,10 @@ void reg_base<T>::Run()
 #ifdef NDEBUG
    }
 #endif
+   
+#ifdef RNIFTYREG
+    this->completedIterations.resize(this->levelToPerform, 0);
+#endif
 
    // Compute the resolution of the progress bar
    float iProgressStep=1, nProgressSteps;
