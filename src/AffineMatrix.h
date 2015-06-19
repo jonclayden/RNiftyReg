@@ -8,7 +8,10 @@ class AffineMatrix : public Rcpp::NumericMatrix
 {
 public:
     AffineMatrix ()
-        : Rcpp::NumericMatrix(4,4) {}
+        : Rcpp::NumericMatrix(4,4)
+    {
+        std::fill(this->begin(), this->end(), 0.0);
+    }
     
     AffineMatrix (SEXP object)
         : Rcpp::NumericMatrix(object)
@@ -72,6 +75,8 @@ public:
         }
         return matrix;
     }
+    
+    bool isValid () const { return ((*this)(3,3) != 0.0); }
 };
 
 #endif
