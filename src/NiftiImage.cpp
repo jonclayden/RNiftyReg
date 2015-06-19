@@ -204,6 +204,23 @@ RObject imageDataToArray (const nifti_image *source)
     }
 }
 
+void addAttributes (RObject &object, nifti_image *source, const bool realDim = true)
+{
+    const int nDims = source->dim[0];
+    IntegerVector dim(source->dim+1, source->dim+1+nDims);
+    
+    if (realDim)
+        object.attr("dim") = dim;
+    else
+        object.attr("imagedim") = dim;
+    
+    DoubleVector pixdim(source->pixdim+1, source->pixdim+1+nDims);
+    object.attr("pixdim") = pixdim;
+    
+    NiftiImage *wrappedSource = new NiftiImage(source);
+    object.attr(".nifti_image_ptr") = XPtr<NiftiImage>(wrappedSource);
+}
+
 RObject imageToArray (nifti_image *source)
 {
     RObject array;
@@ -254,14 +271,15 @@ RObject imageToArray (nifti_image *source)
         throw std::runtime_error("Unsupported data type (" + std::string(nifti_datatype_string(source->datatype)) + ")");
     }
     
-    const int nDims = source->dim[0];
-    IntegerVector dim(source->dim+1, source->dim+1+nDims);
-    array.attr("dim") = dim;
-    DoubleVector pixdim(source->pixdim+1, source->pixdim+1+nDims);
-    array.attr("pixdim") = pixdim;
-    
-    NiftiImage *wrappedSource = new NiftiImage(source);
-    array.attr(".nifti_image_ptr") = XPtr<NiftiImage>(wrappedSource);
+    addAttributes(array, source);
     
     return array;
+}
+
+RObject imageToPointer (nifti_image *source, const std::string label)
+{
+    RObject string = wrap(label);
+    addAttributes(string, source, false);
+    string.attr("class") = "internalImage";
+    return string;
 }

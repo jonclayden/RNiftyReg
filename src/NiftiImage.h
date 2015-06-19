@@ -37,6 +37,8 @@ public:
     
     operator nifti_image* () const { return image; }
     
+    nifti_image * operator-> () const { return image; }
+    
     NiftiImage & operator= (const NiftiImage &source)
     {
         copy(source);
@@ -53,5 +55,7 @@ NiftiImage retrieveImageFromArray (const Rcpp::RObject &object);
 NiftiImage retrieveImage (const SEXP _image, const bool readData = true);
 
 Rcpp::RObject imageToArray (nifti_image *source);
+
+Rcpp::RObject imageToPointer (nifti_image *source, const std::string label);
 
 #endif
