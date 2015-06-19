@@ -13,6 +13,33 @@ using namespace Rcpp;
 
 typedef std::vector<float> float_vector;
 
+RcppExport SEXP readNifti (SEXP _file, SEXP _internal)
+{
+BEGIN_RCPP
+    NiftiImage image = retrieveImage(_file);
+    
+    if (as<bool>(_internal))
+        return imageToPointer(image, "NIfTI image");
+    else
+        return imageToArray(image);
+END_RCPP
+}
+
+RcppExport SEXP writeNifti (SEXP _image, SEXP _file)
+{
+BEGIN_RCPP
+    NiftiImage image = retrieveImage(_image);
+    
+    const int status = nifti_set_filenames(image, as<std::string>(_file).c_str(), false, true);
+    if (status != 0)
+        throw std::runtime_error("Failed to set filenames for NIfTI object");
+    
+    nifti_image_write(image);
+    
+    return R_NilValue;
+END_RCPP
+}
+
 RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _initAffine, SEXP _verbose, SEXP _estimateOnly)
 {
 BEGIN_RCPP
