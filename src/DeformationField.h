@@ -7,7 +7,7 @@
 #include "_reg_globalTransformation.h"
 #include "_reg_resampling.h"
 #include "NiftiImage.h"
-#include "aladin.h"
+#include "AffineMatrix.h"
 
 class DeformationField
 {

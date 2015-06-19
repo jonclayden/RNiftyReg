@@ -62,9 +62,9 @@ AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetI
         reg->SetTransformationMatrix(&affineMatrix);
     
         // Set the masks if defined
-        if (sourceMaskImage != NULL)
+        if (!sourceMaskImage.isNull())
             reg->SetInputFloatingMask(sourceMaskImage);
-        if (targetMaskImage != NULL)
+        if (!targetMaskImage.isNull())
             reg->SetInputMask(targetMaskImage);
     
         // Run the registration
