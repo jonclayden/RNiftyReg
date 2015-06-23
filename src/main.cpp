@@ -40,7 +40,7 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _initAffine, SEXP _verbose, SEXP _estimateOnly)
+RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
 {
 BEGIN_RCPP
     NiftiImage sourceImage = retrieveImage(_source);
@@ -53,17 +53,63 @@ BEGIN_RCPP
     if (targetImage.isNull())
         throw std::runtime_error("Cannot read or retrieve target image");
     
-    LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
+    const LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
+    const int interpolation = as<int>(_interpolation);
+    const bool symmetric = as<bool>(_symmetric);
+    const bool estimateOnly = as<bool>(_estimateOnly);
+    const bool sequentialInit = as<bool>(_sequentialInit);
     
-    AffineMatrix initAffine;
-    if (Rf_isNull(_initAffine))
-        initAffine = AffineMatrix(sourceImage, targetImage);
+    List init(_init);
+    
+    if (sourceImage.nDims() == targetImage.nDims())
+    {
+        AffineMatrix initAffine;
+        if (!Rf_isNull(init[0]))
+            initAffine = AffineMatrix(SEXP(init[0]));
+        else
+            initAffine = AffineMatrix(sourceImage, targetImage);
+    
+        AladinResult result = regAladin(sourceImage, targetImage, scope, symmetric, as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, initAffine, as<bool>(_verbose), estimateOnly);
+    
+        return List::create(Named("image")=imageToArray(result.image), Named("affine")=result.affine, Named("iterations")=result.iterations);
+    }
+    else if (sourceImage.nDims() - targetImage.nDims() == 1)
+    {
+        const int nReps = sourceImage->dim[sourceImage.nDims()];
+        NiftiImage finalImage = allocateMultiregResult(sourceImage, targetImage, interpolation != 0);
+        AladinResult result;
+        for (int i=0; i<nReps; i++)
+        {
+            NiftiImage currentSource;
+            if (sourceImage.nDims() == 3)
+                currentSource = sourceImage.slice(i);
+            else
+                currentSource = sourceImage.volume(i);
+            
+            AffineMatrix initAffine;
+            if (!Rf_isNull(init[i]))
+                initAffine = AffineMatrix(SEXP(init[i]));
+            else if (sequentialInit && i>0 && result.affine.isValid())
+                initAffine = result.affine;
+            else
+                initAffine = AffineMatrix(currentSource, targetImage);
+            
+            result = regAladin(currentSource, targetImage, scope, symmetric, as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), interpolation, sourceMask, targetMask, initAffine, as<bool>(_verbose), estimateOnly);
+            
+            if (sourceImage.nDims() == 3)
+                finalImage.slice(i) = result.image;
+            else
+                finalImage.volume(i) = result.image;
+        }
+    }
     else
-        initAffine = AffineMatrix(_initAffine);
+    {
+        std::ostringstream message;
+        message << "Cannot register a " << sourceImage.nDims() << "D source image to a " << targetImage.nDims() << "D target";
+        throw std::runtime_error(message.str());
+    }
     
-    AladinResult result = regAladin(sourceImage, targetImage, scope, as<bool>(_symmetric), as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, initAffine, as<bool>(_verbose), as<bool>(_estimateOnly));
-    
-    return List::create(Named("image")=imageToArray(result.image), Named("affine")=result.affine, Named("iterations")=result.iterations);
+    return R_NilValue;
 END_RCPP
 }
 

@@ -7,6 +7,27 @@
 
 using namespace Rcpp;
 
+NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble)
+{
+    nifti_image *newStruct = nifti_copy_nim_info(target);
+    newStruct->dim[0] = source->dim[0];
+    newStruct->dim[source.nDims()] = source->dim[source.nDims()];
+    newStruct->pixdim[source.nDims()] = source->pixdim[source.nDims()];
+    
+    if (forceDouble)
+    {
+        newStruct->datatype = DT_FLOAT64;
+        nifti_datatype_sizes(newStruct->datatype, &newStruct->nbyper, NULL);
+    }
+    
+    nifti_update_dims_from_array(newStruct);
+    
+    size_t dataSize = nifti_get_volsize(newStruct);
+    newStruct->data = calloc(1, dataSize);
+    
+    return NiftiImage(newStruct);
+}
+
 // Convert an S4 "nifti" object, as defined in the oro.nifti package, to a "nifti_image" struct
 NiftiImage retrieveImageFromNiftiS4 (const RObject &object, const bool copyData)
 {
