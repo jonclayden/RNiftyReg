@@ -227,6 +227,14 @@ RObject imageDataToArray (const nifti_image *source)
     }
 }
 
+void finaliseNiftiImage (SEXP xptr)
+{
+    NiftiImage *object = (NiftiImage *) R_ExternalPtrAddr(xptr);
+    object->setPersistence(false);
+    delete object;
+    R_ClearExternalPtr(xptr);
+}
+
 void addAttributes (RObject &object, nifti_image *source, const bool realDim = true)
 {
     const int nDims = source->dim[0];
@@ -245,8 +253,11 @@ void addAttributes (RObject &object, nifti_image *source, const bool realDim = t
     pixunits[1] = nifti_units_string(source->time_units);
     object.attr("pixunits") = pixunits;
     
-    NiftiImage *wrappedSource = new NiftiImage(source);
-    object.attr(".nifti_image_ptr") = XPtr<NiftiImage>(wrappedSource);
+    NiftiImage *wrappedSource = new NiftiImage(source, true);
+    wrappedSource->setPersistence(true);
+    XPtr<NiftiImage> xptr(wrappedSource);
+    R_RegisterCFinalizerEx(SEXP(xptr), &finaliseNiftiImage, FALSE);
+    object.attr(".nifti_image_ptr") = xptr;
 }
 
 RObject imageToArray (nifti_image *source)

@@ -35,17 +35,23 @@ public:
     
 protected:
     nifti_image *image;
+    bool persistent;
+    
+    void copy (nifti_image * const source)
+    {
+        if (source != NULL)
+        {
+            size_t dataSize = nifti_get_volsize(source);
+            image = nifti_copy_nim_info(source);
+            image->data = calloc(1, dataSize);
+            memcpy(image->data, source->data, dataSize);
+        }
+    }
     
     void copy (const NiftiImage &source)
     {
         nifti_image *sourceStruct = source;
-        if (sourceStruct != NULL)
-        {
-            size_t dataSize = nifti_get_volsize(sourceStruct);
-            image = nifti_copy_nim_info(sourceStruct);
-            image->data = calloc(1, dataSize);
-            memcpy(image->data, sourceStruct->data, dataSize);
-        }
+        copy(sourceStruct);
     }
     
     void copy (const Block &source)
@@ -69,19 +75,25 @@ protected:
     
 public:
     NiftiImage ()
-        : image(NULL) {}
+        : image(NULL), persistent(false) {}
     
     NiftiImage (const NiftiImage &source)
+        : persistent(false)
     {
-        copy(source);
+        this->copy(source);
     }
     
-    NiftiImage (nifti_image * const image)
-        : image(image) {}
+    NiftiImage (nifti_image * const image, const bool copy = false)
+        : image(image), persistent(false)
+    {
+        if (copy)
+            this->copy(image);
+    }
     
     ~NiftiImage ()
     {
-        nifti_image_free(image);
+        if (!persistent)
+            nifti_image_free(image);
     }
     
     operator nifti_image* () const { return image; }
@@ -100,9 +112,16 @@ public:
         return *this;
     }
     
-    bool isNull () const { return (image == NULL); }
+    void setPersistence (const bool persistent) { this->persistent = persistent; }
     
-    int nDims () const { return image->ndim; }
+    bool isNull () const { return (image == NULL); }
+    int nDims () const
+    {
+        if (image == NULL)
+            return 0;
+        else
+            return image->ndim;
+    }
     
     const Block slice (const int i) const { return Block(*this, 3, i); }
     const Block volume (const int i) const { return Block(*this, 4, i); }
