@@ -76,6 +76,7 @@ BEGIN_RCPP
     else if (sourceImage.nDims() - targetImage.nDims() == 1)
     {
         const int nReps = sourceImage->dim[sourceImage.nDims()];
+        List affines(nReps), iterations(nReps);
         NiftiImage finalImage = allocateMultiregResult(sourceImage, targetImage, interpolation != 0);
         AladinResult result;
         for (int i=0; i<nReps; i++)
@@ -100,7 +101,12 @@ BEGIN_RCPP
                 finalImage.slice(i) = result.image;
             else
                 finalImage.volume(i) = result.image;
+            
+            affines[i] = result.affine;
+            iterations[i] = result.iterations;
         }
+        
+        return List::create(Named("image")=imageToArray(finalImage), Named("affine")=affines, Named("iterations")=iterations);
     }
     else
     {
