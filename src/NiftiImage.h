@@ -65,9 +65,7 @@ protected:
             image->pixdim[source.dimension] = 1.0;
             nifti_update_dims_from_array(image);
             
-            size_t blockSize = 0;
-            for (int i=1; i<source.dimension; i++)
-                blockSize += source.image->dim[i];
+            size_t blockSize = nifti_get_volsize(image);
             image->data = calloc(1, blockSize);
             memcpy(image->data, static_cast<char*>(source.image->data) + blockSize*source.index, blockSize);
         }
