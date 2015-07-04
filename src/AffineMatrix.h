@@ -6,6 +6,13 @@
 
 class AffineMatrix : public Rcpp::NumericMatrix
 {
+private:
+    void addAttributes ()
+    {
+        this->attr("class") = "affine";
+        this->attr("affineType") = "niftyreg";
+    }
+    
 public:
     AffineMatrix ()
         : Rcpp::NumericMatrix(4,4)
@@ -28,6 +35,8 @@ public:
             for (int j=0; j<4; j++)
                 (*this)(i,j) = static_cast<double>(matrix.m[i][j]);
         }
+        
+        addAttributes();
     }
     
     AffineMatrix (const nifti_image *sourceImage, const nifti_image *targetImage)
@@ -63,6 +72,8 @@ public:
         (*this)(0,3) = sourceRealPosition[0] - targetRealPosition[0];
         (*this)(1,3) = sourceRealPosition[1] - targetRealPosition[1];
         (*this)(2,3) = sourceRealPosition[2] - targetRealPosition[2];
+        
+        addAttributes();
     }
     
     operator mat44 () const

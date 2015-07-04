@@ -70,13 +70,20 @@ BEGIN_RCPP
             initAffine = AffineMatrix(sourceImage, targetImage);
     
         AladinResult result = regAladin(sourceImage, targetImage, scope, symmetric, as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, initAffine, as<bool>(_verbose), estimateOnly);
-    
-        return List::create(Named("image")=imageToArray(result.image), Named("affine")=result.affine, Named("iterations")=result.iterations);
+        
+        List returnValue = List::create(Named("image")=imageToArray(result.image), Named("forwardTransforms")=List::create(result.forwardTransform), Named("iterations")=List::create(result.iterations));
+        
+        if (symmetric)
+            returnValue["reverseTransforms"] = List::create(result.reverseTransform);
+        else
+            returnValue["reverseTransforms"] = R_NilValue;
+        
+        return returnValue;
     }
     else if (sourceImage.nDims() - targetImage.nDims() == 1)
     {
         const int nReps = sourceImage->dim[sourceImage.nDims()];
-        List affines(nReps), iterations(nReps);
+        List forwardTransforms(nReps), reverseTransforms(nReps), iterations(nReps);
         NiftiImage finalImage = allocateMultiregResult(sourceImage, targetImage, interpolation != 0);
         AladinResult result;
         for (int i=0; i<nReps; i++)
@@ -90,8 +97,8 @@ BEGIN_RCPP
             AffineMatrix initAffine;
             if (!Rf_isNull(init[i]))
                 initAffine = AffineMatrix(SEXP(init[i]));
-            else if (sequentialInit && i>0 && result.affine.isValid())
-                initAffine = result.affine;
+            else if (sequentialInit && i>0 && result.forwardTransform.isValid())
+                initAffine = result.forwardTransform;
             else
                 initAffine = AffineMatrix(currentSource, targetImage);
             
@@ -102,11 +109,19 @@ BEGIN_RCPP
             else
                 finalImage.volume(i) = result.image;
             
-            affines[i] = result.affine;
+            forwardTransforms[i] = result.forwardTransform;
+            reverseTransforms[i] = result.reverseTransform;
             iterations[i] = result.iterations;
         }
         
-        return List::create(Named("image")=imageToArray(finalImage), Named("affine")=affines, Named("iterations")=iterations);
+        List returnValue = List::create(Named("image")=imageToArray(finalImage), Named("forwardTransforms")=forwardTransforms, Named("iterations")=iterations);
+        
+        if (symmetric)
+            returnValue["reverseTransforms"] = reverseTransforms;
+        else
+            returnValue["reverseTransforms"] = R_NilValue;
+        
+        return returnValue;
     }
     else
     {

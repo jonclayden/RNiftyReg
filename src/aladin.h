@@ -9,7 +9,8 @@ enum LinearTransformScope { RigidScope, AffineScope };
 struct AladinResult
 {
     NiftiImage image;
-    AffineMatrix affine;
+    AffineMatrix forwardTransform;
+    AffineMatrix reverseTransform;
     std::vector<int> iterations;
 };
 

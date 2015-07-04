@@ -27,7 +27,7 @@ AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetI
     {
         DeformationField deformationField(targetImage, initAffine);
         result.image = deformationField.resampleImage(sourceImage, interpolation);
-        result.affine = initAffine;
+        result.forwardTransform = initAffine;
     }
     else
     {
@@ -73,11 +73,14 @@ AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetI
         // Store the results
         if (!estimateOnly)
             result.image = NiftiImage(reg->GetFinalWarpedImage());
-        result.affine = AffineMatrix(*reg->GetTransformationMatrix());
+        result.forwardTransform = AffineMatrix(*reg->GetTransformationMatrix());
         result.iterations = reg->GetCompletedIterations();
     
         delete reg;
     }
+    
+    if (symmetric)
+        result.reverseTransform = AffineMatrix(nifti_mat44_inverse(result.forwardTransform));
     
     return result;
 }
