@@ -71,6 +71,38 @@ invertAffine <- function (affine)
     return (newAffine)
 }
 
+buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,0,0), angles = c(0,0,0))
+{
+    if (is.list(translation))
+        x <- translation
+    else
+        x <- list(translation=translation, scales=scales, skews=skews, angles=angles)
+    
+    if (length(x$scales) < 3)
+        x$scales <- c(x$scales, rep(1,3-length(x$scales)))
+    for (name in c("translation","skews","angles"))
+    {
+        if (length(x[[name]]) < 3)
+            x[[name]] <- c(x[[name]], rep(0,3-length(x[[name]])))
+    }
+    
+    affine <- diag(4)
+    
+    rotationX <- rotationY <- rotationZ <- skewMatrix <- diag(3)
+    cosAngles <- cos(x$angles)
+    sinAngles <- sin(x$angles)
+    rotationX[2:3,2:3] <- c(cosAngles[1], -sinAngles[1], sinAngles[1], cosAngles[1])
+    rotationY[c(1,3),c(1,3)] <- c(cosAngles[2], sinAngles[2], -sinAngles[2], cosAngles[2])
+    rotationZ[1:2,1:2] <- c(cosAngles[3], -sinAngles[3], sinAngles[3], cosAngles[3])
+    skewMatrix[c(4,7,8)] <- x$skews
+    
+    affine[1:3,1:3] <- rotationX %*% rotationY %*% rotationZ %*% skewMatrix %*% diag(x$scales)
+    affine[1:3,4] <- x$translation
+    attr(affine, "affineType") <- "fsl"
+    
+    return (affine)
+}
+
 decomposeAffine <- function (affine, source = NULL, target = NULL, type = NULL)
 {
     affine <- convertAffine(affine, source, target, "fsl", type)
