@@ -152,7 +152,7 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
         report(OL$Error, "Penalty term weights must be nonnegative")
     if (bendingEnergyWeight + jacobianWeight > 1)
         report(OL$Error, "Penalty term weights cannot add up to more than 1")
-    if (!(finalInterpolation %in% c(0,1,3)))
+    if (!(interpolation %in% c(0,1,3)))
         report(OL$Error, "Final interpolation specifier must be 0, 1 or 3")
     
     if (nLevels == 0)
@@ -197,7 +197,7 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
     else
         finalSpacing <- finalSpacing[1:3]
     
-    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, jacobianWeight, inverseConsistencyWeight, verbose, estimateOnly, sequentialInit, PACKAGE="RNiftyReg")
+    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, jacobianWeight, inverseConsistencyWeight, verbose, estimateOnly, sequentialInit, PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)

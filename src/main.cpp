@@ -110,7 +110,8 @@ BEGIN_RCPP
                 finalImage.volume(i) = result.image;
             
             forwardTransforms[i] = result.forwardTransform;
-            reverseTransforms[i] = result.reverseTransform;
+            if (symmetric)
+                reverseTransforms[i] = result.reverseTransform;
             iterations[i] = result.iterations;
         }
         
@@ -134,7 +135,7 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _jacobianWeight, SEXP _inverseConsistencyWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
+RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _jacobianWeight, SEXP _inverseConsistencyWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
 {
 BEGIN_RCPP
     NiftiImage sourceImage = retrieveImage(_source);
@@ -219,7 +220,8 @@ BEGIN_RCPP
                 finalImage.volume(i) = result.image;
             
             forwardTransforms[i] = imageToPointer(result.forwardTransform, "F3D control points");
-            reverseTransforms[i] = imageToPointer(result.reverseTransform, "F3D control points");
+            if (symmetric)
+                reverseTransforms[i] = imageToPointer(result.reverseTransform, "F3D control points");
             iterations[i] = result.iterations;
         }
         
