@@ -3,12 +3,13 @@
 
 #include "nifti1_io.h"
 #include "AffineMatrix.h"
+#include "NiftiImage.h"
 
-struct F3dResult {
-    NiftiImage forwardImage;
-    NiftiImage forwardControlPoints;
-    NiftiImage reverseImage;
-    NiftiImage reverseControlPoints;
+struct F3dResult
+{
+    NiftiImage image;
+    NiftiImage forwardTransform;
+    NiftiImage reverseTransform;
     std::vector<int> iterations;
 };
 

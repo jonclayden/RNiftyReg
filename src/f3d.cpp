@@ -32,15 +32,15 @@ F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, 
     {
         if (!initControlPoints.isNull())
         {
-            result.forwardControlPoints = initControlPoints;
+            result.forwardTransform = initControlPoints;
             DeformationField deformationField(targetImage, initControlPoints);
-            result.forwardImage = deformationField.resampleImage(sourceImage, interpolation);
+            result.image = deformationField.resampleImage(sourceImage, interpolation);
         }
         else
         {
             DeformationField deformationField(targetImage, initAffine);
-            result.forwardControlPoints = deformationField.getFieldImage();
-            result.forwardImage = deformationField.resampleImage(sourceImage, interpolation);
+            result.forwardTransform = deformationField.getFieldImage();
+            result.image = deformationField.resampleImage(sourceImage, interpolation);
         }
     }
     else
@@ -110,14 +110,10 @@ F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, 
         reg->Run();
         
         if (!estimateOnly)
-            result.forwardImage = NiftiImage(reg->GetWarpedImage()[0]);
-        result.forwardControlPoints = NiftiImage(reg->GetControlPointPositionImage());
+            result.image = NiftiImage(reg->GetWarpedImage()[0]);
+        result.forwardTransform = NiftiImage(reg->GetControlPointPositionImage());
         if (symmetric)
-        {
-            if (!estimateOnly)
-                result.reverseImage = NiftiImage(reg->GetWarpedImage()[1]);
-            result.reverseControlPoints = NiftiImage(reg->GetBackwardControlPointPositionImage());
-        }
+            result.reverseTransform = NiftiImage(reg->GetBackwardControlPointPositionImage());
         result.iterations = reg->GetCompletedIterations();
         
         // Erase the registration object
