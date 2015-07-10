@@ -89,6 +89,7 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
         niftyreg.linear(source, target, scope, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
 }
 
+# Standard set of preregistration checks for source and target images
 .checkImages <- function (source, target)
 {
     nSourceDim <- length(dim(source))
@@ -201,6 +202,42 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
     class(result) <- "niftyreg"
     
     return (result)
+}
+
+forward <- function (object, ...)
+{
+    UseMethod("forward")
+}
+
+forward.niftyreg <- function (object, i = 1, ...)
+{
+    if (is.null(object$forwardTransforms))
+        return (NULL)
+    else
+    {
+        result <- object$forwardTransforms[[i]]
+        attr(result, "source") <- object$source
+        attr(result, "target") <- object$target
+        return (result)
+    }
+}
+
+reverse <- function (object, ...)
+{
+    UseMethod("reverse")
+}
+
+reverse.niftyreg <- function (object, i = 1, ...)
+{
+    if (is.null(object$reverseTransforms))
+        return (NULL)
+    else
+    {
+        result <- object$forwardTransforms[[i]]
+        attr(result, "source") <- object$source
+        attr(result, "target") <- object$target
+        return (result)
+    }
 }
 
 applyAffine <- function (affine, source, target, affineType = NULL, finalInterpolation = 3)
