@@ -60,6 +60,7 @@ BEGIN_RCPP
     const bool sequentialInit = as<bool>(_sequentialInit);
     
     List init(_init);
+    List returnValue = List::create(Named("source")=imageToPointer(sourceImage,"Source image"), Named("target")=imageToPointer(targetImage,"Target image"));
     
     if (sourceImage.nDims() == targetImage.nDims())
     {
@@ -71,12 +72,13 @@ BEGIN_RCPP
     
         AladinResult result = regAladin(sourceImage, targetImage, scope, symmetric, as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, initAffine, as<bool>(_verbose), estimateOnly);
         
-        List returnValue = List::create(Named("image")=imageToArray(result.image), Named("forwardTransforms")=List::create(result.forwardTransform), Named("iterations")=List::create(result.iterations));
-        
+        returnValue["image"] = imageToArray(result.image);
+        returnValue["forwardTransforms"] = List::create(result.forwardTransform);
         if (symmetric)
             returnValue["reverseTransforms"] = List::create(result.reverseTransform);
         else
             returnValue["reverseTransforms"] = R_NilValue;
+        returnValue["iterations"] = List::create(result.iterations);
         
         return returnValue;
     }
@@ -115,12 +117,13 @@ BEGIN_RCPP
             iterations[i] = result.iterations;
         }
         
-        List returnValue = List::create(Named("image")=imageToArray(finalImage), Named("forwardTransforms")=forwardTransforms, Named("iterations")=iterations);
-        
+        returnValue["image"] = imageToArray(finalImage);
+        returnValue["forwardTransforms"] = forwardTransforms;
         if (symmetric)
             returnValue["reverseTransforms"] = reverseTransforms;
         else
             returnValue["reverseTransforms"] = R_NilValue;
+        returnValue["iterations"] = iterations;
         
         return returnValue;
     }
@@ -154,6 +157,7 @@ BEGIN_RCPP
     const bool sequentialInit = as<bool>(_sequentialInit);
     
     List init(_init);
+    List returnValue = List::create(Named("source")=imageToPointer(sourceImage,"Source image"), Named("target")=imageToPointer(targetImage,"Target image"));
     
     if (sourceImage.nDims() == targetImage.nDims())
     {
@@ -173,12 +177,13 @@ BEGIN_RCPP
     
         F3dResult result = regF3d(sourceImage, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_jacobianWeight), as<float>(_inverseConsistencyWeight), symmetric, as<bool>(_verbose), estimateOnly);
         
-        List returnValue = List::create(Named("image")=imageToArray(result.image), Named("forwardTransforms")=List::create(imageToPointer(result.forwardTransform, "F3D control points")), Named("iterations")=List::create(result.iterations));
-        
+        returnValue["image"] = imageToArray(result.image);
+        returnValue["forwardTransform"] = List::create(imageToPointer(result.forwardTransform, "F3D control points"));
         if (symmetric)
             returnValue["reverseTransforms"] = List::create(imageToPointer(result.reverseTransform, "F3D control points"));
         else
             returnValue["reverseTransforms"] = R_NilValue;
+        returnValue["iterations"] = List::create(result.iterations);
         
         return returnValue;
     }
@@ -225,12 +230,13 @@ BEGIN_RCPP
             iterations[i] = result.iterations;
         }
         
-        List returnValue = List::create(Named("image")=imageToArray(finalImage), Named("forwardTransforms")=forwardTransforms, Named("iterations")=iterations);
-        
+        returnValue["image"] = imageToArray(finalImage);
+        returnValue["forwardTransforms"] = forwardTransforms;
         if (symmetric)
             returnValue["reverseTransforms"] = reverseTransforms;
         else
             returnValue["reverseTransforms"] = R_NilValue;
+        returnValue["iterations"] = iterations;
         
         return returnValue;
     }
