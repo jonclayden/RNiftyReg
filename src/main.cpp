@@ -40,6 +40,29 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP getXform (SEXP _image, SEXP _preferQuaternion)
+{
+BEGIN_RCPP
+    const NiftiImage image = retrieveImage(_image);
+    const bool preferQuaternion = as<bool>(_preferQuaternion);
+    
+    AffineMatrix matrix;
+    
+    // ANALYZE case: no qform or sform so return LAS matrix
+    if (image->qform_code <= 0 && image->sform_code <= 0)
+    {
+        matrix(0,0) = -1.0;
+        matrix(1,1) = matrix(2,2) = matrix(3,3) = 1.0;
+    }
+    else if ((preferQuaternion && image->qform_code > 0) || image->sform_code <= 0)
+        matrix = AffineMatrix(image->qto_xyz, false);
+    else
+        matrix = AffineMatrix(image->sto_xyz, false);
+    
+    return matrix;
+END_RCPP
+}
+
 RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
 {
 BEGIN_RCPP
