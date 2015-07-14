@@ -67,16 +67,6 @@
     return (image)
 }
 
-pixdim <- function (object)
-{
-    if (!is.null(attr(object, "pixdim")))
-        return (attr(object, "pixdim"))
-    else if (!is.null(dim(object)))
-        return (rep(1, length(dim(object))))
-    else
-        return (1)
-}
-
 niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, estimateOnly = FALSE, ...)
 {
     if (missing(source) || missing(target))
