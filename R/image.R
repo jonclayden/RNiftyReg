@@ -1,6 +1,6 @@
 isImage <- function (object, unsure = NA)
 {
-    if (any(c("nifti","simpleImage") %in% class(object)))
+    if (any(c("nifti","internalImage") %in% class(object)))
         return (TRUE)
     else if (!is.null(attr(object, ".nifti_image_ptr")))
         return (TRUE)

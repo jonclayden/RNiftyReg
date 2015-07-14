@@ -19,7 +19,7 @@ applyTransform <- function (transform, x, interpolation = 3L)
         else
             report(OL$Error, "Object to transform should be a suitable image or matrix of points")
     }
-    else
+    else if (isImage(transform, FALSE))
     {
         if (isImage(x,TRUE) && isTRUE(all.equal(dim(x),dim(source))))
             return (niftyreg.nonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE))
