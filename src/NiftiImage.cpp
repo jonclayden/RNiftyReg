@@ -168,9 +168,15 @@ NiftiImage retrieveImageFromArray (const RObject &object)
 NiftiImage retrieveImage (const SEXP _image, const bool readData)
 {
     NiftiImage image;
+    RObject imageObject(_image);
     
     if (Rf_isNull(_image))
         return image;
+    else if (imageObject.hasAttribute(".nifti_image_ptr"))
+    {
+        XPtr<NiftiImage> imagePtr(SEXP(imageObject.attr(".nifti_image_ptr")));
+        image = *imagePtr;
+    }
     else if (Rf_isString(_image))
     {
         std::string path = as<std::string>(_image);
@@ -178,21 +184,12 @@ NiftiImage retrieveImage (const SEXP _image, const bool readData)
         if (image.isNull())
             throw std::runtime_error("Failed to read image");
     }
+    else if (imageObject.inherits("nifti"))
+        image = retrieveImageFromNiftiS4(imageObject, readData);
+    else if (imageObject.hasAttribute("dim"))
+        image = retrieveImageFromArray(imageObject);
     else
-    {
-        RObject imageObject(_image);
-        if (imageObject.hasAttribute(".nifti_image_ptr"))
-        {
-            XPtr<NiftiImage> imagePtr(SEXP(imageObject.attr(".nifti_image_ptr")));
-            image = *imagePtr;
-        }
-        else if (imageObject.inherits("nifti"))
-            image = retrieveImageFromNiftiS4(imageObject, readData);
-        else if (imageObject.hasAttribute("dim"))
-            image = retrieveImageFromArray(imageObject);
-        else
-            throw std::runtime_error("Cannot convert object of class \"" + as<std::string>(imageObject.attr("class")) + "\" to a nifti_image");
-    }
+        throw std::runtime_error("Cannot convert object of class \"" + as<std::string>(imageObject.attr("class")) + "\" to a nifti_image");
     
     if (!image.isNull())
         reg_checkAndCorrectDimension(image);
