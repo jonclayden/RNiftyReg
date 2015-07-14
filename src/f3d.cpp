@@ -1,8 +1,7 @@
 #include <RcppEigen.h>
 
 #include "_reg_f3d.h"
-#include "_reg_f3d_sym.h"
-#include "_reg_localTransformation.h"
+#include "_reg_f3d2.h"
 
 #include "config.h"
 #include "aladin.h"
@@ -49,7 +48,7 @@ F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, 
 
         // Create the reg_f3d object
         if (symmetric)
-            reg = new reg_f3d_sym<PRECISION_TYPE>(targetImage->nt, sourceImage->nt);
+            reg = new reg_f3d2<PRECISION_TYPE>(targetImage->nt, sourceImage->nt);
         else
             reg = new reg_f3d<PRECISION_TYPE>(targetImage->nt, sourceImage->nt);
         
