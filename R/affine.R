@@ -2,7 +2,7 @@ isAffine <- function (object, strict = FALSE)
 {
     if ("affine" %in% class(object))
         return (TRUE)
-    else if (!strict && is.matrix(affine) && isTRUE(all.equal(dim(affine), c(4,4))))
+    else if (!strict && is.matrix(object) && isTRUE(all.equal(dim(object), c(4,4))))
         return (TRUE)
     else
         return (FALSE)
@@ -39,7 +39,7 @@ writeAffine <- function (affine, fileName)
     writeLines(lines, fileName)
 }
 
-applyAffine <- function (points, affine)
+applyAffine <- function (affine, points)
 {
     if (!isAffine(affine))
         report(OL$Error, "Specified affine matrix is not valid")
@@ -63,7 +63,7 @@ applyAffine <- function (points, affine)
 
 convertAffine <- function (affine, source = NULL, target = NULL, newType = c("niftyreg","fsl"), currentType = NULL)
 {
-    if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
+    if (!isAffine(affine))
         report(OL$Error, "Specified affine matrix is not valid")
     
     newType <- match.arg(newType)
@@ -81,8 +81,8 @@ convertAffine <- function (affine, source = NULL, target = NULL, newType = c("ni
         return (affine)
     else
     {
-        sourceXform <- xformToAffine(source, useQuaternionFirst=FALSE)
-        targetXform <- xformToAffine(target, useQuaternionFirst=FALSE)
+        sourceXform <- xform(source, useQuaternionFirst=FALSE)
+        targetXform <- xform(target, useQuaternionFirst=FALSE)
         sourceScaling <- diag(c(sqrt(colSums(sourceXform[1:3,1:3]^2)), 1))
         targetScaling <- diag(c(sqrt(colSums(targetXform[1:3,1:3]^2)), 1))
         

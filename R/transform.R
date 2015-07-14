@@ -12,7 +12,7 @@ applyTransform <- function (transform, x, interpolation = 3L)
         {
             fslAffine <- convertAffine(transform, source, target, "fsl")
             points <- voxelToWorld(x, source, simple=TRUE)
-            newPoints <- applyAffine(points, affine)
+            newPoints <- applyAffine(fslAffine, points)
             newPoints <- worldToVoxel(newPoints, target, simple=TRUE)
             return (newPoints)
         }

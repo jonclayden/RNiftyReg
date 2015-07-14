@@ -15,7 +15,7 @@ voxelToWorld <- function (points, image, simple = FALSE, ...)
     else
     {
         affine <- xform(image, ...)
-        return (applyAffine(points-1, affine))
+        return (applyAffine(affine, points-1))
     }
 }
 
@@ -31,6 +31,6 @@ worldToVoxel <- function (points, image, simple = FALSE, ...)
     else
     {
         affine <- solve(xform(image, ...))
-        return (applyAffine(points, affine) + 1)
+        return (applyAffine(affine, points) + 1)
     }
 }

@@ -230,28 +230,6 @@ reverse.niftyreg <- function (object, i = 1, ...)
     }
 }
 
-applyAffine <- function (affine, source, target, affineType = NULL, finalInterpolation = 3)
-{
-    if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
-        report(OL$Error, "Specified affine matrix is not valid")
-    
-    if (is.null(affineType))
-    {
-        affineType <- attr(affine, "affineType")
-        if (is.null(affineType))
-            report(OL$Error, "The current affine type was not specified and is not stored with the matrix")
-    }
-    else
-        attr(affine, "affineType") <- affineType
-    
-    return (niftyreg.linear(source, target, targetMask=NULL, initAffine=affine, scope="affine", nLevels=0, finalInterpolation=finalInterpolation, verbose=FALSE, estimateOnly=FALSE))
-}
-
-applyControlPoints <- function (controlPointImage, source, target, finalInterpolation = 3)
-{
-    return (niftyreg.nonlinear(source, target, targetMask=NULL, initControl=controlPointImage, symmetric=FALSE, nLevels=0, finalInterpolation=finalInterpolation, verbose=FALSE, estimateOnly=FALSE))
-}
-
 getDeformationField <- function (target, affine = NULL, controlPointImage = NULL, jacobian = TRUE)
 {
     if (missing(target))
