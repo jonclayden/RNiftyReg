@@ -1,3 +1,13 @@
+isAffine <- function (object, strict = FALSE)
+{
+    if ("affine" %in% class(object))
+        return (TRUE)
+    else if (!strict && is.matrix(affine) && isTRUE(all.equal(dim(affine), c(4,4))))
+        return (TRUE)
+    else
+        return (FALSE)
+}
+
 readAffine <- function (fileName, type = NULL)
 {
     if (!is.null(type))
@@ -21,12 +31,34 @@ readAffine <- function (fileName, type = NULL)
 
 writeAffine <- function (affine, fileName)
 {
-    if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
+    if (!isAffine(affine))
         report(OL$Error, "Specified affine matrix is not valid")
     
     lines <- apply(format(affine,scientific=FALSE), 1, paste, collapse="  ")
     lines <- c(paste("# affineType:",attr(affine,"affineType"),sep=" "), lines)
     writeLines(lines, fileName)
+}
+
+applyAffine <- function (points, affine)
+{
+    if (!isAffine(affine))
+        report(OL$Error, "Specified affine matrix is not valid")
+    
+    if (!is.matrix(points))
+        points <- matrix(points, nrow=1)
+    
+    nDims <- ncol(points)
+    if (nDims != 2 && nDims != 3)
+        report(OL$Error, "Points must be two or three dimensional")
+    
+    if (nDims == 2)
+        affine <- matrix(affine[c(1,2,4,5,6,8,13,14,16)], ncol=3, nrow=3)
+    
+    points <- cbind(points, 1)
+    newPoints <- affine %*% t(points)
+    newPoints <- drop(t(newPoints[1:nDims,,drop=FALSE]))
+    
+    return (newPoints)
 }
 
 convertAffine <- function (affine, source = NULL, target = NULL, newType = c("niftyreg","fsl"), currentType = NULL)
