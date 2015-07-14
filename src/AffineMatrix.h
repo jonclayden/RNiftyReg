@@ -27,7 +27,7 @@ public:
             throw std::runtime_error("Specified affine matrix does not have dimensions of 4x4");
     }
     
-    AffineMatrix (const mat44 &matrix)
+    AffineMatrix (const mat44 &matrix, const bool attributes = true)
         : Rcpp::NumericMatrix(4,4)
     {
         for (int i=0; i<4; i++)
@@ -36,7 +36,8 @@ public:
                 (*this)(i,j) = static_cast<double>(matrix.m[i][j]);
         }
         
-        addAttributes();
+        if (attributes)
+            addAttributes();
     }
     
     AffineMatrix (const nifti_image *sourceImage, const nifti_image *targetImage)
