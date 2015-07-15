@@ -48,12 +48,9 @@ BEGIN_RCPP
     
     AffineMatrix matrix;
     
-    // ANALYZE case: no qform or sform so return LAS matrix
+    // No qform or sform so return RAS matrix (NB: other software may assume differently)
     if (image->qform_code <= 0 && image->sform_code <= 0)
-    {
-        matrix(0,0) = -1.0;
-        matrix(1,1) = matrix(2,2) = matrix(3,3) = 1.0;
-    }
+        matrix(0,0) = matrix(1,1) = matrix(2,2) = matrix(3,3) = 1.0;
     else if ((preferQuaternion && image->qform_code > 0) || image->sform_code <= 0)
         matrix = AffineMatrix(image->qto_xyz, false);
     else
