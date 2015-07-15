@@ -2,6 +2,15 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 1.1.4
+
+- The package was not consistent about how to treat images without NIfTI
+  orientation information, and this could lead to erroneous results when
+  transforming points between spaces using an affine matrix. This has been
+  corrected. (Reported by Jiří Borovec.)
+
+=================================================================================
+
 VERSION 1.1.3
 
 - The C++ code is now more careful to avoid buffer overruns when text fields in
