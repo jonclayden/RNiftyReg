@@ -2,9 +2,9 @@ xformToAffine <- function (image, useQuaternionFirst = TRUE)
 {
     image <- as(image, "nifti")
     
-    # With no information, assume Analyze orientation and zero origin
+    # With no information, assume RAS orientation and zero origin
     if (image@qform_code <= 0 && image@sform_code <= 0)
-        matrix <- diag(c(-1, 1, 1, 1))
+        matrix <- diag(c(1, 1, 1, 1))
     else if ((useQuaternionFirst && image@qform_code > 0) || image@sform_code <= 0)
     {
         matrix <- diag(4)
