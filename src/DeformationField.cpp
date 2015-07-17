@@ -83,6 +83,24 @@ DeformationField::DeformationField (nifti_image *targetImage, nifti_image *trans
     }
 }
 
+NiftiImage DeformationField::getJacobian () const
+{
+    // Allocate Jacobian determinant image
+    nifti_image *jacobianImage = nifti_copy_nim_info(targetImage);
+    jacobianImage->cal_min = 0;
+    jacobianImage->cal_max = 0;
+    jacobianImage->scl_slope = 1.0;
+    jacobianImage->scl_inter = 0.0;
+    jacobianImage->datatype = NIFTI_TYPE_FLOAT64;
+    jacobianImage->nbyper = 8;
+    jacobianImage->data = (void *) calloc(jacobianImage->nvox, jacobianImage->nbyper);
+    
+    // Calculate Jacobian determinant map
+    reg_defField_getJacobianMap(deformationFieldImage, jacobianImage);
+    
+    return NiftiImage(jacobianImage);
+}
+
 NiftiImage DeformationField::resampleImage (nifti_image *sourceImage, const int interpolation) const
 {
     // Allocate result image
@@ -103,3 +121,99 @@ NiftiImage DeformationField::resampleImage (nifti_image *sourceImage, const int 
 
     return NiftiImage(resultImage);
 }
+
+template <int Dim>
+Rcpp::NumericVector DeformationField::findPoint (const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const
+{
+    typedef Eigen::Matrix<double,Dim,1> Point;
+    Point closestLoc;
+    
+    double * const deformationPointer = (double *) deformationFieldImage->data;
+    const size_t nVoxels = deformationFieldImage->nvox;
+    double closestDistance = R_PosInf;
+    size_t closestVoxel = 0;
+    
+    for (size_t v=0; v<nVoxels; v++)
+    {
+        Point loc;
+        for (int i=0; i<Dim; i++)
+            loc[i] = deformationPointer[v + i*nVoxels];
+        
+        const double currentDistance = (loc - sourceLoc).norm();
+        if (currentDistance < closestDistance)
+        {
+            closestDistance = currentDistance;
+            closestVoxel = v;
+            closestLoc = loc;
+        }
+    }
+    
+    std::vector<size_t> strides(Dim);
+    strides[0] = 1;
+    for (int i=1; i<Dim; i++)
+        strides[i] = strides[i-1] * std::abs(deformationFieldImage->dim[i]);
+    
+    if (nearest || closestDistance == 0.0)
+    {
+        Rcpp::NumericVector result(Dim);
+        result[0] = closestVoxel % deformationFieldImage->dim[1] + 1.0;
+        for (int i=1; i<Dim; i++)
+            result[i] = (closestVoxel / strides[i]) % deformationFieldImage->dim[i+1] + 1.0;
+        
+        return result;
+    }
+    else
+    {
+        Rcpp::NumericVector result(int(R_pow_di(4.0,Dim)) * 2 * Dim);
+        Point offset = closestLoc - sourceLoc;
+        size_t v;
+        
+        for (int i=0; i<Dim; i++)
+            offset[i] = (offset[i] >= 0.0 ? 0.0 : -1.0);
+        
+        for (int i=0; i<4; i++)
+        {
+            const int xShift = i + offset[0] - 1;
+
+            for (int j=0; j<4; j++)
+            {
+                const int yShift = j + offset[1] - 1;
+                
+                if (Dim == 2)
+                {
+                    const size_t v = closestVoxel + xShift + yShift * strides[1];
+                    const size_t w = size_t(i + j*4);
+                
+                    result[2*Dim*w] = deformationPointer[v];
+                    result[2*Dim*w + 1] = deformationPointer[v + nVoxels];
+                    result[2*Dim*w + 2] = v % deformationFieldImage->dim[1] + 1.0;
+                    result[2*Dim*w + 3] = (v / strides[1]) % deformationFieldImage->dim[2] + 1.0;
+                }
+                else
+                {
+                    for (int k=0; k<4; k++)
+                    {
+                        const int zShift = k + offset[2] - 1;
+                        const size_t v = closestVoxel + xShift + yShift * strides[1] + zShift * strides[2];
+                        const size_t w = size_t(i + j*4 + k*16);
+                        
+                        result[2*Dim*w] = deformationPointer[v];
+                        result[2*Dim*w + 1] = deformationPointer[v + nVoxels];
+                        result[2*Dim*w + 2] = deformationPointer[v + 2*nVoxels];
+                        result[2*Dim*w + 3] = v % deformationFieldImage->dim[1] + 1.0;
+                        result[2*Dim*w + 4] = (v / strides[1]) % deformationFieldImage->dim[2] + 1.0;
+                        result[2*Dim*w + 5] = (v / strides[2]) % deformationFieldImage->dim[3] + 1.0;
+                    }
+                }
+            }
+        }
+        
+        return result;
+    }
+}
+
+template
+Rcpp::NumericVector DeformationField::findPoint (const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
+
+template
+Rcpp::NumericVector DeformationField::findPoint (const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;

@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "NiftiImage.h"
+#include "DeformationField.h"
 #include "aladin.h"
 #include "f3d.h"
 
@@ -268,5 +269,67 @@ BEGIN_RCPP
     }
     
     return R_NilValue;
+END_RCPP
+}
+
+RcppExport SEXP getDeformationField (SEXP _transform)
+{
+BEGIN_RCPP
+    RObject transform(_transform);
+    NiftiImage targetImage = retrieveImage(transform.attr("target"));
+    
+    if (transform.hasAttribute("class") && as<std::string>(transform.attr("class")) == "affine")
+    {
+        AffineMatrix affine = AffineMatrix(SEXP(transform));
+        DeformationField field(targetImage, affine);
+        return (imageToPointer(field.getFieldImage(), "Deformation field"));
+    }
+    else
+    {
+        NiftiImage transformationImage = retrieveImage(_transform);
+        DeformationField field(targetImage, transformationImage);
+        return (imageToPointer(field.getFieldImage(), "Deformation field"));
+    }
+    
+    return R_NilValue;
+END_RCPP
+}
+
+RcppExport SEXP transformPoints (SEXP _transform, SEXP _points, SEXP _nearest)
+{
+BEGIN_RCPP
+    NiftiImage transformationImage = retrieveImage(_transform);
+    RObject transform(_transform);
+    NiftiImage targetImage = retrieveImage(transform.attr("target"));
+    DeformationField deformationField(targetImage, transformationImage);
+    NumericMatrix points(_points);
+    List result(points.nrow());
+    const bool nearest = as<bool>(_nearest);
+    
+    if (points.ncol() == 2)
+    {
+        for (int i=0; i<points.nrow(); i++)
+        {
+            Eigen::Vector2d point;
+            point[0] = points(i, 0);
+            point[1] = points(i, 1);
+            result[i] = deformationField.findPoint(point, nearest);
+        }
+    }
+    else if (points.ncol() == 3)
+    {
+        for (int i=0; i<points.nrow(); i++)
+        {
+            Eigen::Vector3d point;
+            point[0] = points(i, 0);
+            point[1] = points(i, 1);
+            point[2] = points(i, 2);
+            result[i] = deformationField.findPoint(point, nearest);
+        }
+    }
+    else
+        throw std::runtime_error("Points matrix should have 2 or 3 columns");
+    
+    return result;
 END_RCPP
 }
