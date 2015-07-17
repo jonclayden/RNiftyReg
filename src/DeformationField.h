@@ -17,22 +17,21 @@ protected:
     NiftiImage deformationFieldImage;
     NiftiImage targetImage;
     
-    void initImages (nifti_image *targetImage);
+    void initImages (const NiftiImage &targetImage);
     
 public:
-    DeformationField (nifti_image *targetImage, const AffineMatrix &affine);
-    DeformationField (nifti_image *targetImage, nifti_image *transformationImage);
+    DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine);
+    DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage);
     
-    ~DeformationField ()
+    NiftiImage getFieldImage ()
     {
-        nifti_image_free(deformationFieldImage);
+        deformationFieldImage.setPersistence(true);
+        return deformationFieldImage;
     }
-    
-    NiftiImage getFieldImage () const { return deformationFieldImage; }
     
     NiftiImage getJacobian () const;
     
-    NiftiImage resampleImage (nifti_image *sourceImage, const int interpolation) const;
+    NiftiImage resampleImage (const NiftiImage &sourceImage, const int interpolation) const;
     
     template <int Dim>
     Rcpp::NumericVector findPoint (const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const;

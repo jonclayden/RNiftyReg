@@ -7,9 +7,9 @@
 #include "config.h"
 #include "DeformationField.h"
 
-void DeformationField::initImages (nifti_image *targetImage)
+void DeformationField::initImages (const NiftiImage &targetImage)
 {
-    this->targetImage = NiftiImage(targetImage);
+    this->targetImage = targetImage;
     
     // Create a deformation field
     nifti_image *deformationField = nifti_copy_nim_info(targetImage);
@@ -40,14 +40,14 @@ void DeformationField::initImages (nifti_image *targetImage)
     this->deformationFieldImage = NiftiImage(deformationField);
 }
 
-DeformationField::DeformationField (nifti_image *targetImage, const AffineMatrix &affine)
+DeformationField::DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine)
 {
     initImages(targetImage);
     mat44 affineMatrix = affine;
     reg_affine_getDeformationField(&affineMatrix, deformationFieldImage, false, NULL);
 }
 
-DeformationField::DeformationField (nifti_image *targetImage, nifti_image *transformationImage)
+DeformationField::DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage)
 {
     initImages(targetImage);
     reg_checkAndCorrectDimension(transformationImage);
@@ -101,7 +101,7 @@ NiftiImage DeformationField::getJacobian () const
     return NiftiImage(jacobianImage);
 }
 
-NiftiImage DeformationField::resampleImage (nifti_image *sourceImage, const int interpolation) const
+NiftiImage DeformationField::resampleImage (const NiftiImage &sourceImage, const int interpolation) const
 {
     // Allocate result image
     nifti_image *resultImage = nifti_copy_nim_info(targetImage);
