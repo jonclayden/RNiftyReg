@@ -23,11 +23,6 @@ public:
     DeformationField (nifti_image *targetImage, const AffineMatrix &affine);
     DeformationField (nifti_image *targetImage, nifti_image *transformationImage);
     
-    ~DeformationField ()
-    {
-        nifti_image_free(deformationFieldImage);
-    }
-    
     NiftiImage getFieldImage () const { return deformationFieldImage; }
     
     NiftiImage getJacobian () const;
