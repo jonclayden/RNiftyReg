@@ -17,6 +17,11 @@ dim.internalImage <- function (x)
     return (attr(x, "imagedim"))
 }
 
+as.array.internalImage <- function (x, ...)
+{
+    return (.Call("pointerToArray", x, PACKAGE="RNiftyReg"))
+}
+
 print.internalImage <- function (x, ...)
 {
     dim <- attr(x, "imagedim")

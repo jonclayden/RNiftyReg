@@ -333,3 +333,11 @@ BEGIN_RCPP
     return result;
 END_RCPP
 }
+
+RcppExport SEXP pointerToArray (SEXP _image)
+{
+BEGIN_RCPP
+    NiftiImage image = retrieveImage(_image);
+    return imageToArray(image);
+END_RCPP
+}
