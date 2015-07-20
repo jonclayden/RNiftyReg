@@ -72,7 +72,7 @@ BEGIN_RCPP
     const bool sequentialInit = as<bool>(_sequentialInit);
     
     List init(_init);
-    List returnValue = List::create(Named("source")=sourceImage.toPointer("Source image"), Named("target")=targetImage.toPointer("Target image"));
+    List returnValue;
     
     if (sourceImage.nDims() == targetImage.nDims())
     {
@@ -91,13 +91,15 @@ BEGIN_RCPP
         else
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = List::create(result.iterations);
+        returnValue["source"] = sourceImage.toPointer("Source image");
+        returnValue["target"] = targetImage.toPointer("Target image");
         
         return returnValue;
     }
     else if (sourceImage.nDims() - targetImage.nDims() == 1)
     {
         const int nReps = sourceImage->dim[sourceImage.nDims()];
-        List forwardTransforms(nReps), reverseTransforms(nReps), iterations(nReps);
+        List forwardTransforms(nReps), reverseTransforms(nReps), iterations(nReps), sourceImages(nReps);
         NiftiImage finalImage = allocateMultiregResult(sourceImage, targetImage, interpolation != 0);
         AladinResult result;
         for (int i=0; i<nReps; i++)
@@ -107,6 +109,7 @@ BEGIN_RCPP
                 currentSource = sourceImage.slice(i);
             else
                 currentSource = sourceImage.volume(i);
+            sourceImages[i] = currentSource.toPointer("Source image");
             
             AffineMatrix initAffine;
             if (!Rf_isNull(init[i]))
@@ -136,6 +139,8 @@ BEGIN_RCPP
         else
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = iterations;
+        returnValue["source"] = sourceImages;
+        returnValue["target"] = targetImage.toPointer("Target image");
         
         return returnValue;
     }
@@ -169,7 +174,7 @@ BEGIN_RCPP
     const bool sequentialInit = as<bool>(_sequentialInit);
     
     List init(_init);
-    List returnValue = List::create(Named("source")=sourceImage.toPointer("Source image"), Named("target")=targetImage.toPointer("Target image"));
+    List returnValue;
     
     if (sourceImage.nDims() == targetImage.nDims())
     {
@@ -196,13 +201,15 @@ BEGIN_RCPP
         else
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = List::create(result.iterations);
+        returnValue["source"] = sourceImage.toPointer("Source image");
+        returnValue["target"] = targetImage.toPointer("Target image");
         
         return returnValue;
     }
     else if (sourceImage.nDims() - targetImage.nDims() == 1)
     {
         const int nReps = sourceImage->dim[sourceImage.nDims()];
-        List forwardTransforms(nReps), reverseTransforms(nReps), iterations(nReps);
+        List forwardTransforms(nReps), reverseTransforms(nReps), iterations(nReps), sourceImages(nReps);
         NiftiImage finalImage = allocateMultiregResult(sourceImage, targetImage, interpolation != 0);
         F3dResult result;
         for (int i=0; i<nReps; i++)
@@ -212,6 +219,7 @@ BEGIN_RCPP
                 currentSource = sourceImage.slice(i);
             else
                 currentSource = sourceImage.volume(i);
+            sourceImages[i] = currentSource.toPointer("Source image");
             
             AffineMatrix initAffine;
             NiftiImage initControl;
@@ -249,6 +257,8 @@ BEGIN_RCPP
         else
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = iterations;
+        returnValue["source"] = sourceImages;
+        returnValue["target"] = targetImage.toPointer("Target image");
         
         return returnValue;
     }

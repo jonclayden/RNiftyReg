@@ -206,7 +206,7 @@ forward.niftyreg <- function (object, i = 1, ...)
     else
     {
         result <- object$forwardTransforms[[i]]
-        attr(result, "source") <- object$source
+        attr(result, "source") <- object$source[[i]]
         attr(result, "target") <- object$target
         return (result)
     }
@@ -223,9 +223,9 @@ reverse.niftyreg <- function (object, i = 1, ...)
         return (NULL)
     else
     {
-        result <- object$forwardTransforms[[i]]
+        result <- object$reverseTransforms[[i]]
         attr(result, "source") <- object$target
-        attr(result, "target") <- object$source
+        attr(result, "target") <- object$source[[i]]
         return (result)
     }
 }
