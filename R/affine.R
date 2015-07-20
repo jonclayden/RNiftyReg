@@ -8,48 +8,67 @@ isAffine <- function (object, strict = FALSE)
         return (FALSE)
 }
 
-readAffine <- function (fileName, type = NULL)
+readAffine <- function (fileName, source = NULL, target = NULL, type = NULL)
 {
     if (!is.null(type))
         type <- match.arg(tolower(type), c("niftyreg","fsl"))
     
     lines <- readLines(fileName)
-    typeLine <- (lines %~% "\\# affineType\\: \\w+")
-    if (is.null(type) && any(typeLine))
-        type <- match.arg(tolower(sub("\\# affineType\\: (\\w+)", "\\1", lines[typeLine][1], perl=TRUE)), c("niftyreg","fsl"))
     
-    connection <- textConnection(lines[!typeLine])
+    isSourceLine <- (lines %~% "^\\s*# source:\\s*(.+)$")
+    if (is.null(source) && any(isSourceLine))
+        source <- groups(ore.lastmatch())
+    isTargetLine <- (lines %~% "^\\s*# target:\\s*(.+)$")
+    if (is.null(target) && any(isTargetLine))
+        target <- groups(ore.lastmatch())
+    isTypeLine <- (lines %~% "^\\s*# affineType:\\s*(\\w+)\\s*$")
+    if (is.null(type))
+    {
+        if (any(isTypeLine))
+            type <- match.arg(tolower(groups(ore.lastmatch())), c("niftyreg","fsl"))
+        else
+            type <- "niftyreg"
+    }
+    
+    source <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
+    target <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
+    
+    connection <- textConnection(lines[!(lines %~% "^\\s*#")])
     affine <- as.matrix(read.table(connection))
     close(connection)
     
     if (!isTRUE(all.equal(dim(affine), c(4,4))))
-        report(OL$Error, "The specified file does not contain a 4x4 affine matrix")
+        stop("The specified file does not contain a 4x4 affine matrix")
     
-    attr(affine, "affineType") <- type
+    class(affine) <- "affine"
+    attr(affine, "source") <- source
+    attr(target, "target") <- target
+    
     return (affine)
 }
 
 writeAffine <- function (affine, fileName)
 {
     if (!isAffine(affine))
-        report(OL$Error, "Specified affine matrix is not valid")
+        stop("Specified affine matrix is not valid")
     
     lines <- apply(format(affine,scientific=FALSE), 1, paste, collapse="  ")
     lines <- c(paste("# affineType:",attr(affine,"affineType"),sep=" "), lines)
     writeLines(lines, fileName)
 }
 
+# For internal use only: users should call applyTransform()
 applyAffine <- function (affine, points)
 {
     if (!isAffine(affine))
-        report(OL$Error, "Specified affine matrix is not valid")
+        stop("Specified affine matrix is not valid")
     
     if (!is.matrix(points))
         points <- matrix(points, nrow=1)
     
     nDims <- ncol(points)
     if (nDims != 2 && nDims != 3)
-        report(OL$Error, "Points must be two or three dimensional")
+        stop("Points must be two or three dimensional")
     
     if (nDims == 2)
         affine <- matrix(affine[c(1,2,4,5,6,8,13,14,16)], ncol=3, nrow=3)
@@ -64,7 +83,7 @@ applyAffine <- function (affine, points)
 convertAffine <- function (affine, source = NULL, target = NULL, newType = c("niftyreg","fsl"), currentType = NULL)
 {
     if (!isAffine(affine))
-        report(OL$Error, "Specified affine matrix is not valid")
+        stop("Specified affine matrix is not valid")
     
     newType <- match.arg(newType)
     
@@ -72,7 +91,7 @@ convertAffine <- function (affine, source = NULL, target = NULL, newType = c("ni
     {
         currentType <- attr(affine, "affineType")
         if (is.null(currentType))
-            report(OL$Error, "The current affine type was not specified and is not stored with the matrix")
+            stop("The current affine type was not specified and is not stored with the matrix")
     }
     else
         currentType <- match.arg(currentType, c("niftyreg","fsl"))

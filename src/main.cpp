@@ -14,6 +14,14 @@ using namespace Rcpp;
 
 typedef std::vector<float> float_vector;
 
+RcppExport SEXP retrieveImage (SEXP _image)
+{
+BEGIN_RCPP
+    NiftiImage image(_image);
+    return image.toPointer("NIfTI image");
+END_RCPP
+}
+
 RcppExport SEXP readNifti (SEXP _file, SEXP _internal)
 {
 BEGIN_RCPP

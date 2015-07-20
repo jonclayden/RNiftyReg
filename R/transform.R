@@ -1,7 +1,7 @@
 deformationField <- function (transform, jacobian = TRUE)
 {
     if (!isAffine(transform,strict=TRUE) && !isImage(transform,FALSE))
-        report(OL$Error, "Specified transformation does not seem to be valid")
+        stop("Specified transformation does not seem to be valid")
     
     return (.Call("getDeformationField", transform, isTRUE(jacobian), PACKAGE="RNiftyReg"))
 }
@@ -27,7 +27,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
             return (newPoints)
         }
         else
-            report(OL$Error, "Object to transform should be a suitable image or matrix of points")
+            stop("Object to transform should be a suitable image or matrix of points")
     }
     else if (isImage(transform, FALSE))
     {
@@ -42,7 +42,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
             
             nDims <- ncol(points)
             if (nDims != ndim(source))
-                report(OL$Error, "Dimensionality of points should match the original source image")
+                stop("Dimensionality of points should match the original source image")
             
             result <- .Call("transformPoints", transform, points, isTRUE(nearest), PACKAGE="RNiftyReg")
             
@@ -72,8 +72,8 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
             return (newPoints)
         }
         else
-            report(OL$Error, "Object to transform should be a suitable image or matrix of points")
+            stop("Object to transform should be a suitable image or matrix of points")
     }
     else
-        report(OL$Error, "Specified transform is not valid")
+        stop("Specified transform is not valid")
 }
