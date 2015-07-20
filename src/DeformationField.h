@@ -34,7 +34,7 @@ public:
     NiftiImage resampleImage (const NiftiImage &sourceImage, const int interpolation) const;
     
     template <int Dim>
-    Rcpp::NumericVector findPoint (const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const;
+    Rcpp::NumericVector findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const;
 };
 
 #endif

@@ -123,13 +123,13 @@ NiftiImage DeformationField::resampleImage (const NiftiImage &sourceImage, const
 }
 
 template <int Dim>
-Rcpp::NumericVector DeformationField::findPoint (const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const
+Rcpp::NumericVector DeformationField::findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const
 {
     typedef Eigen::Matrix<double,Dim,1> Point;
     Point closestLoc;
     
-    double * const deformationPointer = (double *) deformationFieldImage->data;
-    const size_t nVoxels = deformationFieldImage->nvox;
+    const PRECISION_TYPE *deformationPointer = (const PRECISION_TYPE *) deformationFieldImage->data;
+    const size_t nVoxels = deformationFieldImage->nx * deformationFieldImage->ny * deformationFieldImage->nz;
     double closestDistance = R_PosInf;
     size_t closestVoxel = 0;
     
@@ -165,11 +165,12 @@ Rcpp::NumericVector DeformationField::findPoint (const Eigen::Matrix<double,Dim,
     else
     {
         Rcpp::NumericVector result(int(R_pow_di(4.0,Dim)) * 2 * Dim);
-        Point offset = closestLoc - sourceLoc;
+        const mat44 &xform = sourceImage.xform();
+        Point offset = sourceLoc - closestLoc;
         size_t v;
         
         for (int i=0; i<Dim; i++)
-            offset[i] = (offset[i] >= 0.0 ? 0.0 : -1.0);
+            offset[i] = (offset[i] * xform.m[i][i] >= 0.0 ? 0.0 : -1.0);
         
         for (int i=0; i<4; i++)
         {
@@ -213,7 +214,7 @@ Rcpp::NumericVector DeformationField::findPoint (const Eigen::Matrix<double,Dim,
 }
 
 template
-Rcpp::NumericVector DeformationField::findPoint (const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
+Rcpp::NumericVector DeformationField::findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
 
 template
-Rcpp::NumericVector DeformationField::findPoint (const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;
+Rcpp::NumericVector DeformationField::findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;
