@@ -309,65 +309,65 @@ void addAttributes (RObject &object, nifti_image *source, const bool realDim = t
     object.attr(".nifti_image_ptr") = xptr;
 }
 
-RObject imageToArray (nifti_image *source)
+RObject NiftiImage::toArray ()
 {
     RObject array;
     
-    switch (source->datatype)
+    switch (image->datatype)
     {
         case DT_UINT8:
-        array = imageDataToArray<uint8_t,INTSXP>(source);
+        array = imageDataToArray<uint8_t,INTSXP>(image);
         break;
         
         case DT_INT16:
-        array = imageDataToArray<int16_t,INTSXP>(source);
+        array = imageDataToArray<int16_t,INTSXP>(image);
         break;
         
         case DT_INT32:
-        array = imageDataToArray<int32_t,INTSXP>(source);
+        array = imageDataToArray<int32_t,INTSXP>(image);
         break;
         
         case DT_FLOAT32:
-        array = imageDataToArray<float,REALSXP>(source);
+        array = imageDataToArray<float,REALSXP>(image);
         break;
         
         case DT_FLOAT64:
-        array = imageDataToArray<double,REALSXP>(source);
+        array = imageDataToArray<double,REALSXP>(image);
         break;
         
         case DT_INT8:
-        array = imageDataToArray<int8_t,INTSXP>(source);
+        array = imageDataToArray<int8_t,INTSXP>(image);
         break;
         
         case DT_UINT16:
-        array = imageDataToArray<uint16_t,INTSXP>(source);
+        array = imageDataToArray<uint16_t,INTSXP>(image);
         break;
         
         case DT_UINT32:
-        array = imageDataToArray<uint32_t,INTSXP>(source);
+        array = imageDataToArray<uint32_t,INTSXP>(image);
         break;
         
         case DT_INT64:
-        array = imageDataToArray<int64_t,INTSXP>(source);
+        array = imageDataToArray<int64_t,INTSXP>(image);
         break;
         
         case DT_UINT64:
-        array = imageDataToArray<uint64_t,INTSXP>(source);
+        array = imageDataToArray<uint64_t,INTSXP>(image);
         break;
         
         default:
-        throw std::runtime_error("Unsupported data type (" + std::string(nifti_datatype_string(source->datatype)) + ")");
+        throw std::runtime_error("Unsupported data type (" + std::string(nifti_datatype_string(image->datatype)) + ")");
     }
     
-    addAttributes(array, source);
+    addAttributes(array, image);
     
     return array;
 }
 
-RObject imageToPointer (nifti_image *source, const std::string label)
+RObject NiftiImage::toPointer (const std::string label)
 {
     RObject string = wrap(label);
-    addAttributes(string, source, false);
+    addAttributes(string, image, false);
     string.attr("class") = "internalImage";
     return string;
 }

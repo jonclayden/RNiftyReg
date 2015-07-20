@@ -103,12 +103,11 @@ public:
     
     Block slice (const int i) { return Block(*this, 3, i); }
     Block volume (const int i) { return Block(*this, 4, i); }
+    
+    Rcpp::RObject toArray ();
+    Rcpp::RObject toPointer (const std::string label);
 };
 
 NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble);
-
-Rcpp::RObject imageToArray (nifti_image *source);
-
-Rcpp::RObject imageToPointer (nifti_image *source, const std::string label);
 
 #endif
