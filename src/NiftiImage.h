@@ -121,6 +121,8 @@ public:
             return image->ndim;
     }
     
+    mat44 xform (const bool preferQuaternion = true) const;
+    
     const Block slice (const int i) const { return Block(*this, 3, i); }
     const Block volume (const int i) const { return Block(*this, 4, i); }
     

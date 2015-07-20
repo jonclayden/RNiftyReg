@@ -7,6 +7,31 @@
 
 using namespace Rcpp;
 
+mat44 NiftiImage::xform (const bool preferQuaternion) const
+{
+    if (image == NULL)
+    {
+        mat44 matrix;
+        for (int i=0; i<4; i++)
+        {
+            for (int j=0; j<4; j++)
+                matrix.m[i][j] = 0.0;
+        }
+        return matrix;
+    }
+    else if (image->qform_code <= 0 && image->sform_code <= 0)
+    {
+        // No qform or sform so return RAS matrix (NB: other software may assume differently)
+        mat44 matrix;
+        reg_mat44_eye(&matrix);
+        return matrix;
+    }
+    else if ((preferQuaternion && image->qform_code > 0) || image->sform_code <= 0)
+        return image->qto_xyz;
+    else
+        return image->sto_xyz;
+}
+
 NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble)
 {
     nifti_image *newStruct = nifti_copy_nim_info(target);

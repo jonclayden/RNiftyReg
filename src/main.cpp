@@ -47,16 +47,7 @@ BEGIN_RCPP
     const NiftiImage image = retrieveImage(_image);
     const bool preferQuaternion = as<bool>(_preferQuaternion);
     
-    AffineMatrix matrix;
-    
-    // No qform or sform so return RAS matrix (NB: other software may assume differently)
-    if (image->qform_code <= 0 && image->sform_code <= 0)
-        matrix(0,0) = matrix(1,1) = matrix(2,2) = matrix(3,3) = 1.0;
-    else if ((preferQuaternion && image->qform_code > 0) || image->sform_code <= 0)
-        matrix = AffineMatrix(image->qto_xyz, false);
-    else
-        matrix = AffineMatrix(image->sto_xyz, false);
-    
+    AffineMatrix matrix(image.xform(preferQuaternion), false);
     return matrix;
 END_RCPP
 }
