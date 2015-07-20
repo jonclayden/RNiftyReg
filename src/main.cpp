@@ -267,22 +267,27 @@ RcppExport SEXP getDeformationField (SEXP _transform)
 {
 BEGIN_RCPP
     RObject transform(_transform);
+    RObject result;
     NiftiImage targetImage = retrieveImage(transform.attr("target"));
     
     if (transform.hasAttribute("class") && as<std::string>(transform.attr("class")) == "affine")
     {
         AffineMatrix affine = AffineMatrix(SEXP(transform));
         DeformationField field(targetImage, affine);
-        return (imageToPointer(field.getFieldImage(), "Deformation field"));
+        result = imageToPointer(field.getFieldImage(), "Deformation field");
+        result.attr("source") = transform.attr("source");
+        result.attr("target") = transform.attr("target");
     }
     else
     {
         NiftiImage transformationImage = retrieveImage(_transform);
         DeformationField field(targetImage, transformationImage);
-        return (imageToPointer(field.getFieldImage(), "Deformation field"));
+        result = imageToPointer(field.getFieldImage(), "Deformation field");
+        result.attr("source") = transform.attr("source");
+        result.attr("target") = transform.attr("target");
     }
     
-    return R_NilValue;
+    return result;
 END_RCPP
 }
 
@@ -291,6 +296,7 @@ RcppExport SEXP transformPoints (SEXP _transform, SEXP _points, SEXP _nearest)
 BEGIN_RCPP
     NiftiImage transformationImage = retrieveImage(_transform);
     RObject transform(_transform);
+    NiftiImage sourceImage = retrieveImage(transform.attr("source"));
     NiftiImage targetImage = retrieveImage(transform.attr("target"));
     DeformationField deformationField(targetImage, transformationImage);
     NumericMatrix points(_points);
@@ -304,7 +310,7 @@ BEGIN_RCPP
             Eigen::Vector2d point;
             point[0] = points(i, 0);
             point[1] = points(i, 1);
-            result[i] = deformationField.findPoint(point, nearest);
+            result[i] = deformationField.findPoint(sourceImage, point, nearest);
         }
     }
     else if (points.ncol() == 3)
@@ -315,7 +321,7 @@ BEGIN_RCPP
             point[0] = points(i, 0);
             point[1] = points(i, 1);
             point[2] = points(i, 2);
-            result[i] = deformationField.findPoint(point, nearest);
+            result[i] = deformationField.findPoint(sourceImage, point, nearest);
         }
     }
     else
