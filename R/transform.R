@@ -1,4 +1,4 @@
-applyTransform <- function (transform, x, interpolation = 3L)
+applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
 {
     source <- attr(transform, "source")
     target <- attr(transform, "target")
@@ -14,6 +14,8 @@ applyTransform <- function (transform, x, interpolation = 3L)
             points <- voxelToWorld(x, source, simple=TRUE)
             newPoints <- applyAffine(fslAffine, points)
             newPoints <- worldToVoxel(newPoints, target, simple=TRUE)
+            if (nearest)
+                newPoints <- round(newPoints)
             return (newPoints)
         }
         else
@@ -25,16 +27,16 @@ applyTransform <- function (transform, x, interpolation = 3L)
             return (niftyreg.nonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE))
         else if ((is.matrix(x) && ncol(x) == length(dim(source))) || length(x) == length(dim(source)))
         {
-            points <- voxelToWorld(points, source)
+            points <- voxelToWorld(x, source)
             
             if (!is.matrix(points))
                 points <- matrix(points, nrow=1)
             
             nDims <- ncol(points)
-            if (nDims != 2 && nDims != 3)
-                report(OL$Error, "Points must be two or three dimensional")
+            if (nDims != ndim(source))
+                report(OL$Error, "Dimensionality of points should match the original source image")
             
-            result <- .Call("cp_transform_R", .fixTypes(transform), .fixTypes(target), points, as.logical(nearest), PACKAGE="RNiftyReg")
+            result <- .Call("transformPoints", transform, points, isTRUE(nearest), PACKAGE="RNiftyReg")
             
             newPoints <- sapply(seq_len(nrow(points)), function(i) {
                 if (length(result[[i]]) == nDims)

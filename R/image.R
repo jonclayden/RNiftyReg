@@ -52,6 +52,11 @@ print.internalImage <- function (x, ...)
     }
 }
 
+ndim <- function (object)
+{
+    length(dim(object))
+}
+
 pixdim <- function (object)
 {
     if (!is.null(attr(object, "pixdim")))
