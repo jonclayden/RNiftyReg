@@ -179,7 +179,7 @@ NiftiImage::NiftiImage (const SEXP object, const bool readData)
     RObject imageObject(object);
     
     if (Rf_isNull(object))
-        return;
+        this->image = NULL;
     else if (imageObject.hasAttribute(".nifti_image_ptr"))
     {
         XPtr<NiftiImage> imagePtr(SEXP(imageObject.attr(".nifti_image_ptr")));
