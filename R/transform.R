@@ -15,13 +15,12 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
     {
         # The argument looks like a suitable image
         if (isImage(x,TRUE) && isTRUE(all.equal(dim(x),dim(source))))
-            return (niftyreg.linear(x, target, "affine", init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE))
+            return (niftyregLinear(x, target, "affine", init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE))
         else if ((is.matrix(x) && ncol(x) == length(dim(source))) || length(x) == length(dim(source)))
         {
-            fslAffine <- convertAffine(transform, source, target, "fsl")
-            points <- voxelToWorld(x, source, simple=TRUE)
-            newPoints <- applyAffine(fslAffine, points)
-            newPoints <- worldToVoxel(newPoints, target, simple=TRUE)
+            points <- voxelToWorld(x, source, simple=FALSE)
+            newPoints <- applyAffine(invertAffine(transform), points)
+            newPoints <- worldToVoxel(newPoints, target, simple=FALSE)
             if (nearest)
                 newPoints <- round(newPoints)
             return (newPoints)
@@ -32,7 +31,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
     else if (isImage(transform, FALSE))
     {
         if (isImage(x,TRUE) && isTRUE(all.equal(dim(x),dim(source))))
-            return (niftyreg.nonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE))
+            return (niftyregNonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE))
         else if ((is.matrix(x) && ncol(x) == length(dim(source))) || length(x) == length(dim(source)))
         {
             points <- voxelToWorld(x, source)

@@ -5,13 +5,13 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
     
     scope <- match.arg(scope)
     if (scope == "nonlinear")
-        niftyreg.nonlinear(source, target, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
+        niftyregNonlinear(source, target, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
     else
-        niftyreg.linear(source, target, scope, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
+        niftyregLinear(source, target, scope, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
 }
 
 # Standard set of preregistration checks for source and target images
-.checkImages <- function (source, target)
+checkImages <- function (source, target)
 {
     nSourceDim <- length(dim(source))
     nTargetDim <- length(dim(target))
@@ -28,11 +28,11 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
         stop("Images of fewer than 4 voxels in any dimension cannot be registered")
 }
 
-niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
     nSourceDim <- length(dim(source))
     nTargetDim <- length(dim(target))
-    .checkImages(source, target)
+    checkImages(source, target)
     
     if (!(interpolation %in% c(0,1,3)))
         stop("Final interpolation specifier must be 0, 1 or 3")
@@ -50,12 +50,10 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
             init <- rep(init, length.out=nReps)
     }
     init <- lapply(init, function(x) {
-        if (is.null(x))
-            return (x)
-        else if (!is.matrix(x) || !isTRUE(all.equal(dim(x), c(4,4))))
+        if (!isAffine(x))
             stop("Linear registration can only be initialised with an affine matrix")
-        else if (!is.null(attr(x,"affineType")) && attr(x,"affineType") != "niftyreg")
-            return (convertAffine(x, source, target, "niftyreg"))
+        else
+            return (x)
     })
     
     result <- .Call("regLinear", source, target, ifelse(scope=="affine",1L,0L), symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, PACKAGE="RNiftyReg")
@@ -64,11 +62,11 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
     return (result)
 }
 
-niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005, jacobianWeight = 0, inverseConsistencyWeight = 0.01, finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005, jacobianWeight = 0, inverseConsistencyWeight = 0.01, finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
     nSourceDim <- length(dim(source))
     nTargetDim <- length(dim(target))
-    .checkImages(source, target)
+    checkImages(source, target)
     
     if (any(c(bendingEnergyWeight,jacobianWeight,inverseConsistencyWeight) < 0))
         stop("Penalty term weights must be nonnegative")
@@ -105,10 +103,10 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
             spacingUnit <<- "mm"
             return (x)
         }
-        else if (!is.matrix(x) || !isTRUE(all.equal(dim(x), c(4,4))))
+        else if (!isAffine(x))
             stop("Initial transform should be a control point image or affine matrix")
-        else if (!is.null(attr(x,"affineType")) && attr(x,"affineType") != "niftyreg")
-            return (convertAffine(x, source, target, "niftyreg"))
+        else
+            return (x)
     })
     
     if (spacingUnit == "vox")
