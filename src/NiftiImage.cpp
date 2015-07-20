@@ -7,54 +7,42 @@
 
 using namespace Rcpp;
 
-mat44 NiftiImage::xform (const bool preferQuaternion) const
+void NiftiImage::copy (nifti_image * const source)
 {
-    if (image == NULL)
+    if (source != NULL)
     {
-        mat44 matrix;
-        for (int i=0; i<4; i++)
-        {
-            for (int j=0; j<4; j++)
-                matrix.m[i][j] = 0.0;
-        }
-        return matrix;
+        size_t dataSize = nifti_get_volsize(source);
+        image = nifti_copy_nim_info(source);
+        image->data = calloc(1, dataSize);
+        memcpy(image->data, source->data, dataSize);
     }
-    else if (image->qform_code <= 0 && image->sform_code <= 0)
-    {
-        // No qform or sform so return RAS matrix (NB: other software may assume differently)
-        mat44 matrix;
-        reg_mat44_eye(&matrix);
-        return matrix;
-    }
-    else if ((preferQuaternion && image->qform_code > 0) || image->sform_code <= 0)
-        return image->qto_xyz;
-    else
-        return image->sto_xyz;
 }
 
-NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble)
+void NiftiImage::copy (const NiftiImage &source)
 {
-    nifti_image *newStruct = nifti_copy_nim_info(target);
-    newStruct->dim[0] = source->dim[0];
-    newStruct->dim[source.nDims()] = source->dim[source.nDims()];
-    newStruct->pixdim[source.nDims()] = source->pixdim[source.nDims()];
-    
-    if (forceDouble)
+    nifti_image *sourceStruct = source;
+    copy(sourceStruct);
+}
+
+void NiftiImage::copy (const Block &source)
+{
+    nifti_image *sourceStruct = source.image;
+    if (sourceStruct != NULL)
     {
-        newStruct->datatype = DT_FLOAT64;
-        nifti_datatype_sizes(newStruct->datatype, &newStruct->nbyper, NULL);
+        image = nifti_copy_nim_info(sourceStruct);
+        image->dim[0] = source.image->dim[0] - 1;
+        image->dim[source.dimension] = 1;
+        image->pixdim[source.dimension] = 1.0;
+        nifti_update_dims_from_array(image);
+        
+        size_t blockSize = nifti_get_volsize(image);
+        image->data = calloc(1, blockSize);
+        memcpy(image->data, static_cast<char*>(source.image->data) + blockSize*source.index, blockSize);
     }
-    
-    nifti_update_dims_from_array(newStruct);
-    
-    size_t dataSize = nifti_get_volsize(newStruct);
-    newStruct->data = calloc(1, dataSize);
-    
-    return NiftiImage(newStruct);
 }
 
 // Convert an S4 "nifti" object, as defined in the oro.nifti package, to a "nifti_image" struct
-NiftiImage retrieveImageFromNiftiS4 (const RObject &object, const bool copyData)
+void NiftiImage::initFromNiftiS4 (const RObject &object, const bool copyData)
 {
     nifti_1_header header;
     header.sizeof_hdr = 348;
@@ -127,32 +115,30 @@ NiftiImage retrieveImageFromNiftiS4 (const RObject &object, const bool copyData)
     else
         throw std::runtime_error("Data type is not supported");
     
-    nifti_image *image = nifti_convert_nhdr2nim(header, NULL);
+    this->image = nifti_convert_nhdr2nim(header, NULL);
     
     const SEXP data = PROTECT(object.slot(".Data"));
-    if (!copyData || Rf_length(data) == 1)
-        image->data = NULL;
+    if (!copyData || Rf_length(data) <= 1)
+        this->image->data = NULL;
     else
     {
-        const size_t dataSize = nifti_get_volsize(image);
-        image->data = calloc(1, dataSize);
+        const size_t dataSize = nifti_get_volsize(this->image);
+        this->image->data = calloc(1, dataSize);
         if (header.datatype == DT_INT32)
         {
             IntegerVector intData(data);
-            std::copy(intData.begin(), intData.end(), static_cast<int32_t*>(image->data));
+            std::copy(intData.begin(), intData.end(), static_cast<int32_t*>(this->image->data));
         }
         else
         {
             DoubleVector doubleData(data);
-            std::copy(doubleData.begin(), doubleData.end(), static_cast<double*>(image->data));
+            std::copy(doubleData.begin(), doubleData.end(), static_cast<double*>(this->image->data));
         }
     }
     UNPROTECT(1);
-    
-    return NiftiImage(image);
 }
 
-NiftiImage retrieveImageFromArray (const RObject &object)
+void NiftiImage::initFromArray (const RObject &object)
 {
     int dims[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     const std::vector<int> dimVector = object.attr("dim");
@@ -171,55 +157,96 @@ NiftiImage retrieveImageFromArray (const RObject &object)
     else
         throw std::runtime_error("Array elements must be numeric");
     
-    nifti_image *image = nifti_make_new_nim(dims, datatype, TRUE);
+    this->image = nifti_make_new_nim(dims, datatype, TRUE);
     
     const size_t dataSize = nifti_get_volsize(image);
     if (datatype == DT_INT32)
-        memcpy(image->data, INTEGER(object), dataSize);
+        memcpy(this->image->data, INTEGER(object), dataSize);
     else
-        memcpy(image->data, REAL(object), dataSize);
+        memcpy(this->image->data, REAL(object), dataSize);
     
     if (object.hasAttribute("pixdim"))
     {
         const std::vector<float> pixdimVector = object.attr("pixdim");
         const int pixdimLength = pixdimVector.size();
         for (int i=0; i<std::min(pixdimLength,nDims); i++)
-            image->pixdim[i+1] = pixdimVector[i];
+            this->image->pixdim[i+1] = pixdimVector[i];
     }
-    
-    return NiftiImage(image);
 }
 
-NiftiImage retrieveImage (const SEXP _image, const bool readData)
+NiftiImage::NiftiImage (const SEXP object, const bool readData)
 {
-    NiftiImage image;
-    RObject imageObject(_image);
+    RObject imageObject(object);
     
-    if (Rf_isNull(_image))
-        return image;
+    if (Rf_isNull(object))
+        return;
     else if (imageObject.hasAttribute(".nifti_image_ptr"))
     {
         XPtr<NiftiImage> imagePtr(SEXP(imageObject.attr(".nifti_image_ptr")));
-        image = *imagePtr;
+        this->image = *imagePtr;
     }
-    else if (Rf_isString(_image))
+    else if (Rf_isString(object))
     {
-        std::string path = as<std::string>(_image);
-        image = NiftiImage(nifti_image_read(path.c_str(), readData));
-        if (image.isNull())
+        std::string path = as<std::string>(object);
+        this->image = nifti_image_read(path.c_str(), readData);
+        if (this->image == NULL)
             throw std::runtime_error("Failed to read image");
     }
     else if (imageObject.inherits("nifti"))
-        image = retrieveImageFromNiftiS4(imageObject, readData);
+        initFromNiftiS4(imageObject, readData);
     else if (imageObject.hasAttribute("dim"))
-        image = retrieveImageFromArray(imageObject);
+        initFromArray(imageObject);
     else
         throw std::runtime_error("Cannot convert object of class \"" + as<std::string>(imageObject.attr("class")) + "\" to a nifti_image");
     
-    if (!image.isNull())
-        reg_checkAndCorrectDimension(image);
+    if (this->image != NULL)
+        reg_checkAndCorrectDimension(this->image);
+}
+
+mat44 NiftiImage::xform (const bool preferQuaternion) const
+{
+    if (image == NULL)
+    {
+        mat44 matrix;
+        for (int i=0; i<4; i++)
+        {
+            for (int j=0; j<4; j++)
+                matrix.m[i][j] = 0.0;
+        }
+        return matrix;
+    }
+    else if (image->qform_code <= 0 && image->sform_code <= 0)
+    {
+        // No qform or sform so return RAS matrix (NB: other software may assume differently)
+        mat44 matrix;
+        reg_mat44_eye(&matrix);
+        return matrix;
+    }
+    else if ((preferQuaternion && image->qform_code > 0) || image->sform_code <= 0)
+        return image->qto_xyz;
+    else
+        return image->sto_xyz;
+}
+
+NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble)
+{
+    nifti_image *newStruct = nifti_copy_nim_info(target);
+    newStruct->dim[0] = source->dim[0];
+    newStruct->dim[source.nDims()] = source->dim[source.nDims()];
+    newStruct->pixdim[source.nDims()] = source->pixdim[source.nDims()];
     
-    return image;
+    if (forceDouble)
+    {
+        newStruct->datatype = DT_FLOAT64;
+        nifti_datatype_sizes(newStruct->datatype, &newStruct->nbyper, NULL);
+    }
+    
+    nifti_update_dims_from_array(newStruct);
+    
+    size_t dataSize = nifti_get_volsize(newStruct);
+    newStruct->data = calloc(1, dataSize);
+    
+    return NiftiImage(newStruct);
 }
 
 template <typename SourceType, typename TargetType>

@@ -37,39 +37,12 @@ protected:
     nifti_image *image;
     bool persistent;
     
-    void copy (nifti_image * const source)
-    {
-        if (source != NULL)
-        {
-            size_t dataSize = nifti_get_volsize(source);
-            image = nifti_copy_nim_info(source);
-            image->data = calloc(1, dataSize);
-            memcpy(image->data, source->data, dataSize);
-        }
-    }
+    void copy (nifti_image * const source);
+    void copy (const NiftiImage &source);
+    void copy (const Block &source);
     
-    void copy (const NiftiImage &source)
-    {
-        nifti_image *sourceStruct = source;
-        copy(sourceStruct);
-    }
-    
-    void copy (const Block &source)
-    {
-        nifti_image *sourceStruct = source.image;
-        if (sourceStruct != NULL)
-        {
-            image = nifti_copy_nim_info(sourceStruct);
-            image->dim[0] = source.image->dim[0] - 1;
-            image->dim[source.dimension] = 1;
-            image->pixdim[source.dimension] = 1.0;
-            nifti_update_dims_from_array(image);
-            
-            size_t blockSize = nifti_get_volsize(image);
-            image->data = calloc(1, blockSize);
-            memcpy(image->data, static_cast<char*>(source.image->data) + blockSize*source.index, blockSize);
-        }
-    }
+    void initFromNiftiS4 (const Rcpp::RObject &object, const bool copyData = true);
+    void initFromArray (const Rcpp::RObject &object);
     
 public:
     NiftiImage ()
@@ -87,6 +60,8 @@ public:
         if (copy)
             this->copy(image);
     }
+    
+    NiftiImage (const SEXP object, const bool readData = true);
     
     ~NiftiImage ()
     {
@@ -131,12 +106,6 @@ public:
 };
 
 NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble);
-
-NiftiImage retrieveImageFromNiftiS4 (const Rcpp::RObject &object, const bool copyData = true);
-
-NiftiImage retrieveImageFromArray (const Rcpp::RObject &object);
-
-NiftiImage retrieveImage (const SEXP _image, const bool readData = true);
 
 Rcpp::RObject imageToArray (nifti_image *source);
 

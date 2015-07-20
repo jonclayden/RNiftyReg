@@ -17,7 +17,7 @@ typedef std::vector<float> float_vector;
 RcppExport SEXP readNifti (SEXP _file, SEXP _internal)
 {
 BEGIN_RCPP
-    NiftiImage image = retrieveImage(_file);
+    NiftiImage image(_file);
     
     if (as<bool>(_internal))
         return imageToPointer(image, "NIfTI image");
@@ -29,7 +29,7 @@ END_RCPP
 RcppExport SEXP writeNifti (SEXP _image, SEXP _file)
 {
 BEGIN_RCPP
-    NiftiImage image = retrieveImage(_image);
+    NiftiImage image(_image);
     
     const int status = nifti_set_filenames(image, as<std::string>(_file).c_str(), false, true);
     if (status != 0)
@@ -44,7 +44,7 @@ END_RCPP
 RcppExport SEXP getXform (SEXP _image, SEXP _preferQuaternion)
 {
 BEGIN_RCPP
-    const NiftiImage image = retrieveImage(_image);
+    const NiftiImage image(_image);
     const bool preferQuaternion = as<bool>(_preferQuaternion);
     
     AffineMatrix matrix(image.xform(preferQuaternion), false);
@@ -55,10 +55,10 @@ END_RCPP
 RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
 {
 BEGIN_RCPP
-    NiftiImage sourceImage = retrieveImage(_source);
-    NiftiImage targetImage = retrieveImage(_target);
-    NiftiImage sourceMask = retrieveImage(_sourceMask);
-    NiftiImage targetMask = retrieveImage(_targetMask);
+    NiftiImage sourceImage(_source);
+    NiftiImage targetImage(_target);
+    NiftiImage sourceMask(_sourceMask);
+    NiftiImage targetMask(_targetMask);
     
     if (sourceImage.isNull())
         throw std::runtime_error("Cannot read or retrieve source image");
@@ -153,10 +153,10 @@ END_RCPP
 RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _jacobianWeight, SEXP _inverseConsistencyWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
 {
 BEGIN_RCPP
-    NiftiImage sourceImage = retrieveImage(_source);
-    NiftiImage targetImage = retrieveImage(_target);
-    NiftiImage sourceMask = retrieveImage(_sourceMask);
-    NiftiImage targetMask = retrieveImage(_targetMask);
+    NiftiImage sourceImage(_source);
+    NiftiImage targetImage(_target);
+    NiftiImage sourceMask(_sourceMask);
+    NiftiImage targetMask(_targetMask);
     
     if (sourceImage.isNull())
         throw std::runtime_error("Cannot read or retrieve source image");
@@ -182,7 +182,7 @@ BEGIN_RCPP
             if (initObject.hasAttribute("class") && as<std::string>(initObject.attr("class")) == "affine")
                 initAffine = AffineMatrix(SEXP(initObject));
             else
-                initControl = retrieveImage(init[0]);
+                initControl = NiftiImage(SEXP(init[0]));
         }
         else
             initAffine = AffineMatrix(sourceImage, targetImage);
@@ -222,7 +222,7 @@ BEGIN_RCPP
                 if (initObject.hasAttribute("class") && as<std::string>(initObject.attr("class")) == "affine")
                     initAffine = AffineMatrix(SEXP(initObject));
                 else
-                    initControl = retrieveImage(init[i]);
+                    initControl = NiftiImage(SEXP(init[i]));
             }
             else if (sequentialInit && i>0 && !result.forwardTransform.isNull())
                 initControl = result.forwardTransform;
@@ -268,7 +268,7 @@ RcppExport SEXP getDeformationField (SEXP _transform)
 BEGIN_RCPP
     RObject transform(_transform);
     RObject result;
-    NiftiImage targetImage = retrieveImage(transform.attr("target"));
+    NiftiImage targetImage(SEXP(transform.attr("target")));
     
     if (transform.hasAttribute("class") && as<std::string>(transform.attr("class")) == "affine")
     {
@@ -280,7 +280,7 @@ BEGIN_RCPP
     }
     else
     {
-        NiftiImage transformationImage = retrieveImage(_transform);
+        NiftiImage transformationImage(_transform);
         DeformationField field(targetImage, transformationImage);
         result = imageToPointer(field.getFieldImage(), "Deformation field");
         result.attr("source") = transform.attr("source");
@@ -294,10 +294,10 @@ END_RCPP
 RcppExport SEXP transformPoints (SEXP _transform, SEXP _points, SEXP _nearest)
 {
 BEGIN_RCPP
-    NiftiImage transformationImage = retrieveImage(_transform);
+    NiftiImage transformationImage(_transform);
     RObject transform(_transform);
-    NiftiImage sourceImage = retrieveImage(transform.attr("source"));
-    NiftiImage targetImage = retrieveImage(transform.attr("target"));
+    NiftiImage sourceImage(SEXP(transform.attr("source")));
+    NiftiImage targetImage(SEXP(transform.attr("target")));
     DeformationField deformationField(targetImage, transformationImage);
     NumericMatrix points(_points);
     List result(points.nrow());
@@ -334,7 +334,7 @@ END_RCPP
 RcppExport SEXP pointerToArray (SEXP _image)
 {
 BEGIN_RCPP
-    NiftiImage image = retrieveImage(_image);
+    NiftiImage image(_image);
     return imageToArray(image);
 END_RCPP
 }
