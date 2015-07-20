@@ -1,3 +1,11 @@
+deformationField <- function (transform, jacobian = TRUE)
+{
+    if (!isAffine(transform,strict=TRUE) && !isImage(transform,FALSE))
+        report(OL$Error, "Specified transformation does not seem to be valid")
+    
+    return (.Call("getDeformationField", transform, isTRUE(jacobian), PACKAGE="RNiftyReg"))
+}
+
 applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
 {
     source <- attr(transform, "source")

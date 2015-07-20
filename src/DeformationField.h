@@ -20,6 +20,7 @@ protected:
     void initImages (const NiftiImage &targetImage);
     
 public:
+    DeformationField () {}
     DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine);
     DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage);
     

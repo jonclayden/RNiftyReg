@@ -273,29 +273,31 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP getDeformationField (SEXP _transform)
+RcppExport SEXP getDeformationField (SEXP _transform, SEXP _jacobian)
 {
 BEGIN_RCPP
     RObject transform(_transform);
     RObject result;
     NiftiImage targetImage(SEXP(transform.attr("target")));
+    DeformationField field;
     
     if (transform.hasAttribute("class") && as<std::string>(transform.attr("class")) == "affine")
     {
         AffineMatrix affine = AffineMatrix(SEXP(transform));
-        DeformationField field(targetImage, affine);
-        result = field.getFieldImage().toPointer("Deformation field");
-        result.attr("source") = transform.attr("source");
-        result.attr("target") = transform.attr("target");
+        field = DeformationField(targetImage, affine);
     }
     else
     {
         NiftiImage transformationImage(_transform);
-        DeformationField field(targetImage, transformationImage);
-        result = field.getFieldImage().toPointer("Deformation field");
-        result.attr("source") = transform.attr("source");
-        result.attr("target") = transform.attr("target");
+        field = DeformationField(targetImage, transformationImage);
     }
+    
+    result = field.getFieldImage().toPointer("Deformation field");
+    result.attr("source") = transform.attr("source");
+    result.attr("target") = transform.attr("target");
+    
+    if (as<bool>(_jacobian))
+        result.attr("jacobian") = field.getJacobian().toPointer("Jacobian of deformation field");
     
     return result;
 END_RCPP
