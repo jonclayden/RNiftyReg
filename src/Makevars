@@ -1,5 +1,13 @@
-PKG_CPPFLAGS=-DNDEBUG -DRNIFTYREG
-PKG_CFLAGS=$(SHLIB_OPENMP_CFLAGS)
-PKG_CXXFLAGS=$(SHLIB_OPENMP_CXXFLAGS)
-PKG_LIBS=$(SHLIB_OPENMP_CXXFLAGS)
-OBJECTS=niftyreg.o print.o exit.o index.o _reg_blockMatching.o _reg_f3d.o _reg_KLdivergence.o _reg_femTransformation.o _reg_globalTransformation.o _reg_localTransformation.o _reg_maths.o _reg_mutualinformation.o _reg_resampling.o _reg_ssd.o _reg_tools.o nifti1_io.o znzlib.o
+PKG_CFLAGS = $(SHLIB_OPENMP_CFLAGS)
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
+PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) `$(R_HOME)/bin/Rscript -e "Rcpp:::LdFlags()"` -lz
+
+PKG_CPPFLAGS = -DNDEBUG -DRNIFTYREG -DHAVE_ZLIB -I. -Ireg-lib -Ireg-lib/cpu -Ireg-io/nifti
+
+OBJECTS_LIB_CPU = reg-lib/cpu/_reg_blockMatching.o reg-lib/cpu/_reg_dti.o reg-lib/cpu/_reg_femTransformation.o reg-lib/cpu/_reg_globalTransformation.o reg-lib/cpu/_reg_KLdivergence.o reg-lib/cpu/_reg_lncc.o reg-lib/cpu/_reg_localTransformation.o reg-lib/cpu/_reg_maths.o reg-lib/cpu/_reg_nmi.o reg-lib/cpu/_reg_optimiser.o reg-lib/cpu/_reg_polyAffine.o reg-lib/cpu/_reg_resampling.o reg-lib/cpu/_reg_ssd.o reg-lib/cpu/_reg_thinPlateSpline.o reg-lib/cpu/_reg_tools.o reg-lib/cpu/CPUKernelFactory.o reg-lib/cpu/CPUKernels.o
+
+OBJECTS_LIB = reg-lib/_reg_aladin.o reg-lib/_reg_aladin_sym.o reg-lib/_reg_base.o reg-lib/_reg_f3d.o reg-lib/_reg_f3d2.o reg-lib/_reg_f3d_sym.o reg-lib/_reg_polyAffine.o reg-lib/Content.o reg-lib/Platform.o
+
+OBJECTS_IO_NIFTI = reg-io/nifti/nifti1_io.o reg-io/nifti/znzlib.o
+
+OBJECTS = main.o AffineMatrix.o NiftiImage.o DeformationField.o aladin.o f3d.o $(OBJECTS_LIB) $(OBJECTS_LIB_CPU) $(OBJECTS_IO_NIFTI)

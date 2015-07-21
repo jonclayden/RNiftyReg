@@ -1,79 +1,160 @@
-readAffine <- function (fileName, type = NULL)
+isAffine <- function (object, strict = FALSE)
+{
+    if ("affine" %in% class(object))
+        return (TRUE)
+    else if (!strict && is.matrix(object) && isTRUE(all.equal(dim(object), c(4,4))))
+        return (TRUE)
+    else
+        return (FALSE)
+}
+
+readAffine <- function (fileName, source = NULL, target = NULL, type = NULL)
 {
     if (!is.null(type))
         type <- match.arg(tolower(type), c("niftyreg","fsl"))
     
     lines <- readLines(fileName)
-    typeLine <- (lines %~% "\\# affineType\\: \\w+")
-    if (is.null(type) && any(typeLine))
-        type <- match.arg(tolower(sub("\\# affineType\\: (\\w+)", "\\1", lines[typeLine][1], perl=TRUE)), c("niftyreg","fsl"))
     
-    connection <- textConnection(lines[!typeLine])
+    isSourceLine <- (lines %~% "^\\s*# source:\\s*(.+)$")
+    if (is.null(source) && any(isSourceLine))
+        source <- groups(ore.lastmatch())
+    isTargetLine <- (lines %~% "^\\s*# target:\\s*(.+)$")
+    if (is.null(target) && any(isTargetLine))
+        target <- groups(ore.lastmatch())
+    isTypeLine <- (lines %~% "^\\s*# affineType:\\s*(\\w+)\\s*$")
+    if (is.null(type))
+    {
+        if (any(isTypeLine))
+            type <- match.arg(tolower(groups(ore.lastmatch())), c("niftyreg","fsl"))
+        else
+            type <- "niftyreg"
+    }
+    
+    connection <- textConnection(lines[!(lines %~% "^\\s*#")])
     affine <- as.matrix(read.table(connection))
     close(connection)
     
     if (!isTRUE(all.equal(dim(affine), c(4,4))))
-        report(OL$Error, "The specified file does not contain a 4x4 affine matrix")
+        stop("The specified file does not contain a 4x4 affine matrix")
     
-    attr(affine, "affineType") <- type
-    return (affine)
+    source <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
+    target <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
+    
+    if (type != "niftyreg")
+        return (convertAffine(affine, source, target, "niftyreg"))
+    else
+        return (structure(affine, class="affine", source=source, target=target))
 }
 
 writeAffine <- function (affine, fileName)
 {
-    if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
-        report(OL$Error, "Specified affine matrix is not valid")
+    if (!isAffine(affine))
+        stop("Specified affine matrix is not valid")
     
     lines <- apply(format(affine,scientific=FALSE), 1, paste, collapse="  ")
-    lines <- c(paste("# affineType:",attr(affine,"affineType"),sep=" "), lines)
+    lines <- c("# affineType: niftyreg", lines)
     writeLines(lines, fileName)
 }
 
-convertAffine <- function (affine, source = NULL, target = NULL, newType = c("niftyreg","fsl"), currentType = NULL)
+# For internal use only: users should call applyTransform()
+applyAffine <- function (affine, points)
 {
-    if (!is.matrix(affine) || !isTRUE(all.equal(dim(affine), c(4,4))))
-        report(OL$Error, "Specified affine matrix is not valid")
+    if (!isAffine(affine))
+        stop("Specified affine matrix is not valid")
+    
+    if (!is.matrix(points))
+        points <- matrix(points, nrow=1)
+    
+    nDims <- ncol(points)
+    if (nDims != 2 && nDims != 3)
+        stop("Points must be two or three dimensional")
+    
+    if (nDims == 2)
+        affine <- matrix(affine[c(1,2,4,5,6,8,13,14,16)], ncol=3, nrow=3)
+    
+    points <- cbind(points, 1)
+    newPoints <- affine %*% t(points)
+    newPoints <- drop(t(newPoints[1:nDims,,drop=FALSE]))
+    
+    return (newPoints)
+}
+
+convertAffine <- function (affine, source = NULL, target = NULL, newType = c("niftyreg","fsl"))
+{
+    if (!isAffine(affine))
+        stop("Specified affine matrix is not valid")
+    if (is.null(source))
+        source <- attr(affine, "source")
+    if (is.null(target))
+        target <- attr(affine, "target")
     
     newType <- match.arg(newType)
     
-    if (is.null(currentType))
-    {
-        currentType <- attr(affine, "affineType")
-        if (is.null(currentType))
-            report(OL$Error, "The current affine type was not specified and is not stored with the matrix")
-    }
-    else
-        currentType <- match.arg(currentType, c("niftyreg","fsl"))
+    sourceXform <- xform(source, useQuaternionFirst=FALSE)
+    targetXform <- xform(target, useQuaternionFirst=FALSE)
+    sourceScaling <- diag(c(sqrt(colSums(sourceXform[1:3,1:3]^2)), 1))
+    targetScaling <- diag(c(sqrt(colSums(targetXform[1:3,1:3]^2)), 1))
     
-    if (newType == currentType)
-        return (affine)
+    if (newType == "fsl")
+        newAffine <- targetScaling %*% solve(targetXform) %*% solve(affine) %*% sourceXform %*% solve(sourceScaling)
     else
-    {
-        sourceXform <- xformToAffine(source, useQuaternionFirst=FALSE)
-        targetXform <- xformToAffine(target, useQuaternionFirst=FALSE)
-        sourceScaling <- diag(c(sqrt(colSums(sourceXform[1:3,1:3]^2)), 1))
-        targetScaling <- diag(c(sqrt(colSums(targetXform[1:3,1:3]^2)), 1))
-        
-        if (newType == "fsl")
-            newAffine <- targetScaling %*% solve(targetXform) %*% solve(affine) %*% sourceXform %*% solve(sourceScaling)
-        else
-            newAffine <- sourceXform %*% solve(sourceScaling) %*% solve(affine) %*% targetScaling %*% solve(targetXform)
-        
-        attr(newAffine, "affineType") <- newType
-        return (newAffine)
-    }
+        newAffine <- sourceXform %*% solve(sourceScaling) %*% solve(affine) %*% targetScaling %*% solve(targetXform)
+    
+    return (structure(newAffine, class="affine", source=source, target=target))
 }
 
 invertAffine <- function (affine)
 {
+    if (!isAffine(affine))
+        stop("Specified affine matrix is not valid")
+    
     newAffine <- solve(affine)
-    attr(newAffine, "affineType") <- attr(affine, "affineType")
-    return (newAffine)
+    return (structure(newAffine, class="affine", source=attr(affine,"target"), target=attr(affine,"source")))
 }
 
-decomposeAffine <- function (affine, source = NULL, target = NULL, type = NULL)
+buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,0,0), angles = c(0,0,0), source = NULL, target = NULL)
 {
-    affine <- convertAffine(affine, source, target, "fsl", type)
+    if (is.null(source) || is.null(target))
+        stop("Source and target images must be specified")
+    source <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
+    target <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
+    
+    if (is.list(translation))
+        x <- translation
+    else
+        x <- list(translation=translation, scales=scales, skews=skews, angles=angles)
+    
+    if (length(x$scales) < 3)
+        x$scales <- c(x$scales, rep(1,3-length(x$scales)))
+    for (name in c("translation","skews","angles"))
+    {
+        if (length(x[[name]]) < 3)
+            x[[name]] <- c(x[[name]], rep(0,3-length(x[[name]])))
+    }
+    
+    affine <- diag(4)
+    
+    rotationX <- rotationY <- rotationZ <- skewMatrix <- diag(3)
+    cosAngles <- cos(x$angles)
+    sinAngles <- sin(x$angles)
+    rotationX[2:3,2:3] <- c(cosAngles[1], -sinAngles[1], sinAngles[1], cosAngles[1])
+    rotationY[c(1,3),c(1,3)] <- c(cosAngles[2], sinAngles[2], -sinAngles[2], cosAngles[2])
+    rotationZ[1:2,1:2] <- c(cosAngles[3], -sinAngles[3], sinAngles[3], cosAngles[3])
+    skewMatrix[c(4,7,8)] <- x$skews
+    
+    affine[1:3,1:3] <- rotationX %*% rotationY %*% rotationZ %*% skewMatrix %*% diag(x$scales)
+    affine[1:3,4] <- x$translation
+    
+    return (convertAffine(affine, source, target, "fsl"))
+}
+
+decomposeAffine <- function (affine)
+{
+    if (!isAffine(affine))
+        stop("Specified affine matrix is not valid")
+    source <- attr(affine, "source")
+    target <- attr(affine, "target")
+    affine <- convertAffine(affine, source, target, "fsl")
     
     # Full matrix is rotationX %*% rotationY %*% rotationZ %*% skew %*% scale
     submatrix <- affine[1:3,1:3]
