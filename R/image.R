@@ -39,6 +39,7 @@ isImage <- function (object, unsure = NA)
 #' @param ... Additional parameters to methods. Currently unused.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
+#' @aliases internalImage
 #' @rdname internalImage
 #' @export
 dim.internalImage <- function (x)

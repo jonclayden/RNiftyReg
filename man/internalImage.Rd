@@ -3,6 +3,7 @@
 \name{dim.internalImage}
 \alias{as.array.internalImage}
 \alias{dim.internalImage}
+\alias{internalImage}
 \alias{print.internalImage}
 \title{Internal images}
 \usage{
