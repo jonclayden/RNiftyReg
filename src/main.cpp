@@ -192,7 +192,7 @@ BEGIN_RCPP
         {
             // NB: R code must set the class of an affine appropriately
             RObject initObject(init[0]);
-            if (initObject.hasAttribute("class") && as<std::string>(initObject.attr("class")) == "affine")
+            if (initObject.inherits("affine"))
                 initAffine = AffineMatrix(SEXP(initObject));
             else
                 initControl = NiftiImage(SEXP(init[0]));
@@ -235,7 +235,7 @@ BEGIN_RCPP
             {
                 // NB: R code must set the class of an affine appropriately
                 RObject initObject(init[i]);
-                if (initObject.hasAttribute("class") && as<std::string>(initObject.attr("class")) == "affine")
+                if (initObject.inherits("affine"))
                     initAffine = AffineMatrix(SEXP(initObject));
                 else
                     initControl = NiftiImage(SEXP(init[i]));
@@ -289,7 +289,7 @@ BEGIN_RCPP
     NiftiImage targetImage(SEXP(transform.attr("target")));
     DeformationField field;
     
-    if (transform.hasAttribute("class") && as<std::string>(transform.attr("class")) == "affine")
+    if (transform.inherits("affine"))
     {
         AffineMatrix affine = AffineMatrix(SEXP(transform));
         field = DeformationField(targetImage, affine);
