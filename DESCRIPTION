@@ -1,10 +1,9 @@
 Package: RNiftyReg
-Version: 1.1.4
+Version: 2.0.0
 Date: 2015-07-15
 Title: Medical Image Registration Using the NiftyReg Library
-Author: Jon Clayden, based on original code by Marc Modat and Pankaj Daga
+Author: Jon Clayden, based on original code by Marc Modat, Pankaj Daga and others
 Maintainer: Jon Clayden <code@clayden.org>
-Depends: R (>= 2.9.0)
 Imports: ore, Rcpp
 Suggests: splines, testthat
 Enhances: oro.nifti
