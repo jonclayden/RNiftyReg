@@ -313,6 +313,9 @@ RObject NiftiImage::toArray ()
 {
     RObject array;
     
+    if (this->isNull())
+        return array;
+    
     switch (image->datatype)
     {
         case DT_UINT8:
@@ -366,8 +369,13 @@ RObject NiftiImage::toArray ()
 
 RObject NiftiImage::toPointer (const std::string label)
 {
-    RObject string = wrap(label);
-    addAttributes(string, image, false);
-    string.attr("class") = "internalImage";
-    return string;
+    if (this->isNull())
+        return RObject();
+    else
+    {
+        RObject string = wrap(label);
+        addAttributes(string, image, false);
+        string.attr("class") = "internalImage";
+        return string;
+    }
 }

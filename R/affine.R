@@ -1,3 +1,22 @@
+#' Check whether an object is an affine matrix
+#' 
+#' This function returns a logical value indicating whether its argument is, or
+#' resembles a 4x4 affine matrix. Affine transformations are a class of linear
+#' transformations which preserve points, straight lines and planes, and may
+#' consist of a combination of rotation, translation, scale and skew
+#' operations.
+#' 
+#' @param object Any R object.
+#' @param strict If \code{TRUE}, this function just tests whether the object is
+#'   of class \code{"affine"}. Otherwise it also tests for an affine-like 4x4
+#'   matrix.
+#' @return A logical value, which is \code{TRUE} if \code{object} appears to be
+#'   an affine matrix.
+#' 
+#' @note 2D affines are a subset of 3D affines, and are stored in a 4x4 matrix
+#'   for internal consistency, even though a 3x3 matrix would suffice.
+#' @author Jon Clayden <code@@clayden.org>
+#' @export
 isAffine <- function (object, strict = FALSE)
 {
     if ("affine" %in% class(object))
@@ -8,6 +27,35 @@ isAffine <- function (object, strict = FALSE)
         return (FALSE)
 }
 
+
+#' Read an affine matrix from a file
+#' 
+#' This function is used to read a 4x4 numeric matrix representing an affine
+#' transformation from a file. It is a wrapper around \code{read.table} which
+#' additionally ensures that required attributes are set. The type of the
+#' matrix must be specified, as there are differing conventions across
+#' software packages.
+#' 
+#' @param fileName A string giving the file name to read the affine matrix
+#'   from.
+#' @param source The source image for the transformation. If \code{NULL}, the
+#'   file will be searched for a comment specifying the path to a NIfTI file.
+#' @param target The target image for the transformation. If \code{NULL}, the
+#'   file will be searched for a comment specifying the path to a NIfTI file.
+#' @param type The type of the affine matrix, which describes what convention
+#'   is it is stored with. Currently valid values are \code{"niftyreg"} and
+#'   \code{"fsl"} (for FSL FLIRT). If \code{NULL}, the function will look in
+#'   the file for a comment specifying the type.
+#' @return An matrix with class \code{"affine"}, converted to the NiftyReg
+#'   convention and with \code{source} and \code{target} attributes set
+#'   appropriately.
+#' 
+#' @examples
+#' print(readAffine(system.file("extdata","affine.txt",package="RNiftyReg")))
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{read.table}}, \code{\link{writeAffine}}
+#' @export
 readAffine <- function (fileName, source = NULL, target = NULL, type = NULL)
 {
     if (!is.null(type))
@@ -46,6 +94,20 @@ readAffine <- function (fileName, source = NULL, target = NULL, type = NULL)
         return (structure(affine, class="affine", source=source, target=target))
 }
 
+
+#' Write an affine matrix to a file
+#' 
+#' This function is used to write a 4x4 numeric matrix representing an affine
+#' transformation to a file. A comment is also written which specifies the
+#' matrix as using the NiftyReg convention, for the benefit of
+#' \code{\link{readAffine}}.
+#' 
+#' @param affine A 4x4 affine matrix.
+#' @param fileName A string giving the file name to write the matrix to.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{write.table}}, \code{\link{readAffine}}
+#' @export
 writeAffine <- function (affine, fileName)
 {
     if (!isAffine(affine))
@@ -55,6 +117,7 @@ writeAffine <- function (affine, fileName)
     lines <- c("# affineType: niftyreg", lines)
     writeLines(lines, fileName)
 }
+
 
 # For internal use only: users should call applyTransform()
 applyAffine <- function (affine, points)
@@ -79,6 +142,8 @@ applyAffine <- function (affine, points)
     return (newPoints)
 }
 
+
+# For internal use only: working transforms should always use the NiftyReg convention
 convertAffine <- function (affine, source = NULL, target = NULL, newType = c("niftyreg","fsl"))
 {
     if (!isAffine(affine))
@@ -103,6 +168,23 @@ convertAffine <- function (affine, source = NULL, target = NULL, newType = c("ni
     return (structure(newAffine, class="affine", source=source, target=target))
 }
 
+
+#' Invert an affine matrix
+#' 
+#' This function is used to invert an affine matrix. It is a wrapper around
+#' \code{\link{solve}}, which additionally sets appropriate attributes.
+#' 
+#' @param affine An existing 4x4 affine matrix.
+#' @return The inverted affine matrix.
+#' 
+#' @examples
+#' affine <- readAffine(system.file("extdata","affine.txt",package="RNiftyReg"))
+#' print(affine)
+#' print(invertAffine(affine))
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{solve}}
+#' @export
 invertAffine <- function (affine)
 {
     if (!isAffine(affine))
@@ -112,6 +194,27 @@ invertAffine <- function (affine)
     return (structure(newAffine, class="affine", source=attr(affine,"target"), target=attr(affine,"source")))
 }
 
+
+#' Build an affine matrix up from its constituent transformations
+#' 
+#' This function does the opposite to \code{\link{decomposeAffine}}, building
+#' up an affine matrix from its components. It can be useful for testing.
+#' 
+#' @param translation Translations along each axis, in \code{\link{pixunits}}
+#'   units. May also be a list, such as that produced by
+#'   \code{\link{decomposeAffine}}, with elements for translation, scales,
+#'   skews and angles.
+#' @param scales Scale factors along each axis.
+#' @param skews Skews in the XY, XZ and YZ planes.
+#' @param angles Roll, pitch and yaw rotation angles, in radians.
+#' @param source The source image for the transformation.
+#' @param target The target image for the transformation. Can be the same as
+#'   \code{source}, if appropriate.
+#' @return A 4x4 affine matrix representing the composite transformation.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{decomposeAffine}}, \code{\link{isAffine}}
+#' @export
 buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,0,0), angles = c(0,0,0), source = NULL, target = NULL)
 {
     if (is.null(source) || is.null(target))
@@ -145,9 +248,48 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
     affine[1:3,1:3] <- rotationX %*% rotationY %*% rotationZ %*% skewMatrix %*% diag(x$scales)
     affine[1:3,4] <- x$translation
     
-    return (convertAffine(affine, source, target, "fsl"))
+    return (convertAffine(affine, source, target, "niftyreg"))
 }
 
+
+#' Decompose an affine matrix into its constituent transformations
+#' 
+#' An affine matrix is composed of translation, scale, skew and rotation
+#' transformations. This function extracts these components.
+#' 
+#' @param affine A 4x4 matrix representing an affine transformation matrix.
+#' @return A list with components:
+#'   \item{scaleMatrix}{A 3x3 matrix representing only the scale operation
+#'     embodied in the full affine transformation.}
+#'   \item{skewMatrix}{A 3x3 matrix representing only the skew operation
+#'     embodied in the full affine transformation.}
+#'   \item{rotationMatrix}{A 3x3 matrix representing only the rotation
+#'     operation embodied in the full affine transformation.}
+#'   \item{translation}{A length-3 named numeric vector representing the
+#'     translations (in \code{\link{pixunits}} units) in each of the X, Y and Z
+#'     directions.}
+#'   \item{scales}{A length-3 named numeric vector representing the scale
+#'     factors in each of the X, Y and Z directions. Scale factors of 1
+#'     represent no effect.}
+#'   \item{skews}{A length-3 named numeric vector representing the skews in
+#'     each of the XY, XZ and YZ planes.}
+#'   \item{angles}{A length-3 named numeric vector representing the rotation
+#'     angles (in radians) about each of the X, Y and Z directions, i.e., roll,
+#'     pitch and yaw.}
+#' 
+#' @note The decomposition is not perfect, and there is one particular
+#' degenerate case when the pitch angle is very close to \code{pi/2} radians,
+#' known as ``Gimbal lock''. In this case the yaw angle is arbitrarily set to
+#' zero.
+#' 
+#' Affine matrices embodying rigid-body transformations include only 6 degrees
+#' of freedom, rather than the full 12, so skews will always be zero and scales
+#' will always be unity (to within rounding error). Likewise, affine matrices
+#' derived from 2D registration will not include components relating to the Z
+#' direction.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{buildAffine}}, \code{\link{isAffine}}
 decomposeAffine <- function (affine)
 {
     if (!isAffine(affine))

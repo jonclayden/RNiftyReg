@@ -1,3 +1,84 @@
+#' Two and three dimensional image registration
+#' 
+#' The \code{niftyreg} function performs linear or nonlinear registration for
+#' two and three dimensional images. 4D images may also be registered
+#' volumewise to a 3D image, or 3D images slicewise to a 2D image. This
+#' function is a common wrapper for \code{\link{niftyregLinear}} and
+#' \code{\link{niftyregNonlinear}}.
+#' 
+#' @param source The source image, an object of class \code{"nifti"} or
+#'   \code{"internalImage"}, or a plain array, or a NIfTI-1 filename. Must have
+#'   2, 3 or 4 dimensions.
+#' @param target The target image, an object of class \code{"nifti"} or
+#'   \code{"internalImage"}, or a plain array, or a NIfTI-1 filename. Must have
+#'   2 or 3 dimensions.
+#' @param scope A string describing the scope, or number of degrees of freedom
+#'   (DOF), of the registration. The currently supported values are
+#'   \code{"affine"} (12 DOF), \code{"rigid"} (6 DOF) or \code{"nonlinear"}
+#'   (high DOF, with the exact number depending on the image sizes).
+#' @param init Transformation(s) to be used for initialisation, which may be
+#'   \code{NULL}, for no initialisation, or an affine matrix or control point
+#'   image (nonlinear only). For multiple registration, where the source image
+#'   has one more dimension than the target, this may also be a list whose
+#'   components are likewise \code{NULL} or a suitable initial transform.
+#' @param sourceMask An optional mask image in source space, whose nonzero
+#'   region will be taken as the region of interest for the registration.
+#'   Ignored when \code{symmetric} is \code{FALSE}.
+#' @param targetMask An optional mask image in target space, whose nonzero
+#'   region will be taken as the region of interest for the registration.
+#' @param symmetric Logical value. Should forward and reverse transformations
+#'   be estimated simultaneously?
+#' @param estimateOnly Logical value: if \code{TRUE}, transformations will be
+#'   estimated, but images will not be resampled.
+#' @param ... Further arguments to \code{\link{niftyregLinear}} or
+#'   \code{\link{niftyregNonlinear}}.
+#' @return A list of class \code{"niftyreg"} with components:
+#'   \item{image}{An array representing the registered and resampled
+#'     \code{source} image in the space of the \code{target} image. This
+#'     element is \code{NULL} if the \code{estimateOnly} parameter is
+#'     \code{TRUE}.}
+#'   \item{forwardTransforms}{A list of (linear or nonlinear) transformations
+#'     from source to target space.}
+#'   \item{reverseTransforms}{A list of (linear or nonlinear) transformations
+#'     from target to source space.}
+#'   \item{iterations}{A list of integer vectors, giving the number of
+#'     iterations completed at each ``level'' of the algorithm. Note that for
+#'     the first level of the linear algorithm specifically, twice the
+#'     specified number of iterations is allowed.}
+#'   \item{source}{An internal representation of the source image for each
+#'     registration.}
+#'   \item{target}{An internal representation of the target image.}
+#' 
+#' @note If substantial parts of the target image are zero-valued, for example
+#' because the target image has been brain-extracted, it can be useful to pass
+#' it as a target mask as well as the target image, viz. \code{niftyreg(source,
+#' target, targetMask=target)}.
+#' 
+#' Also the NIfTI library is used internally by NiftyReg, there is no reason
+#' that arrays that do not represent medical images cannot be registered using
+#' this function. A standard R array can be passed directly as a source or
+#' target image with no problems. It is no longer necessary to convert it to
+#' the \code{"nifti"} class.
+#' 
+#' @examples
+#' \dontrun{
+#' source <- readNifti(system.file("extdata", "source.nii.gz",
+#'   package="RNiftyReg"))
+#' target <- readNifti(system.file("extdata", "target.nii.gz",
+#'   package="RNiftyReg"))
+#' 
+#' result <- niftyreg(source, target, scope="affine")
+#' }
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{niftyregLinear}} and \code{\link{niftyregNonlinear}},
+#' which do most of the work. Also, \code{\link{forward}} and
+#' \code{\link{reverse}} to extract transformations, and
+#' \code{\link{applyTransform}} to apply them to new images or points.
+#' @references Please see \code{\link{niftyregLinear}} or
+#' \code{\link{niftyregNonlinear}} for references relating to each type of
+#' registration.
+#' @export
 niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, estimateOnly = FALSE, ...)
 {
     if (missing(source) || missing(target))
@@ -10,11 +91,12 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
         niftyregLinear(source, target, scope, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
 }
 
-# Standard set of preregistration checks for source and target images
+
+# For internal use only: standard set of preregistration checks for source and target images
 checkImages <- function (source, target)
 {
-    nSourceDim <- length(dim(source))
-    nTargetDim <- length(dim(target))
+    nSourceDim <- ndim(source)
+    nTargetDim <- ndim(target)
     
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -28,10 +110,82 @@ checkImages <- function (source, target)
         stop("Images of fewer than 4 voxels in any dimension cannot be registered")
 }
 
+
+#' Two and three dimensional linear image registration
+#' 
+#' The \code{niftyregLinear} function performs linear registration for two and
+#' three dimensional images. 4D images may also be registered volumewise to a
+#' 3D image, or 3D images slicewise to a 2D image. Rigid-body (6 degrees of
+#' freedom) and affine (12 degrees of freedom) registration can currently be
+#' performed.
+#' 
+#' This function performs the dual operations of finding a transformation to
+#' optimise image alignment, and resampling the source image into the space of
+#' the target image.
+#' 
+#' The algorithm is based on a block-matching approach and Least Trimmed
+#' Squares (LTS) fitting. Firstly, the block matching provides a set of
+#' corresponding points between a target and a source image. Secondly, using
+#' this set of corresponding points, the best rigid or affine transformation is
+#' evaluated. This two-step loop is repeated until convergence to the best
+#' transformation is achieved.
+#' 
+#' In the NiftyReg implementation, normalised cross-correlation between the
+#' target and source blocks is used to evaluate correspondence. The block width
+#' is constant and has been set to 4 voxels. A coarse-to-fine approach is used,
+#' where the registration is first performed on down-sampled images (using a
+#' Gaussian filter to resample images), and finally performed on full
+#' resolution images.
+#' 
+#' The source image may have 2, 3 or 4 dimensions, and the target 2 or 3. The
+#' dimensionality of the target image determines whether 2D or 3D registration
+#' is applied, and source images with one more dimension than the target (i.e.
+#' 4D to 3D, or 3D to 2D) will be registered volumewise or slicewise, as
+#' appropriate. In the latter case the last dimension of the resulting image is
+#' taken from the source image, while all other dimensions come from the
+#' target. One affine matrix is returned for each registration performed.
+#'
+#' @inheritParams niftyreg 
+#' @param nLevels A single integer specifying the number of levels of the
+#'   algorithm that should be applied. If zero, no optimisation will be
+#'   performed, and the final affine matrix will be the same as its
+#'   initialisation value.
+#' @param maxIterations A single integer specifying the maximum number of
+#'   iterations to be used within each level. Fewer iterations may be used if a
+#'   convergence test deems the process to have completed.
+#' @param useBlockPercentage A single integer giving the percentage of blocks
+#'   to use for calculating correspondence at each step of the algorithm. The
+#'   blocks with the highest intensity variance will be chosen.
+#' @param interpolation A single integer specifying the type of interpolation
+#'   to be applied to the final resampled image. May be 0 (nearest neighbour),
+#'   1 (trilinear) or 3 (cubic spline). No other values are valid.
+#' @param verbose A single logical value: if \code{TRUE}, the code will give
+#'   some feedback on its progress; otherwise, nothing will be output while the
+#'   algorithm runs. Run time can be seconds or more, depending on the size and
+#'   dimensionality of the images.
+#' @param sequentialInit If \code{TRUE} and \code{source} has higher
+#'   dimensionality than \code{target}, transformations which are not
+#'   explicitly initialised will begin from the result of the previous
+#'   registration.
+#' @return See \code{\link{niftyreg}}.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{niftyreg}}, which can be used as an interface to this
+#' function, and \code{\link{niftyregNonlinear}} for nonlinear registration.
+#' Also, \code{\link{forward}} and \code{\link{reverse}} to extract
+#' transformations, and \code{\link{applyTransform}} to apply them to new
+#' images or points.
+#' @references The algorithm used by this function is described in the
+#' following publication.
+#' 
+#' M. Modat, D.M. Cash, P. Daga, G.P. Winston, J.S. Duncan & S. Ourselin
+#' (2014). Global image registration using a symmetric block-matching approach.
+#' Journal of Medical Imaging 1(2):024003.
+#' @export
 niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
-    nSourceDim <- length(dim(source))
-    nTargetDim <- length(dim(target))
+    nSourceDim <- ndim(source)
+    nTargetDim <- ndim(target)
     checkImages(source, target)
     
     if (!(interpolation %in% c(0,1,3)))
@@ -50,7 +204,7 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
             init <- rep(init, length.out=nReps)
     }
     init <- lapply(init, function(x) {
-        if (!isAffine(x))
+        if (!is.null(x) && !isAffine(x))
             stop("Linear registration can only be initialised with an affine matrix")
         else
             return (x)
@@ -62,10 +216,95 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
     return (result)
 }
 
-niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005, jacobianWeight = 0, inverseConsistencyWeight = 0.01, finalSpacing = c(5,5,5), spacingUnit = c("vox","mm"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+
+#' Two and three dimensional nonlinear image registration
+#' 
+#' The \code{niftyregNonlinear} function performs nonlinear registration for
+#' two and three dimensional images. 4D images may also be registered
+#' volumewise to a 3D image, or 3D images slicewise to a 2D image. The warping
+#' is based on free-form deformations, parameterised using an image of control
+#' points.
+#' 
+#' This function performs the dual operations of finding a transformation to
+#' optimise image alignment, and resampling the source image into the space of
+#' the target image (and vice-versa, if \code{symmetric} is \code{TRUE}).
+#' Unlike \code{\link{niftyregLinear}}, this transformation is nonlinear, and
+#' the degree of deformation may vary across the image.
+#' 
+#' The nonlinear warping is based on free-form deformations. A lattice of
+#' equally-spaced control points is defined over the target image, each of
+#' which can be moved to locally modify the mapping to the source image. In
+#' order to assess the quality of the warping between the two images, an
+#' objective function based on the normalised mutual information is used, with
+#' penalty terms based on the bending energy or the squared log of the Jacobian
+#' determinant. The objective function value is optimised using a conjugate
+#' gradient scheme.
+#' 
+#' The source image may have 2, 3 or 4 dimensions, and the target 2 or 3. The
+#' dimensionality of the target image determines whether 2D or 3D registration
+#' is applied, and source images with one more dimension than the target (i.e.
+#' 4D to 3D, or 3D to 2D) will be registered volumewise or slicewise, as
+#' appropriate. In the latter case the last dimension of the resulting image is
+#' taken from the source image, while all other dimensions come from the
+#' target. One image of control points is returned for each registration
+#' performed.
+#'
+#' @inheritParams niftyreg 
+#' @param nLevels A single integer specifying the number of levels of the
+#'   algorithm that should be applied. If zero, no optimisation will be
+#'   performed, and the final control-point image will be the same as its
+#'   initialisation value.
+#' @param maxIterations A single integer specifying the maximum number of
+#'   iterations to be used within each level. Fewer iterations may be used if a
+#'   convergence test deems the process to have completed.
+#' @param nBins A single integer giving the number of bins to use for the joint
+#'   histogram created by the algorithm.
+#' @param bendingEnergyWeight A numeric value giving the weight of the bending
+#'   energy term in the cost function.
+#' @param jacobianWeight A numeric value giving the weight of the Jacobian
+#'   determinant term in the cost function.
+#' @param inverseConsistencyWeight A numeric value giving the weight of the
+#'   term ensuring inverse consistency in the cost function. Ignored if
+#'   \code{symmetric} is \code{FALSE}.
+#' @param finalSpacing A numeric vector giving the spacing of control points in
+#'   the final grid, along the X, Y and Z directions respectively. This is set
+#'   from the initial control point image, if one is supplied.
+#' @param spacingUnit A character string giving the units in which the
+#'   \code{finalSpacing} is specified: either \code{"voxel"} for pixels/voxels,
+#'   or \code{"world"} for real-world units (see \code{\link{pixunits}}).
+#' @param interpolation A single integer specifying the type of interpolation
+#'   to be applied to the final resampled image. May be 0 (nearest neighbour),
+#'   1 (trilinear) or 3 (cubic spline). No other values are valid.
+#' @param verbose A single logical value: if \code{TRUE}, the code will give
+#'   some feedback on its progress; otherwise, nothing will be output while the
+#'   algorithm runs. Run time can be seconds or more, depending on the size and
+#'   dimensionality of the images.
+#' @param sequentialInit If \code{TRUE} and \code{source} has higher
+#'   dimensionality than \code{target}, transformations which are not
+#'   explicitly initialised will begin from the result of the previous
+#'   registration.
+#' @return See \code{\link{niftyreg}}.
+#' 
+#' @note Performing a linear registration first, and then initialising the
+#' nonlinear transformation with the result (via the \code{initAffine}
+#' parameter), is highly recommended in most circumstances.
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{niftyreg}}, which can be used as an interface to this
+#' function, and \code{\link{niftyregLinear}} for linear registration. Also,
+#' \code{\link{forward}} and \code{\link{reverse}} to extract transformations,
+#' and \code{\link{applyTransform}} to apply them to new images or points.
+#' @references The algorithm used by this function is described in the
+#' following publication.
+#' 
+#' M. Modat, G.R. Ridgway, Z.A. Taylor, M. Lehmann, J. Barnes, D.J. Hawkes,
+#' N.C. Fox & S. Ourselin (2010). Fast free-form deformation using graphics
+#' processing units. Computer Methods and Programs in Biomedicine
+#' 98(3):278-284.
+#' @export
+niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005, jacobianWeight = 0, inverseConsistencyWeight = 0.01, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
-    nSourceDim <- length(dim(source))
-    nTargetDim <- length(dim(target))
+    nSourceDim <- ndim(source)
+    nTargetDim <- ndim(target)
     checkImages(source, target)
     
     if (any(c(bendingEnergyWeight,jacobianWeight,inverseConsistencyWeight) < 0))
@@ -101,6 +340,7 @@ niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, t
                 stop("Initial control point images must all use the same grid")
             finalSpacing <<- currentSpacing
             spacingUnit <<- "mm"
+            spacingChanged <<- TRUE
             return (x)
         }
         else if (!isAffine(x))
@@ -109,7 +349,7 @@ niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, t
             return (x)
     })
     
-    if (spacingUnit == "vox")
+    if (spacingUnit == "voxel")
         finalSpacing <- finalSpacing * abs(pixdim(target)[1:min(3,nTargetDim)])
     
     if (nTargetDim == 2)

@@ -16,7 +16,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
         # The argument looks like a suitable image
         if (isImage(x,TRUE) && isTRUE(all.equal(dim(x),dim(source))))
             return (niftyregLinear(x, target, "affine", init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE))
-        else if ((is.matrix(x) && ncol(x) == length(dim(source))) || length(x) == length(dim(source)))
+        else if ((is.matrix(x) && ncol(x) == ndim(source)) || length(x) == ndim(source))
         {
             points <- voxelToWorld(x, source, simple=FALSE)
             newPoints <- applyAffine(invertAffine(transform), points)
@@ -32,7 +32,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
     {
         if (isImage(x,TRUE) && isTRUE(all.equal(dim(x),dim(source))))
             return (niftyregNonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE))
-        else if ((is.matrix(x) && ncol(x) == length(dim(source))) || length(x) == length(dim(source)))
+        else if ((is.matrix(x) && ncol(x) == ndim(source)) || length(x) == ndim(source))
         {
             points <- voxelToWorld(x, source)
             
