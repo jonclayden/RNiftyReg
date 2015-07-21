@@ -363,11 +363,33 @@ niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, t
     return (result)
 }
 
+
+#' Extract forward and reverse transformations
+#' 
+#' These functions extract forward and reverse transformations in a form
+#' compatible with \code{\link{applyTransform}} and other functions. They are
+#' (S3) generic, but only methods for \code{"niftyreg"} objects currently
+#' exist.
+#' 
+#' @param object An R object.
+#' @param i The transformation number to extract. There will only be more than
+#'   one in the case of multiple registration.
+#' @param ... Additional arguments. Not currently used.
+#' @return A transformation object, an image or affine matrix, with suitable
+#'   attributes giving pointers to source and target images. If there is no
+#'   transformation information in the object then \code{NULL} is returned.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{niftyreg}}, \code{\link{applyTransform}}
+#' @export
 forward <- function (object, ...)
 {
     UseMethod("forward")
 }
 
+
+#' @rdname forward
+#' @export
 forward.niftyreg <- function (object, i = 1, ...)
 {
     if (is.null(object$forwardTransforms))
@@ -381,11 +403,17 @@ forward.niftyreg <- function (object, i = 1, ...)
     }
 }
 
+
+#' @rdname forward
+#' @export
 reverse <- function (object, ...)
 {
     UseMethod("reverse")
 }
 
+
+#' @rdname forward
+#' @export
 reverse.niftyreg <- function (object, i = 1, ...)
 {
     if (is.null(object$reverseTransforms))
