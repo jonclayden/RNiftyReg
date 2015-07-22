@@ -263,9 +263,6 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
 #'   energy term in the cost function.
 #' @param jacobianWeight A numeric value giving the weight of the Jacobian
 #'   determinant term in the cost function.
-#' @param inverseConsistencyWeight A numeric value giving the weight of the
-#'   term ensuring inverse consistency in the cost function. Ignored if
-#'   \code{symmetric} is \code{FALSE}.
 #' @param finalSpacing A numeric vector giving the spacing of control points in
 #'   the final grid, along the X, Y and Z directions respectively. This is set
 #'   from the initial control point image, if one is supplied.
@@ -301,13 +298,13 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
 #' processing units. Computer Methods and Programs in Biomedicine
 #' 98(3):278-284.
 #' @export
-niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005, jacobianWeight = 0, inverseConsistencyWeight = 0.01, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
     nSourceDim <- ndim(source)
     nTargetDim <- ndim(target)
     checkImages(source, target)
     
-    if (any(c(bendingEnergyWeight,jacobianWeight,inverseConsistencyWeight) < 0))
+    if (any(c(bendingEnergyWeight,jacobianWeight) < 0))
         stop("Penalty term weights must be nonnegative")
     if (bendingEnergyWeight + jacobianWeight > 1)
         stop("Penalty term weights cannot add up to more than 1")
@@ -357,7 +354,7 @@ niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, t
     else
         finalSpacing <- finalSpacing[1:3]
     
-    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, jacobianWeight, inverseConsistencyWeight, verbose, estimateOnly, sequentialInit, PACKAGE="RNiftyReg")
+    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)

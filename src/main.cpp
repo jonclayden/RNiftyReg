@@ -163,7 +163,7 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _jacobianWeight, SEXP _inverseConsistencyWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
+RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _jacobianWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
 {
 BEGIN_RCPP
     NiftiImage sourceImage(_source);
@@ -200,7 +200,7 @@ BEGIN_RCPP
         else
             initAffine = AffineMatrix(sourceImage, targetImage);
     
-        F3dResult result = regF3d(sourceImage, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_jacobianWeight), as<float>(_inverseConsistencyWeight), symmetric, as<bool>(_verbose), estimateOnly);
+        F3dResult result = regF3d(sourceImage, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
         
         returnValue["image"] = result.image.toArray();
         returnValue["forwardTransform"] = List::create(result.forwardTransform.toPointer("F3D control points"));
@@ -245,7 +245,7 @@ BEGIN_RCPP
             else
                 initAffine = AffineMatrix(currentSource, targetImage);
             
-            result = regF3d(currentSource, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_jacobianWeight), as<float>(_inverseConsistencyWeight), symmetric, as<bool>(_verbose), estimateOnly);
+            result = regF3d(currentSource, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
             
             if (sourceImage.nDims() == 3)
                 finalImage.slice(i) = result.image;

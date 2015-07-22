@@ -13,6 +13,6 @@ struct F3dResult
     std::vector<int> iterations;
 };
 
-F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, const int nLevels, const int maxIterations, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const NiftiImage &initControlPoints, const AffineMatrix &initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float jacobianWeight, const float inverseConsistencyWeight, const bool symmetric, const bool verbose, const bool estimateOnly);
+F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, const int nLevels, const int maxIterations, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const NiftiImage &initControlPoints, const AffineMatrix &initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float jacobianWeight, const bool symmetric, const bool verbose, const bool estimateOnly);
 
 #endif
