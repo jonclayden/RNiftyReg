@@ -92,25 +92,6 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
 }
 
 
-# For internal use only: standard set of preregistration checks for source and target images
-checkImages <- function (source, target)
-{
-    nSourceDim <- ndim(source)
-    nTargetDim <- ndim(target)
-    
-    if (missing(source) || missing(target))
-        stop("Source and target images must be given")
-    if (!(nSourceDim %in% 2:4))
-        stop("Only 2D, 3D or 4D source images may be used")
-    if (!(nTargetDim %in% 2:3))
-        stop("Only 2D or 3D target images may be used")
-    if (nSourceDim == 4 && nTargetDim == 2)
-        stop("4D to 2D registration cannot be performed")
-    if (any(dim(source) < 4) || any(dim(target) < 4))
-        stop("Images of fewer than 4 voxels in any dimension cannot be registered")
-}
-
-
 #' Two and three dimensional linear image registration
 #' 
 #' The \code{niftyregLinear} function performs linear registration for two and
@@ -184,9 +165,11 @@ checkImages <- function (source, target)
 #' @export
 niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
+    if (missing(source) || missing(target))
+        stop("Source and target images must be given")
+    
     nSourceDim <- ndim(source)
     nTargetDim <- ndim(target)
-    checkImages(source, target)
     
     if (!(interpolation %in% c(0,1,3)))
         stop("Final interpolation specifier must be 0, 1 or 3")
@@ -300,9 +283,11 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
 #' @export
 niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
+    if (missing(source) || missing(target))
+        stop("Source and target images must be given")
+    
     nSourceDim <- ndim(source)
     nTargetDim <- ndim(target)
-    checkImages(source, target)
     
     if (any(c(bendingEnergyWeight,jacobianWeight) < 0))
         stop("Penalty term weights must be nonnegative")

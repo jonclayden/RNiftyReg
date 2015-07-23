@@ -88,12 +88,18 @@ public:
     void setPersistence (const bool persistent) { this->persistent = persistent; }
     
     bool isNull () const { return (image == NULL); }
-    int nDims () const
+    int nDims (const bool drop = false) const
     {
         if (image == NULL)
             return 0;
-        else
-            return image->ndim;
+        
+        int ndim = image->ndim;
+        if (drop)
+        {
+            while (image->dim[ndim] < 2)
+                ndim--;
+        }
+        return ndim;
     }
     
     mat44 xform (const bool preferQuaternion = true) const;

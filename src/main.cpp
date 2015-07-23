@@ -60,6 +60,22 @@ BEGIN_RCPP
 END_RCPP
 }
 
+void checkImages (const NiftiImage &sourceImage, const NiftiImage &targetImage)
+{
+    if (sourceImage.isNull())
+        throw std::runtime_error("Cannot read or retrieve source image");
+    if (targetImage.isNull())
+        throw std::runtime_error("Cannot read or retrieve target image");
+    
+    const int nSourceDim = sourceImage.nDims(true);
+    const int nTargetDim = targetImage.nDims(true);
+    
+    if (nSourceDim < 2 || nSourceDim > 4)
+        throw std::runtime_error("Source image should have 2, 3 or 4 dimensions");
+    if (nTargetDim < 2 || nTargetDim > 3)
+        throw std::runtime_error("Target image should have 2 or 3 dimensions");
+}
+
 RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
 {
 BEGIN_RCPP
@@ -68,10 +84,7 @@ BEGIN_RCPP
     NiftiImage sourceMask(_sourceMask);
     NiftiImage targetMask(_targetMask);
     
-    if (sourceImage.isNull())
-        throw std::runtime_error("Cannot read or retrieve source image");
-    if (targetImage.isNull())
-        throw std::runtime_error("Cannot read or retrieve target image");
+    checkImages(sourceImage, targetImage);
     
     const LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
     const int interpolation = as<int>(_interpolation);
@@ -171,10 +184,7 @@ BEGIN_RCPP
     NiftiImage sourceMask(_sourceMask);
     NiftiImage targetMask(_targetMask);
     
-    if (sourceImage.isNull())
-        throw std::runtime_error("Cannot read or retrieve source image");
-    if (targetImage.isNull())
-        throw std::runtime_error("Cannot read or retrieve target image");
+    checkImages(sourceImage, targetImage);
     
     const int interpolation = as<int>(_interpolation);
     const bool symmetric = as<bool>(_symmetric);
