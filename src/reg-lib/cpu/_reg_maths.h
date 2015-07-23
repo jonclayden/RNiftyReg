@@ -13,6 +13,11 @@
 #ifndef _REG_MATHS_H
 #define _REG_MATHS_H
 
+#ifdef RNIFTYREG
+#define R_NO_REMAP
+#include <RcppEigen.h>
+#endif
+
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
@@ -61,8 +66,6 @@ typedef enum
 #endif
 /* *************************************************************** */
 #ifdef RNIFTYREG
-#define R_NO_REMAP
-#include <RcppEigen.h>  // This may have to change to Rcpp.h or RcppEigen.h later
 #define reg_exit(val)                   Rf_error("[NiftyReg] Fatal error with code %d", val)
 #define reg_print_info(executable,text) Rprintf("[%s] %s\n", executable, text)
 #define reg_print_fct_debug(text)       Rprintf("[NiftyReg DEBUG] Function: %s called\n", text)
