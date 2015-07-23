@@ -203,7 +203,7 @@ BEGIN_RCPP
         F3dResult result = regF3d(sourceImage, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
         
         returnValue["image"] = result.image.toArray();
-        returnValue["forwardTransform"] = List::create(result.forwardTransform.toPointer("F3D control points"));
+        returnValue["forwardTransforms"] = List::create(result.forwardTransform.toPointer("F3D control points"));
         if (symmetric)
             returnValue["reverseTransforms"] = List::create(result.reverseTransform.toPointer("F3D control points"));
         else

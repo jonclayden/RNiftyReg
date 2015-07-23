@@ -507,7 +507,9 @@ void reg_createSymmetricControlPointGrids(nifti_image **forwardGridImage,
       halfBackwardAffine = reg_mat44_logm(&halfBackwardAffine);
       halfBackwardAffine = reg_mat44_mul(&halfBackwardAffine,.5f);
       halfBackwardAffine = reg_mat44_expm(&halfBackwardAffine);
+#ifndef RNIFTYREG
       reg_print_msg_warn("Note that the symmetry of the registration is affected by the input affine transformation");
+#endif
    }
    else
    {
