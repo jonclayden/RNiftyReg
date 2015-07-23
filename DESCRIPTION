@@ -1,14 +1,14 @@
 Package: RNiftyReg
 Version: 2.0.0
 Date: 2015-07-15
-Title: Medical Image Registration Using the NiftyReg Library
+Title: Image Registration Using the NiftyReg Library
 Author: Jon Clayden, based on original code by Marc Modat, Pankaj Daga and others
 Maintainer: Jon Clayden <code@clayden.org>
 Imports: ore, Rcpp
-Suggests: splines, testthat
+Suggests: splines, png, testthat
 Enhances: oro.nifti
 LinkingTo: Rcpp, RcppEigen
-Description: Provides an R interface to the NiftyReg image registration tools <http://sourceforge.net/projects/niftyreg/>. Linear and nonlinear registration are supported.
+Description: Provides an R interface to the NiftyReg image registration tools <http://sourceforge.net/projects/niftyreg/>. Linear and nonlinear registration are supported, in two and three dimensions.
 License: GPL-2
 URL: https://github.com/jonclayden/RNiftyReg
 BugReports: https://github.com/jonclayden/RNiftyReg/issues
