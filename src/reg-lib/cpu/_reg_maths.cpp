@@ -5,9 +5,9 @@
 
 #include "_reg_maths.h"
 // Eigen headers are in there because of the nvcc preprocessing step
+#ifndef RNIFTYREG
 #include "Eigen/Core"
 #include "Eigen/SVD"
-#ifndef RNIFTYREG
 #include "Eigen/unsupported/MatrixFunctions"
 #endif
 

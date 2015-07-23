@@ -14,7 +14,6 @@
 #define _REG_MATHS_H
 
 #ifdef RNIFTYREG
-
 // NIfTI-1 library defines this but it can interfere with dirent.h on some systems
 #ifdef DT_UNKNOWN
 #undef DT_UNKNOWN
@@ -22,7 +21,7 @@
 
 #define R_NO_REMAP
 #include <RcppEigen.h>
-#endif
+#endif // RNIFTYREG
 
 #include <stdio.h>
 #include <math.h>
