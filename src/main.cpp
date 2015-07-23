@@ -112,7 +112,7 @@ BEGIN_RCPP
         else
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = List::create(result.iterations);
-        returnValue["source"] = sourceImage.toPointer("Source image");
+        returnValue["source"] = List::create(sourceImage.toPointer("Source image"));
         returnValue["target"] = targetImage.toPointer("Target image");
         
         return returnValue;
@@ -219,7 +219,7 @@ BEGIN_RCPP
         else
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = List::create(result.iterations);
-        returnValue["source"] = sourceImage.toPointer("Source image");
+        returnValue["source"] = List::create(sourceImage.toPointer("Source image"));
         returnValue["target"] = targetImage.toPointer("Target image");
         
         return returnValue;
