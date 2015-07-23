@@ -113,6 +113,8 @@ ndim <- function (object)
 #' in. The former defaults to 1 in each dimension, if there is no attribute.
 #' 
 #' @param object An R object, generally an image.
+#' @param value Numeric vector of pixel dimensions along each axis. A scalar
+#'   \code{value} will be recycled if necessary.
 #' @return \code{pixdim} returns a numeric vector of pixel dimensions.
 #'   \code{pixunits} returns a character vector of length up to two, giving the
 #'   spatial and temporal unit names.
@@ -127,6 +129,21 @@ pixdim <- function (object)
         return (rep(1, length(dim(object))))
     else
         return (1)
+}
+
+
+#' @rdname pixdim
+#' @export
+"pixdim<-" <- function (object, value)
+{
+    if (is.numeric(value))
+    {
+        if (length(value) == ndim(object))
+            attr(object, "pixdim") <- value
+        else if (length(value) == 1)
+            attr(object, "pixdim") <- rep(value, ndim(object))
+    }
+    return (object)
 }
 
 

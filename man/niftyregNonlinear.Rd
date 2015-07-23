@@ -7,9 +7,9 @@
 niftyregNonlinear(source, target, init = NULL, sourceMask = NULL,
   targetMask = NULL, symmetric = TRUE, nLevels = 3L,
   maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005,
-  jacobianWeight = 0, inverseConsistencyWeight = 0.01, finalSpacing = c(5,
-  5, 5), spacingUnit = c("voxel", "world"), interpolation = 3L,
-  verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+  jacobianWeight = 0, finalSpacing = c(5, 5, 5), spacingUnit = c("voxel",
+  "world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE,
+  sequentialInit = FALSE)
 }
 \arguments{
 \item{source}{The source image, an object of class \code{"nifti"} or
@@ -53,10 +53,6 @@ energy term in the cost function.}
 
 \item{jacobianWeight}{A numeric value giving the weight of the Jacobian
 determinant term in the cost function.}
-
-\item{inverseConsistencyWeight}{A numeric value giving the weight of the
-term ensuring inverse consistency in the cost function. Ignored if
-\code{symmetric} is \code{FALSE}.}
 
 \item{finalSpacing}{A numeric vector giving the spacing of control points in
 the final grid, along the X, Y and Z directions respectively. This is set

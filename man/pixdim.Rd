@@ -2,15 +2,21 @@
 % Please edit documentation in R/image.R
 \name{pixdim}
 \alias{pixdim}
+\alias{pixdim<-}
 \alias{pixunits}
 \title{Pixel dimensions and units}
 \usage{
 pixdim(object)
 
+pixdim(object) <- value
+
 pixunits(object)
 }
 \arguments{
 \item{object}{An R object, generally an image.}
+
+\item{value}{Numeric vector of pixel dimensions along each axis. A scalar
+\code{value} will be recycled if necessary.}
 }
 \value{
 \code{pixdim} returns a numeric vector of pixel dimensions.
