@@ -148,7 +148,7 @@ void NiftiImage::initFromArray (const RObject &object)
     for (int i=0; i<nDims; i++)
         dims[i+1] = dimVector[i];
     
-    short datatype = DT_UNKNOWN;
+    short datatype = DT_NONE;
     const int sexpType = object.sexp_type();
     if (sexpType == INTSXP || sexpType == LGLSXP)
         datatype = DT_INT32;
