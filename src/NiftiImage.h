@@ -61,6 +61,7 @@ public:
             this->copy(image);
     }
     
+    NiftiImage (const NiftiImage &reference, const SEXP array);
     NiftiImage (const SEXP object, const bool readData = true);
     
     ~NiftiImage ()
@@ -110,10 +111,13 @@ public:
     Block slice (const int i) { return Block(*this, 3, i); }
     Block volume (const int i) { return Block(*this, 4, i); }
     
-    Rcpp::RObject toArray ();
-    Rcpp::RObject toPointer (const std::string label);
+    Rcpp::RObject toArray () const;
+    Rcpp::RObject toPointer (const std::string label) const;
+    Rcpp::RObject headerToList () const;
 };
 
 NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble);
+
+void finaliseNiftiImage (SEXP xptr);
 
 #endif

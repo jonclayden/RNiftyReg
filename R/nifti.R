@@ -13,6 +13,7 @@
 #' @return An array or \code{"internalImage"} object.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{writeNifti}}
 #' @references The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1}).
 #' @export
 readNifti <- function (file, internal = FALSE)
@@ -35,14 +36,23 @@ readNifti <- function (file, internal = FALSE)
 #' 
 #' @param image An image, in any acceptable form (see \code{\link{isImage}}).
 #' @param file A character string containing a file name.
+#' @param template An optional template object to derive NIfTI-1 properties
+#'   from. Passed to \code{\link{updateNifti}} if not \code{NULL}, and if
+#'   \code{image} is an array, otherwise \code{image} itself will be passed.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{readNifti}}, \code{\link{updateNifti}}
 #' @references The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1}).
 #' @export
 writeNifti <- function (image, file, template = NULL)
 {
-    if (is.array(image) && !is.null(template))
-        image <- updateNifti(image, template)
+    if (is.array(image))
+    {
+        if (is.null(template))
+            image <- updateNifti(image, image)
+        else
+            image <- updateNifti(image, template)
+    }
     
     .Call("writeNifti", image, file, PACKAGE="RNiftyReg")
 }
@@ -65,5 +75,22 @@ writeNifti <- function (image, file, template = NULL)
 updateNifti <- function (image, template)
 {
     .Call("updateNifti", image, template, PACKAGE="RNiftyReg")
-    return (image)
+}
+
+
+#' Dump the contents of an internal NIfTI-1 object
+#' 
+#' This function extracts the contents of an internal NIfTI-1 object into an R
+#' list. No processing is done to the elements.
+#' 
+#' @param An image, in any acceptable form (see \code{\link{isImage}}).
+#' @return A list with named components corresponding to the elements in a raw
+#'   NIfTI-1 file.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @references The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1}).
+#' @export
+dumpNifti <- function (image)
+{
+    .Call("dumpNifti", image, PACKAGE="RNiftyReg")
 }

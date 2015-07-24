@@ -174,26 +174,34 @@ void NiftiImage::initFromArray (const RObject &object)
     }
 }
 
-NiftiImage::NiftiImage (const SEXP object, const NiftiImage &reference)
+NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
 {
-    RObject array(object);
+    RObject object(array);
+    if (!object.hasAttribute("dim"))
+        throw std::runtime_error("Specified object is not an array");
+    
     this->image = nifti_copy_nim_info(reference);
     
-    this->image->dim[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-    const std::vector<int> dimVector = array.attr("dim");
+    for (int i=0; i<8; i++)
+        this->image->dim[i] = 0;
+    const std::vector<int> dimVector = object.attr("dim");
     
     const int nDims = std::min(7, int(dimVector.size()));
     this->image->dim[0] = nDims;
     for (int i=0; i<nDims; i++)
         this->image->dim[i+1] = dimVector[i];
     
-    if (array.hasAttribute("pixdim"))
+    if (object.hasAttribute("pixdim"))
     {
-        const std::vector<float> pixdimVector = array.attr("pixdim");
+        for (int i=1; i<8; i++)
+            this->image->pixdim[i] = 0.0;
+        const std::vector<float> pixdimVector = object.attr("pixdim");
         const int pixdimLength = pixdimVector.size();
         for (int i=0; i<std::min(pixdimLength,nDims); i++)
             this->image->pixdim[i+1] = pixdimVector[i];
     }
+    
+    nifti_update_dims_from_array(this->image);
     
     const int sexpType = object.sexp_type();
     if (sexpType == INTSXP || sexpType == LGLSXP)
@@ -202,17 +210,14 @@ NiftiImage::NiftiImage (const SEXP object, const NiftiImage &reference)
         this->image->datatype = DT_FLOAT64;
     else
         throw std::runtime_error("Array elements must be numeric");
+    nifti_datatype_sizes(this->image->datatype, &this->image->nbyper, NULL);
     
-    
-    this->image = nifti_make_new_nim(dims, datatype, TRUE);
-    
-    const size_t dataSize = nifti_get_volsize(image);
-    if (datatype == DT_INT32)
+    const size_t dataSize = nifti_get_volsize(this->image);
+    this->image->data = calloc(1, dataSize);
+    if (this->image->datatype == DT_INT32)
         memcpy(this->image->data, INTEGER(object), dataSize);
     else
         memcpy(this->image->data, REAL(object), dataSize);
-    
-    
 }
 
 NiftiImage::NiftiImage (const SEXP object, const bool readData)
@@ -350,7 +355,7 @@ void addAttributes (RObject &object, nifti_image *source, const bool realDim = t
     object.attr(".nifti_image_ptr") = xptr;
 }
 
-RObject NiftiImage::toArray ()
+RObject NiftiImage::toArray () const
 {
     RObject array;
     
@@ -408,7 +413,7 @@ RObject NiftiImage::toArray ()
     return array;
 }
 
-RObject NiftiImage::toPointer (const std::string label)
+RObject NiftiImage::toPointer (const std::string label) const
 {
     if (this->isNull())
         return RObject();
@@ -419,4 +424,58 @@ RObject NiftiImage::toPointer (const std::string label)
         string.attr("class") = "internalImage";
         return string;
     }
+}
+
+RObject NiftiImage::headerToList () const
+{
+    if (this->image == NULL)
+        return RObject();
+    
+    nifti_1_header header = nifti_convert_nim2nhdr(this->image);
+    List result;
+    
+    result["sizeof_hdr"] = header.sizeof_hdr;
+    
+    result["dim_info"] = int(header.dim_info);
+    result["dim"] = std::vector<short>(header.dim, header.dim+8);
+    
+    result["intent_p1"] = header.intent_p1;
+    result["intent_p2"] = header.intent_p2;
+    result["intent_p3"] = header.intent_p3;
+    result["intent_code"] = header.intent_code;
+    
+    result["datatype"] = header.datatype;
+    result["bitpix"] = header.bitpix;
+    
+    result["slice_start"] = header.slice_start;
+    result["pixdim"] = std::vector<float>(header.pixdim, header.pixdim+8);
+    result["vox_offset"] = header.vox_offset;
+    result["scl_slope"] = header.scl_slope;
+    result["scl_inter"] = header.scl_inter;
+    result["slice_end"] = header.slice_end;
+    result["slice_code"] = int(header.slice_code);
+    result["xyzt_units"] = int(header.xyzt_units);
+    result["cal_max"] = header.cal_max;
+    result["cal_min"] = header.cal_min;
+    result["slice_duration"] = header.slice_duration;
+    result["toffset"] = header.toffset;
+    result["descrip"] = std::string(header.descrip, 80);
+    result["aux_file"] = std::string(header.aux_file, 24);
+    
+    result["qform_code"] = header.qform_code;
+    result["sform_code"] = header.sform_code;
+    result["quatern_b"] = header.quatern_b;
+    result["quatern_c"] = header.quatern_c;
+    result["quatern_d"] = header.quatern_d;
+    result["qoffset_x"] = header.qoffset_x;
+    result["qoffset_y"] = header.qoffset_y;
+    result["qoffset_z"] = header.qoffset_z;
+    result["srow_x"] = std::vector<float>(header.srow_x, header.srow_x+4);
+    result["srow_y"] = std::vector<float>(header.srow_y, header.srow_y+4);
+    result["srow_z"] = std::vector<float>(header.srow_z, header.srow_z+4);
+    
+    result["intent_name"] = std::string(header.intent_name, 16);
+    result["magic"] = std::string(header.magic, 4);
+    
+    return result;
 }

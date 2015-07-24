@@ -49,11 +49,31 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP updateNifti (SEXP _image, SEXP _template)
+RcppExport SEXP updateNifti (SEXP _image, SEXP _reference)
 {
 BEGIN_RCPP
-    NiftiImage result(_image, _template);
+    const NiftiImage reference(_reference);
+    RObject object(_image);
+    
+    if (!reference.isNull())
+    {
+        NiftiImage *updatedImage = new NiftiImage(reference, _image);
+        updatedImage->setPersistence(true);
+        XPtr<NiftiImage> xptr(updatedImage);
+        R_RegisterCFinalizerEx(SEXP(xptr), &finaliseNiftiImage, FALSE);
+        object.attr(".nifti_image_ptr") = xptr;
+    }
+    
+    return object;
+END_RCPP
+}
+
+RcppExport SEXP dumpNifti (SEXP _image)
+{
 BEGIN_RCPP
+    const NiftiImage image(_image);
+    return image.headerToList();
+END_RCPP
 }
 
 RcppExport SEXP getXform (SEXP _image, SEXP _preferQuaternion)

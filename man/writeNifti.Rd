@@ -4,12 +4,16 @@
 \alias{writeNifti}
 \title{Write a NIfTI-1 format file}
 \usage{
-writeNifti(image, file)
+writeNifti(image, file, template = NULL)
 }
 \arguments{
 \item{image}{An image, in any acceptable form (see \code{\link{isImage}}).}
 
 \item{file}{A character string containing a file name.}
+
+\item{template}{An optional template object to derive NIfTI-1 properties
+  from. Passed to \code{\link{updateNifti}} if not \code{NULL}, and if
+  \code{image} is an array, otherwise \code{image} itself will be passed.}
 }
 \description{
 This function writes an image to NIfTI-1 format, using the standard NIfTI-1
@@ -20,5 +24,8 @@ Jon Clayden <code@clayden.org>
 }
 \references{
 The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1}).
+}
+\seealso{
+\code{\link{readNifti}}, \code{\link{updateNifti}}
 }
 
