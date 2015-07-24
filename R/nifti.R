@@ -39,7 +39,31 @@ readNifti <- function (file, internal = FALSE)
 #' @author Jon Clayden <code@@clayden.org>
 #' @references The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1}).
 #' @export
-writeNifti <- function (image, file)
+writeNifti <- function (image, file, template = NULL)
 {
+    if (is.array(image) && !is.null(template))
+        image <- updateNifti(image, template)
+    
     .Call("writeNifti", image, file, PACKAGE="RNiftyReg")
+}
+
+
+#' Update an internal NIfTI-1 object using a template
+#' 
+#' This function adds or updates the internal NIfTI-1 object for an array,
+#' using metadata from the template. The dimensions and, if available, pixel
+#' dimensions, from the \code{image} will replace those from the template.
+#' 
+#' @param image A numeric array.
+#' @param template An image, in any acceptable form (see
+#'   \code{\link{isImage}}).
+#' @return The original \code{image}, with its internal image attribute set or
+#'   updated appropriately.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @export
+updateNifti <- function (image, template)
+{
+    .Call("updateNifti", image, template, PACKAGE="RNiftyReg")
+    return (image)
 }

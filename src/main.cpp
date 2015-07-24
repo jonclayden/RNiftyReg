@@ -49,6 +49,13 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP updateNifti (SEXP _image, SEXP _template)
+{
+BEGIN_RCPP
+    NiftiImage result(_image, _template);
+BEGIN_RCPP
+}
+
 RcppExport SEXP getXform (SEXP _image, SEXP _preferQuaternion)
 {
 BEGIN_RCPP

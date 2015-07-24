@@ -174,6 +174,47 @@ void NiftiImage::initFromArray (const RObject &object)
     }
 }
 
+NiftiImage::NiftiImage (const SEXP object, const NiftiImage &reference)
+{
+    RObject array(object);
+    this->image = nifti_copy_nim_info(reference);
+    
+    this->image->dim[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    const std::vector<int> dimVector = array.attr("dim");
+    
+    const int nDims = std::min(7, int(dimVector.size()));
+    this->image->dim[0] = nDims;
+    for (int i=0; i<nDims; i++)
+        this->image->dim[i+1] = dimVector[i];
+    
+    if (array.hasAttribute("pixdim"))
+    {
+        const std::vector<float> pixdimVector = array.attr("pixdim");
+        const int pixdimLength = pixdimVector.size();
+        for (int i=0; i<std::min(pixdimLength,nDims); i++)
+            this->image->pixdim[i+1] = pixdimVector[i];
+    }
+    
+    const int sexpType = object.sexp_type();
+    if (sexpType == INTSXP || sexpType == LGLSXP)
+        this->image->datatype = DT_INT32;
+    else if (sexpType == REALSXP)
+        this->image->datatype = DT_FLOAT64;
+    else
+        throw std::runtime_error("Array elements must be numeric");
+    
+    
+    this->image = nifti_make_new_nim(dims, datatype, TRUE);
+    
+    const size_t dataSize = nifti_get_volsize(image);
+    if (datatype == DT_INT32)
+        memcpy(this->image->data, INTEGER(object), dataSize);
+    else
+        memcpy(this->image->data, REAL(object), dataSize);
+    
+    
+}
+
 NiftiImage::NiftiImage (const SEXP object, const bool readData)
 {
     RObject imageObject(object);
