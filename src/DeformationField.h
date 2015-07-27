@@ -36,6 +36,8 @@ public:
     
     template <int Dim>
     Rcpp::NumericVector findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const;
+    
+    void compose (const DeformationField &otherField);
 };
 
 #endif

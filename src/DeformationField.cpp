@@ -52,7 +52,7 @@ DeformationField::DeformationField (const NiftiImage &targetImage, const NiftiIm
     initImages(targetImage);
     reg_checkAndCorrectDimension(transformationImage);
     
-    switch (static_cast<int>(transformationImage->intent_p1))
+    switch (reg_round(transformationImage->intent_p1))
     {
         case SPLINE_GRID:
         reg_spline_getDeformationField(transformationImage, deformationFieldImage, NULL, false, true);
@@ -211,6 +211,11 @@ Rcpp::NumericVector DeformationField::findPoint (const NiftiImage &sourceImage, 
         
         return result;
     }
+}
+
+void DeformationField::compose (const DeformationField &otherField)
+{
+    reg_defField_compose(otherField.getFieldImage(), deformationFieldImage, NULL);
 }
 
 template

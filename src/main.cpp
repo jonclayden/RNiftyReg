@@ -462,3 +462,36 @@ BEGIN_RCPP
     return result;
 END_RCPP
 }
+
+RcppExport SEXP composeTransforms (SEXP _transform1, SEXP _transform2)
+{
+BEGIN_RCPP
+    RObject transform1(_transform1);
+    RObject transform2(_transform2);
+    RObject result;
+    
+    if (transform1.inherits("affine") && transform2.inherits("affine"))
+    {
+        Eigen::MatrixXd matrix = as<Eigen::MatrixXd>(_transform2) * as<Eigen::MatrixXd>(_transform1);
+        result = AffineMatrix(matrix);
+    }
+    else
+    {
+        NiftiImage targetImage1(SEXP(transform1.attr("target")));
+        NiftiImage transformImage1(_transform1);
+        DeformationField field1(targetImage1, transformImage1);
+        
+        NiftiImage targetImage2(SEXP(transform2.attr("target")));
+        NiftiImage transformImage2(_transform2);
+        DeformationField field2(targetImage2, transformImage2);
+        
+        field1.compose(field2);
+        result = field1.getFieldImage().toPointer("Deformation field");
+    }
+    
+    result.attr("source") = transform1.attr("source");
+    result.attr("target") = transform2.attr("target");
+    
+    result result;
+END_RCPP
+}
