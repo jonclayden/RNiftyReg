@@ -24,11 +24,7 @@ public:
     DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine);
     DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage);
     
-    NiftiImage getFieldImage ()
-    {
-        deformationFieldImage.setPersistence(true);
-        return deformationFieldImage;
-    }
+    NiftiImage getFieldImage () const { return deformationFieldImage; }
     
     NiftiImage getJacobian () const;
     

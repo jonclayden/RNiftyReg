@@ -492,6 +492,6 @@ BEGIN_RCPP
     result.attr("source") = transform1.attr("source");
     result.attr("target") = transform2.attr("target");
     
-    result result;
+    return result;
 END_RCPP
 }

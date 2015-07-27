@@ -157,3 +157,24 @@ halfTransform <- function (transform)
 {
     invisible (.Call("halfTransform", transform, PACKAGE="RNiftyReg"))
 }
+
+
+#' Compose two transformations
+#' 
+#' Compute the composition of two transforms, the single transform that
+#' combines their effects in order.
+#' 
+#' @param transform1, transform2 Affine or nonlinear transforms, possibly
+#'   obtained from \code{\link{forward}} or \code{\link{reverse}}.
+#' @return The composed transform. If both \code{transform1} and
+#'   \code{transform2} are affines then the result will also be an affine;
+#'   otherwise it will be a deformation field.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{niftyregLinear}}, \code{\link{niftyregNonlinear}},
+#'   \code{\link{deformationField}}
+#' @export
+composeTransforms <- function (transform1, transform2)
+{
+    invisible (.Call("composeTransforms", transform1, transform2, PACKAGE="RNiftyReg"))
+}
