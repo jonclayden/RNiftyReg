@@ -175,6 +175,7 @@ void NiftiImage::initFromArray (const RObject &object)
 }
 
 NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
+    : persistent(false)
 {
     RObject object(array);
     if (!object.hasAttribute("dim"))
@@ -223,6 +224,7 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
 }
 
 NiftiImage::NiftiImage (const SEXP object, const bool readData)
+    : persistent(false)
 {
     RObject imageObject(object);
     
