@@ -89,18 +89,23 @@ public:
     void setPersistence (const bool persistent) { this->persistent = persistent; }
     
     bool isNull () const { return (image == NULL); }
-    int nDims (const bool drop = false) const
+    int nDims () const
     {
         if (image == NULL)
             return 0;
-        
+        else
+            return image->ndim;
+    }
+    
+    // Note that this function differs from its R equivalent in only dropping unitary dimensions after the last nonunitary one
+    NiftiImage & drop ()
+    {
         int ndim = image->ndim;
-        if (drop)
-        {
-            while (image->dim[ndim] < 2)
-                ndim--;
-        }
-        return ndim;
+        while (image->dim[ndim] < 2)
+            ndim--;
+        image->dim[0] = image->ndim = ndim;
+        
+        return *this;
     }
     
     mat44 xform (const bool preferQuaternion = true) const;

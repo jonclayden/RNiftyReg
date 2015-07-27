@@ -94,8 +94,8 @@ void checkImages (const NiftiImage &sourceImage, const NiftiImage &targetImage)
     if (targetImage.isNull())
         throw std::runtime_error("Cannot read or retrieve target image");
     
-    const int nSourceDim = sourceImage.nDims(true);
-    const int nTargetDim = targetImage.nDims(true);
+    const int nSourceDim = sourceImage.nDims();
+    const int nTargetDim = targetImage.nDims();
     
     if (nSourceDim < 2 || nSourceDim > 4)
         throw std::runtime_error("Source image should have 2, 3 or 4 dimensions");
@@ -111,7 +111,7 @@ BEGIN_RCPP
     NiftiImage sourceMask(_sourceMask);
     NiftiImage targetMask(_targetMask);
     
-    checkImages(sourceImage, targetImage);
+    checkImages(sourceImage.drop(), targetImage.drop());
     
     const LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
     const int interpolation = as<int>(_interpolation);
@@ -211,7 +211,7 @@ BEGIN_RCPP
     NiftiImage sourceMask(_sourceMask);
     NiftiImage targetMask(_targetMask);
     
-    checkImages(sourceImage, targetImage);
+    checkImages(sourceImage.drop(), targetImage.drop());
     
     const int interpolation = as<int>(_interpolation);
     const bool symmetric = as<bool>(_symmetric);

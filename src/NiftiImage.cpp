@@ -201,7 +201,9 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
             this->image->pixdim[i+1] = pixdimVector[i];
     }
     
+    // This NIfTI-1 library function clobbers dim[0] if the last dimension is unitary; we undo that here
     nifti_update_dims_from_array(this->image);
+    this->image->dim[0] = this->image->ndim = nDims;
     
     const int sexpType = object.sexp_type();
     if (sexpType == INTSXP || sexpType == LGLSXP)
