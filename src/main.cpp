@@ -57,9 +57,7 @@ BEGIN_RCPP
     
     if (!reference.isNull())
     {
-        NiftiImage *updatedImage = new NiftiImage(reference);
-        updatedImage->update(_image);
-        // NiftiImage *updatedImage = new NiftiImage(reference, _image);
+        NiftiImage *updatedImage = new NiftiImage(reference, _image);
         updatedImage->setPersistence(true);
         XPtr<NiftiImage> xptr(updatedImage);
         R_RegisterCFinalizerEx(SEXP(xptr), &finaliseNiftiImage, FALSE);

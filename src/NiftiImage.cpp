@@ -174,12 +174,13 @@ void NiftiImage::initFromArray (const RObject &object)
     }
 }
 
-// NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
-void NiftiImage::update (const SEXP array)
+NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
 {
     RObject object(array);
     if (!object.hasAttribute("dim"))
         throw std::runtime_error("Specified object is not an array");
+    
+    this->image = nifti_copy_nim_info(reference);
     
     for (int i=0; i<8; i++)
         this->image->dim[i] = 0;

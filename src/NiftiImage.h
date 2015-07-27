@@ -108,8 +108,6 @@ public:
         return *this;
     }
     
-    void update (const SEXP array);
-    
     mat44 xform (const bool preferQuaternion = true) const;
     
     const Block slice (const int i) const { return Block(*this, 3, i); }
