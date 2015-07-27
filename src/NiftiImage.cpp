@@ -234,6 +234,7 @@ NiftiImage::NiftiImage (const SEXP object, const bool readData)
     {
         XPtr<NiftiImage> imagePtr(SEXP(imageObject.attr(".nifti_image_ptr")));
         this->image = *imagePtr;
+        this->persistent = true;
     }
     else if (Rf_isString(object))
     {
