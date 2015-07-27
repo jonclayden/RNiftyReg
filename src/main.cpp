@@ -395,3 +395,70 @@ BEGIN_RCPP
     return image.toArray();
 END_RCPP
 }
+
+RcppExport SEXP halfTransform (SEXP _transform)
+{
+BEGIN_RCPP
+    RObject transform(_transform);
+    RObject result;
+    if (transform.inherits("affine"))
+    {
+        Eigen::MatrixXd matrix = as<Eigen::MatrixXd>(_transform);
+        matrix = (matrix.log() * 0.5).exp();
+        result = AffineMatrix(matrix);
+    }
+    else
+    {
+        NiftiImage transformationImage(_transform);
+        switch (reg_round(transformationImage->intent_p1))
+        {
+            case SPLINE_GRID:
+            reg_getDisplacementFromDeformation(transformationImage);
+            reg_tools_multiplyValueToImage(transformationImage,transformationImage,0.5f);
+            reg_getDeformationFromDisplacement(transformationImage);
+            break;
+            
+            case DEF_FIELD:
+            reg_getDisplacementFromDeformation(transformationImage);
+            reg_tools_multiplyValueToImage(transformationImage,transformationImage,0.5f);
+            reg_getDeformationFromDisplacement(transformationImage);
+            break;
+            
+            case DISP_FIELD:
+            reg_tools_multiplyValueToImage(transformationImage,transformationImage,0.5f);
+            break;
+            
+            case SPLINE_VEL_GRID:
+            reg_getDisplacementFromDeformation(transformationImage);
+            reg_tools_multiplyValueToImage(transformationImage,transformationImage,0.5f);
+            reg_getDeformationFromDisplacement(transformationImage);
+            --transformationImage->intent_p2;
+            if (transformationImage->num_ext>1)
+                --transformationImage->num_ext;
+            break;
+            
+            case DEF_VEL_FIELD:
+            reg_getDisplacementFromDeformation(transformationImage);
+            reg_tools_multiplyValueToImage(transformationImage,transformationImage,0.5f);
+            reg_getDeformationFromDisplacement(transformationImage);
+            --transformationImage->intent_p2;
+            break;
+            
+            case DISP_VEL_FIELD:
+            reg_tools_multiplyValueToImage(transformationImage,transformationImage,0.5f);
+            --transformationImage->intent_p2;
+            break;
+            
+            default:
+            throw std::runtime_error("The specified transformation image is not valid or not supported");
+        }
+        
+        result = transformationImage.toPointer("F3D transformation");
+    }
+    
+    result.attr("source") = transform.attr("source");
+    result.attr("target") = transform.attr("target");
+    
+    return result;
+END_RCPP
+}

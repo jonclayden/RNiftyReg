@@ -137,3 +137,23 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
     else
         stop("Specified transform is not valid")
 }
+
+
+#' Calculate a half transformation
+#' 
+#' This function calculates the half-way transformation corresponding to its
+#' argument. Applying this transformation results in points or images in a
+#' space halfway between the original source and target images, which can be a
+#' useful common space in some applications.
+#' 
+#' @param transform A transform, possibly obtained from \code{\link{forward}}
+#'   or \code{\link{reverse}}.
+#' @return The half-way transform, in a similar format to \code{transform}.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{niftyregLinear}}, \code{\link{niftyregNonlinear}}
+#' @export
+halfTransform <- function (transform)
+{
+    invisible (.Call("halfTransform", transform, PACKAGE="RNiftyReg"))
+}

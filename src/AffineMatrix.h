@@ -28,6 +28,7 @@ public:
     }
     
     AffineMatrix (const mat44 &matrix, const bool attributes = true);
+    AffineMatrix (const Eigen::MatrixXd &matrix, const bool attributes = true);
     AffineMatrix (const nifti_image *sourceImage, const nifti_image *targetImage);
     
     operator mat44 () const

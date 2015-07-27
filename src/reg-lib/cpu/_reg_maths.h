@@ -49,8 +49,8 @@ typedef enum
 #undef pythag
 #define reg_pow2(a)     R_pow_di(a,2)
 #define reg_ceil(a)     ceil(a)
-#define reg_round(a)    round(a)
-#define reg_floor(a)    floor(a)
+#define reg_round(a)    int(round(a))
+#define reg_floor(a)    int(floor(a))
 #define SIGN(a,b)       fsign(a,b)
 #define FMAX(a,b)       fmax2(a,b)
 #define IMIN(a,b)       imin2(a,b)

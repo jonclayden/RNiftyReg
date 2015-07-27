@@ -15,6 +15,22 @@ AffineMatrix::AffineMatrix (const mat44 &matrix, const bool attributes)
         addAttributes();
 }
 
+AffineMatrix::AffineMatrix (const Eigen::MatrixXd &matrix, const bool attributes)
+    : Rcpp::NumericMatrix(4,4)
+{
+    if (matrix.rows() != 4 || matrix.cols() != 4)
+        throw std::runtime_error("The specified matrix is not 4x4");
+    
+    for (int i=0; i<4; i++)
+    {
+        for (int j=0; j<4; j++)
+            (*this)(i,j) = matrix(i,j);
+    }
+    
+    if (attributes)
+        addAttributes();
+}
+
 AffineMatrix::AffineMatrix (const nifti_image *sourceImage, const nifti_image *targetImage)
     : Rcpp::NumericMatrix(4,4)
 {
