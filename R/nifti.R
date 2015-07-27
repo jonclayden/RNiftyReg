@@ -37,24 +37,18 @@ readNifti <- function (file, internal = FALSE)
 #' @param image An image, in any acceptable form (see \code{\link{isImage}}).
 #' @param file A character string containing a file name.
 #' @param template An optional template object to derive NIfTI-1 properties
-#'   from. Passed to \code{\link{updateNifti}} if not \code{NULL}, and if
-#'   \code{image} is an array, otherwise \code{image} itself will be passed.
+#'   from. Passed to \code{\link{updateNifti}} if \code{image} is an array.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{readNifti}}, \code{\link{updateNifti}}
 #' @references The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1}).
 #' @export
-writeNifti <- function (image, file, template = NULL)
+writeNifti <- function (image, file, template = image)
 {
     if (is.array(image))
-    {
-        if (is.null(template))
-            image <- updateNifti(image, image)
-        else
-            image <- updateNifti(image, template)
-    }
+        updateNifti(image, template)
     
-    .Call("writeNifti", image, file, PACKAGE="RNiftyReg")
+    invisible(.Call("writeNifti", image, file, PACKAGE="RNiftyReg"))
 }
 
 
@@ -63,18 +57,20 @@ writeNifti <- function (image, file, template = NULL)
 #' This function adds or updates the internal NIfTI-1 object for an array,
 #' using metadata from the template. The dimensions and, if available, pixel
 #' dimensions, from the \code{image} will replace those from the template.
+#' This function is called by \code{\link{writeNifti}} and the
+#' \code{\link{niftyreg}} registration functions.
 #' 
-#' @param image A numeric array.
+#' @param image A numeric array. Note that the original object is modified.
 #' @param template An image, in any acceptable form (see
-#'   \code{\link{isImage}}).
+#'   \code{\link{isImage}}). Defaults to \code{image} itself.
 #' @return The original \code{image}, with its internal image attribute set or
 #'   updated appropriately.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @export
-updateNifti <- function (image, template)
+updateNifti <- function (image, template = image)
 {
-    .Call("updateNifti", image, template, PACKAGE="RNiftyReg")
+    invisible(.Call("updateNifti", image, template, PACKAGE="RNiftyReg"))
 }
 
 

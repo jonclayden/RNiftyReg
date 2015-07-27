@@ -4,13 +4,13 @@
 \alias{updateNifti}
 \title{Update an internal NIfTI-1 object using a template}
 \usage{
-updateNifti(image, template)
+updateNifti(image, template = image)
 }
 \arguments{
-\item{image}{A numeric array.}
+\item{image}{A numeric array. Note that the original object is modified.}
 
 \item{template}{An image, in any acceptable form (see
-\code{\link{isImage}}).}
+\code{\link{isImage}}). Defaults to \code{image} itself.}
 }
 \value{
 The original \code{image}, with its internal image attribute set or
@@ -20,6 +20,8 @@ The original \code{image}, with its internal image attribute set or
 This function adds or updates the internal NIfTI-1 object for an array,
 using metadata from the template. The dimensions and, if available, pixel
 dimensions, from the \code{image} will replace those from the template.
+This function is called by \code{\link{writeNifti}} and the
+\code{\link{niftyreg}} registration functions.
 }
 \author{
 Jon Clayden <code@clayden.org>
