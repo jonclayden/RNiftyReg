@@ -9,7 +9,13 @@ test_that("NIfTI files can be read and written", {
     
     image <- readNifti(imagePath)
     expect_that(pixunits(image), equals(c("mm","s")))
+    
     writeNifti(image, tempPath)
     expect_that(pixdim(readNifti(tempPath)), equals(c(2.5,2.5,2.5)))
     unlink(tempPath)
+    
+    expect_that(dumpNifti(image)$dim, equals(c(3L,96L,96L,60L,1L,1L,1L,1L)))
+    pixdim(image) <- c(5,5,5)
+    updateNifti(image)
+    expect_that(dumpNifti(image)$pixdim, equals(c(-1,5,5,5,0,0,0,0)))
 })
