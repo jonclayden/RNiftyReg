@@ -7,7 +7,7 @@
 composeTransforms(transform1, transform2)
 }
 \arguments{
-\item{transform1,}{transform2 Affine or nonlinear transforms, possibly
+\item{transform1,transform2}{Affine or nonlinear transforms, possibly
 obtained from \code{\link{forward}} or \code{\link{reverse}}.}
 }
 \value{

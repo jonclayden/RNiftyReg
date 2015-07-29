@@ -340,7 +340,10 @@ niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, t
     })
     
     if (spacingUnit == "voxel")
-        finalSpacing <- finalSpacing * abs(pixdim(target)[1:min(3,nTargetDim)])
+    {
+        indices <- 1:min(3,nTargetDim)
+        finalSpacing[indices] <- finalSpacing[indices] * abs(pixdim(target)[indices])
+    }
     
     if (nTargetDim == 2)
         finalSpacing <- c(finalSpacing[1:2], 1)

@@ -4,6 +4,10 @@
 #' NIfTI-1 C library.
 #' 
 #' @param file A character vector of file names.
+#' @param source,target If the specified \code{file} contains a transformation,
+#'   these parameters can be used to specify the associated source and target
+#'   images, which are stored in attributes of the same name. Only used if
+#'   \code{file} is of unit length.
 #' @param internal Logical value. If \code{FALSE} (the default), an array
 #'   containing the image pixel or voxel values will be returned. If
 #'   \code{TRUE}, the return value will be an object of class
@@ -16,7 +20,7 @@
 #' @seealso \code{\link{writeNifti}}
 #' @references The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1}).
 #' @export
-readNifti <- function (file, internal = FALSE)
+readNifti <- function (file, source = NULL, target = NULL, internal = FALSE)
 {
     if (!is.character(file))
         stop("File name(s) must be specified in a character vector")
@@ -25,7 +29,14 @@ readNifti <- function (file, internal = FALSE)
     else if (length(file) > 1)
         lapply(file, function(f) .Call("readNifti", f, internal, PACKAGE="RNiftyReg"))
     else
-        .Call("readNifti", file, internal, PACKAGE="RNiftyReg")
+    {
+        image <- .Call("readNifti", file, internal, PACKAGE="RNiftyReg")
+        if (!is.null(source))
+            attr(image, "source") <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
+        if (!is.null(target))
+            attr(image, "target") <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
+        return (image)
+    }
 }
 
 

@@ -73,7 +73,7 @@ readAffine <- function (fileName, source = NULL, target = NULL, type = NULL)
     if (is.null(type))
     {
         if (any(isTypeLine))
-            type <- match.arg(tolower(groups(ore.lastmatch())), c("niftyreg","fsl"))
+            type <- match.arg(tolower(na.omit(groups(ore.lastmatch()))), c("niftyreg","fsl"))
         else
             type <- "niftyreg"
     }
@@ -290,6 +290,7 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{buildAffine}}, \code{\link{isAffine}}
+#' @export
 decomposeAffine <- function (affine)
 {
     if (!isAffine(affine))
