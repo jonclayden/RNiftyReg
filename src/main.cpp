@@ -477,13 +477,32 @@ BEGIN_RCPP
     }
     else
     {
-        NiftiImage targetImage1(SEXP(transform1.attr("target")));
-        NiftiImage transformImage1(_transform1);
-        DeformationField field1(targetImage1, transformImage1);
+        DeformationField field1, field2;
         
+        NiftiImage targetImage1(SEXP(transform1.attr("target")));
         NiftiImage targetImage2(SEXP(transform2.attr("target")));
-        NiftiImage transformImage2(_transform2);
-        DeformationField field2(targetImage2, transformImage2);
+        
+        if (transform1.inherits("affine"))
+        {
+            AffineMatrix transformMatrix(_transform1);
+            field1 = DeformationField(targetImage1, transformMatrix, true);
+        }
+        else
+        {
+            NiftiImage transformImage(_transform1);
+            field1 = DeformationField(targetImage1, transformImage, true);
+        }
+        
+        if (transform2.inherits("affine"))
+        {
+            AffineMatrix transformMatrix(_transform2);
+            field2 = DeformationField(targetImage2, transformMatrix, true);
+        }
+        else
+        {
+            NiftiImage transformImage(_transform2);
+            field2 = DeformationField(targetImage2, transformImage, true);
+        }
         
         field1.compose(field2);
         result = field1.getFieldImage().toPointer("Deformation field");

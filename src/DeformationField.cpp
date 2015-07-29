@@ -40,14 +40,14 @@ void DeformationField::initImages (const NiftiImage &targetImage)
     this->deformationFieldImage = NiftiImage(deformationField);
 }
 
-DeformationField::DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine)
+DeformationField::DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine, const bool compose)
 {
     initImages(targetImage);
     mat44 affineMatrix = affine;
-    reg_affine_getDeformationField(&affineMatrix, deformationFieldImage, false, NULL);
+    reg_affine_getDeformationField(&affineMatrix, deformationFieldImage, compose, NULL);
 }
 
-DeformationField::DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage)
+DeformationField::DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage, const bool compose)
 {
     initImages(targetImage);
     reg_checkAndCorrectDimension(transformationImage);
@@ -55,7 +55,7 @@ DeformationField::DeformationField (const NiftiImage &targetImage, const NiftiIm
     switch (reg_round(transformationImage->intent_p1))
     {
         case SPLINE_GRID:
-        reg_spline_getDeformationField(transformationImage, deformationFieldImage, NULL, false, true);
+        reg_spline_getDeformationField(transformationImage, deformationFieldImage, NULL, compose, true);
         break;
         
         case DISP_VEL_FIELD:

@@ -21,8 +21,8 @@ protected:
     
 public:
     DeformationField () {}
-    DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine);
-    DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage);
+    DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine, const bool compose = false);
+    DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage, const bool compose = false);
     
     NiftiImage getFieldImage () const { return deformationFieldImage; }
     
