@@ -10,7 +10,6 @@ private:
     void addAttributes ()
     {
         this->attr("class") = "affine";
-        this->attr("affineType") = "niftyreg";
     }
     
 public:
