@@ -19,7 +19,7 @@ AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetI
     
     // The source data type is changed for interpolation precision if necessary
     if (interpolation != 0)
-        reg_tools_changeDatatype<double>(sourceImage);
+        reg_tools_changeDatatype<PRECISION_TYPE>(sourceImage);
     
     AladinResult result;
     

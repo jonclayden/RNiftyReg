@@ -1754,4 +1754,5 @@ nifti_image * reg_f3d_sym<T>::GetBackwardControlPointPositionImage()
 /* *************************************************************** */
 /* *************************************************************** */
 template class reg_f3d_sym<float>;
+template class reg_f3d_sym<double>;
 #endif

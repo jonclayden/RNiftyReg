@@ -1124,4 +1124,5 @@ void reg_f3d<T>::CorrectTransformation()
 /* *************************************************************** */
 /* *************************************************************** */
 template class reg_f3d<float>;
+template class reg_f3d<double>;
 #endif

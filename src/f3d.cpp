@@ -9,7 +9,7 @@
 #include "AffineMatrix.h"
 #include "DeformationField.h"
 
-F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, const int nLevels, const int maxIterations, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const NiftiImage &initControlPoints, const AffineMatrix &initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float jacobianWeight, const bool symmetric, const bool verbose, const bool estimateOnly)
+F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, const int nLevels, const int maxIterations, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const NiftiImage &initControlPoints, const AffineMatrix &initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float linearEnergyWeight, const float jacobianWeight, const bool symmetric, const bool verbose, const bool estimateOnly)
 {
     // Binarise the mask images
     if (!sourceMaskImage.isNull())
@@ -82,8 +82,7 @@ F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, 
         }
         
         reg->SetBendingEnergyWeight(bendingEnergyWeight);
-        reg->SetLinearEnergyWeights(0.0, 0.0);
-        reg->SetL2NormDisplacementWeight(0.0);
+        reg->SetLinearEnergyWeight(linearEnergyWeight);
         reg->SetJacobianLogWeight(jacobianWeight);
         
         reg->SetMaximalIterationNumber(maxIterations);

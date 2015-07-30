@@ -482,4 +482,5 @@ nifti_image **reg_f3d2<T>::GetWarpedImage()
 /* *************************************************************** */
 /* *************************************************************** */
 template class reg_f3d2<float>;
+template class reg_f3d2<double>;
 #endif

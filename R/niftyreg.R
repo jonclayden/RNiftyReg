@@ -285,7 +285,7 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
 #' processing units. Computer Methods and Programs in Biomedicine
 #' 98(3):278-284.
 #' @export
-niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001, linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -350,7 +350,7 @@ niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, t
     else
         finalSpacing <- finalSpacing[1:3]
     
-    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, PACKAGE="RNiftyReg")
+    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, linearEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)
