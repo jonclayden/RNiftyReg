@@ -24,7 +24,7 @@ reg_f3d2<T>::reg_f3d2(int refTimePoint,int floTimePoint)
    this->executableName=(char *)"NiftyReg F3D2";
    this->inverseConsistencyWeight=0;
    this->BCHUpdate=false;
-   this->useGradientCumulativeExp=false;
+   this->useGradientCumulativeExp=true;
    this->BCHUpdateValue=0;
 
 #ifndef NDEBUG
@@ -57,6 +57,13 @@ void reg_f3d2<T>::UseGradientCumulativeExp()
 {
    this->BCHUpdate = false;
    this->useGradientCumulativeExp = true;
+}
+/* *************************************************************** */
+/* *************************************************************** */
+template <class T>
+void reg_f3d2<T>::DoNotUseGradientCumulativeExp()
+{
+   this->useGradientCumulativeExp = false;
 }
 /* *************************************************************** */
 /* *************************************************************** */
@@ -176,13 +183,26 @@ void reg_f3d2<T>::ExponentiateGradient()
    reg_spline_getIntermediateDefFieldFromVelGrid(this->backwardControlPointGrid,
          tempDef);
 
+   // Remove the affine component
+   nifti_image *affine_disp=NULL;
+   if(this->affineTransformation!=NULL){
+      affine_disp=nifti_copy_nim_info(this->deformationFieldImage);
+      affine_disp->data=(void *)malloc(affine_disp->nvox*affine_disp->nbyper);
+      mat44 backwardAffineTransformation=nifti_mat44_inverse(*this->affineTransformation);
+      reg_affine_getDeformationField(&backwardAffineTransformation,
+                                     affine_disp);
+      reg_getDisplacementFromDeformation(affine_disp);
+   }
+
    /* Allocate a temporary gradient image to store the backward gradient */
    nifti_image *tempGrad=nifti_copy_nim_info(this->voxelBasedMeasureGradientImage);
 
    tempGrad->data=(void *)malloc(tempGrad->nvox*tempGrad->nbyper);
    for(int i=0; i<(int)fabsf(this->backwardControlPointGrid->intent_p2); ++i)
    {
-
+      reg_tools_substractImageToImage(tempDef[i],
+                                      affine_disp,
+                                      tempDef[i]);
       reg_resampleGradient(this->voxelBasedMeasureGradientImage, // floating
                            tempGrad, // warped - out
                            tempDef[i], // deformation field
@@ -193,7 +213,7 @@ void reg_f3d2<T>::ExponentiateGradient()
                                 this->voxelBasedMeasureGradientImage); // out
    }
 
-   // Free the temporary deformation field
+   // Free the temporary deformation fields
    for(int i=0; i<=(int)fabsf(this->backwardControlPointGrid->intent_p2); ++i)
    {
       nifti_image_free(tempDef[i]);
@@ -204,6 +224,10 @@ void reg_f3d2<T>::ExponentiateGradient()
    // Free the temporary gradient image
    nifti_image_free(tempGrad);
    tempGrad=NULL;
+   // Free the temporary affine displacement field
+   if(affine_disp!=NULL)
+      nifti_image_free(affine_disp);
+   affine_disp=NULL;
    // Normalise the forward gradient
    reg_tools_divideValueToImage(this->voxelBasedMeasureGradientImage, // in
                                 this->voxelBasedMeasureGradientImage, // out
@@ -228,9 +252,20 @@ void reg_f3d2<T>::ExponentiateGradient()
    reg_spline_getIntermediateDefFieldFromVelGrid(this->controlPointGrid,
          tempDef);
 
+   // Remove the affine component
+   if(this->affineTransformation!=NULL){
+      affine_disp=nifti_copy_nim_info(this->backwardDeformationFieldImage);
+      affine_disp->data=(void *)malloc(affine_disp->nvox*affine_disp->nbyper);
+      reg_affine_getDeformationField(this->affineTransformation,
+                                     affine_disp);
+      reg_getDisplacementFromDeformation(affine_disp);
+   }
+
    for(int i=0; i<(int)fabsf(this->controlPointGrid->intent_p2); ++i)
    {
-
+      reg_tools_substractImageToImage(tempDef[i],
+                                      affine_disp,
+                                      tempDef[i]);
       reg_resampleGradient(this->backwardVoxelBasedMeasureGradientImage, // floating
                            tempGrad, // warped - out
                            tempDef[i], // deformation field
@@ -252,6 +287,10 @@ void reg_f3d2<T>::ExponentiateGradient()
    // Free the temporary gradient image
    nifti_image_free(tempGrad);
    tempGrad=NULL;
+   // Free the temporary affine displacement field
+   if(affine_disp!=NULL)
+      nifti_image_free(affine_disp);
+   affine_disp=NULL;
    // Normalise the backward gradient
    reg_tools_divideValueToImage(this->backwardVoxelBasedMeasureGradientImage, // in
                                 this->backwardVoxelBasedMeasureGradientImage, // out
@@ -442,5 +481,5 @@ nifti_image **reg_f3d2<T>::GetWarpedImage()
 }
 /* *************************************************************** */
 /* *************************************************************** */
-
+template class reg_f3d2<float>;
 #endif

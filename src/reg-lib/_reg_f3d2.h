@@ -30,6 +30,7 @@ protected:
    virtual void ExponentiateGradient();
    virtual void UseBCHUpdate(int);
    virtual void UseGradientCumulativeExp();
+   virtual void DoNotUseGradientCumulativeExp();
 
 public:
    reg_f3d2(int refTimePoint,int floTimePoint);
@@ -38,6 +39,6 @@ public:
    virtual nifti_image **GetWarpedImage();
 };
 
-#include "_reg_f3d2.cpp"
+//#include "_reg_f3d2.cpp"
 
 #endif

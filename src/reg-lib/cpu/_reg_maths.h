@@ -175,12 +175,16 @@ mat44 reg_mat44_mul(mat44 const* A,
                     mat44 const* B);
 mat44 operator*(mat44 A,
                 mat44 B);
+
+mat33 operator*(mat33 A,
+                mat33 B);
 /* *************************************************************** */
 /** @brief Multipy a vector with a 4-by-4 matrix
  */
 void reg_mat44_mul(mat44 const* mat,
                    float const* in,
                    float *out);
+
 void reg_mat44_mul(mat44 const* mat,
                    double const* in,
                    double *out);
@@ -194,6 +198,8 @@ mat44 reg_mat44_mul(mat44 const* mat,
  */
 mat33 reg_mat33_add(mat33 const* A, mat33 const* B);
 mat33 operator+(mat33 A,mat33 B);
+mat33 reg_mat33_trans(mat33 A);
+void reg_mat33_diagonalize(mat33 const* A, mat33 * Q, mat33 * D);
 /* *************************************************************** */
 /** @brief Add two 4-by-4 matrices
  */

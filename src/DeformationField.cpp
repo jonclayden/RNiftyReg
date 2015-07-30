@@ -1,7 +1,7 @@
 #include <RcppEigen.h>
 
-#include "_reg_localTransformation.h"
-#include "_reg_globalTransformation.h"
+#include "_reg_localTrans.h"
+#include "_reg_globalTrans.h"
 #include "_reg_resampling.h"
 
 #include "config.h"

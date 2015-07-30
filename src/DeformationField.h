@@ -5,8 +5,8 @@
 
 #include "config.h"
 #include "nifti1_io.h"
-#include "_reg_localTransformation.h"
-#include "_reg_globalTransformation.h"
+#include "_reg_localTrans.h"
+#include "_reg_globalTrans.h"
 #include "_reg_resampling.h"
 #include "NiftiImage.h"
 #include "AffineMatrix.h"
