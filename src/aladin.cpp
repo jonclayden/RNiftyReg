@@ -53,6 +53,9 @@ AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetI
         reg->setPlatformCode(NR_PLATFORM_CPU);
         reg->setCaptureRangeVox(3);
         
+        reg->SetFloatingLowerThreshold(-std::numeric_limits<PRECISION_TYPE>::max());
+        reg->SetFloatingUpperThreshold(std::numeric_limits<PRECISION_TYPE>::max());
+        
         // Set the reference and floating images
         reg->SetInputReference(targetImage);
         reg->SetInputFloating(sourceImage);
