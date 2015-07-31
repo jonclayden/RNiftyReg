@@ -10,12 +10,16 @@
 #' @param strict If \code{TRUE}, this function just tests whether the object is
 #'   of class \code{"affine"}. Otherwise it also tests for an affine-like 4x4
 #'   matrix.
+#' @param x An \code{"affine"} object.
+#' @param ... Additional parameters to methods. Currently unused.
 #' @return A logical value, which is \code{TRUE} if \code{object} appears to be
 #'   an affine matrix.
 #' 
 #' @note 2D affines are a subset of 3D affines, and are stored in a 4x4 matrix
 #'   for internal consistency, even though a 3x3 matrix would suffice.
 #' @author Jon Clayden <code@@clayden.org>
+#' @aliases affine
+#' @rdname affine
 #' @export
 isAffine <- function (object, strict = FALSE)
 {
@@ -25,6 +29,26 @@ isAffine <- function (object, strict = FALSE)
         return (TRUE)
     else
         return (FALSE)
+}
+
+
+#' @rdname affine
+#' @export
+print.affine <- function (x, ...)
+{
+    cat("NiftyReg affine matrix:\n")
+    lines <- apply(format(x,scientific=FALSE), 1, paste, collapse="  ")
+    cat(paste(lines, collapse="\n"))
+    
+    source <- attr(x, "source")
+    if (!is.null(source))
+        cat(paste0("\nSource origin: (", paste(round(worldToVoxel(c(0,0,0),source),2),collapse=", "), ")"))
+    
+    target <- attr(x, "target")
+    if (!is.null(target))
+        cat(paste0("\nTarget origin: (", paste(round(worldToVoxel(c(0,0,0),target),2),collapse=", "), ")"))
+    
+    cat("\n")
 }
 
 

@@ -3,6 +3,7 @@
 S3method(as.array,internalImage)
 S3method(dim,internalImage)
 S3method(forward,niftyreg)
+S3method(print,affine)
 S3method(print,internalImage)
 S3method(reverse,niftyreg)
 export("pixdim<-")
