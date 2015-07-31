@@ -115,13 +115,13 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
                     if (nDims == 2)
                     {
                         colnames(data) <- c("sx", "sy", "tx", "ty")
-                        fit <- lm(cbind(tx,ty) ~ splines::bs(sx) * splines::bs(sy), data=data)
+                        fit <- lm(cbind(tx,ty) ~ bs(sx) * bs(sy), data=data)
                         return (drop(predict(fit, data.frame(sx=points[i,1],sy=points[i,2]))))
                     }
                     else
                     {
                         colnames(data) <- c("sx", "sy", "sz", "tx", "ty", "tz")
-                        fit <- lm(cbind(tx,ty,tz) ~ splines::bs(sx) * splines::bs(sy) * splines::bs(sz), data=data)
+                        fit <- lm(cbind(tx,ty,tz) ~ bs(sx) * bs(sy) * bs(sz), data=data)
                         return (drop(predict(fit, data.frame(sx=points[i,1],sy=points[i,2],sz=points[i,3]))))
                     }
                 }

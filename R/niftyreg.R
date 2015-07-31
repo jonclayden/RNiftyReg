@@ -248,6 +248,8 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
 #'   histogram created by the algorithm.
 #' @param bendingEnergyWeight A numeric value giving the weight of the bending
 #'   energy term in the cost function.
+#' @param linearEnergyWeight A numeric value giving the weight of the linear
+#'   energy term in the cost function.
 #' @param jacobianWeight A numeric value giving the weight of the Jacobian
 #'   determinant term in the cost function.
 #' @param finalSpacing A numeric vector giving the spacing of control points in

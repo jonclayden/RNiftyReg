@@ -6,10 +6,10 @@
 \usage{
 niftyregNonlinear(source, target, init = NULL, sourceMask = NULL,
   targetMask = NULL, symmetric = TRUE, nLevels = 3L,
-  maxIterations = 300L, nBins = 64L, bendingEnergyWeight = 0.005,
-  jacobianWeight = 0, finalSpacing = c(5, 5, 5), spacingUnit = c("voxel",
-  "world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE,
-  sequentialInit = FALSE)
+  maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001,
+  linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5, 5,
+  5), spacingUnit = c("voxel", "world"), interpolation = 3L,
+  verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 }
 \arguments{
 \item{source}{The source image, an object of class \code{"nifti"} or
@@ -49,6 +49,9 @@ convergence test deems the process to have completed.}
 histogram created by the algorithm.}
 
 \item{bendingEnergyWeight}{A numeric value giving the weight of the bending
+energy term in the cost function.}
+
+\item{linearEnergyWeight}{A numeric value giving the weight of the linear
 energy term in the cost function.}
 
 \item{jacobianWeight}{A numeric value giving the weight of the Jacobian

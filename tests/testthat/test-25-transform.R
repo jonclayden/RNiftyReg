@@ -9,9 +9,10 @@ test_that("Existing transformations can be applied and combined", {
     t1_to_mni <- readNifti(system.file("extdata","control.nii.gz",package="RNiftyReg"), t1, mni)
     
     expect_that(applyTransform(t2_to_t1,c(40,40,20),nearest=TRUE), equals(c(34,49,64)))
-    expect_that(applyTransform(t1_to_mni,c(34,49,64),nearest=TRUE), equals(c(33,49,25)))
+    point <- applyTransform(t2_to_t1, c(40,40,20), nearest=FALSE)
+    expect_that(applyTransform(t1_to_mni,point,nearest=TRUE), equals(c(33,49,24)))
+    expect_that(round(applyTransform(t1_to_mni,point,nearest=FALSE)), equals(c(33,49,24)))
     
-    # Result here is slightly different, due to rounding error in the intermediate location
     t2_to_mni <- composeTransforms(t2_to_t1, t1_to_mni)
     expect_that(applyTransform(t2_to_mni,c(40,40,20),nearest=TRUE), equals(c(33,49,24)))
     
@@ -20,5 +21,5 @@ test_that("Existing transformations can be applied and combined", {
     
     t1_to_mni_half <- halfTransform(t1_to_mni)
     t1_to_mni_reconstructed <- composeTransforms(t1_to_mni_half, t1_to_mni_half)
-    expect_that(applyTransform(t1_to_mni_reconstructed,c(34,49,64),nearest=TRUE), equals(c(33,49,25)))
+    expect_that(applyTransform(t1_to_mni_reconstructed,point,nearest=TRUE), equals(c(33,49,24)))
 })
