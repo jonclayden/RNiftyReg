@@ -504,8 +504,9 @@ BEGIN_RCPP
             field2 = DeformationField(targetImage2, transformImage, true);
         }
         
-        field1.compose(field2);
-        result = field1.getFieldImage().toPointer("Deformation field");
+        // Order of composition is possibly not as expected
+        field2.compose(field1);
+        result = field2.getFieldImage().toPointer("Deformation field");
     }
     
     result.attr("source") = transform1.attr("source");
