@@ -2888,7 +2888,7 @@ float reg_test_compare_arrays(DTYPE *ptrA,
             float diffRatio=valA/valB;
             if(diffRatio<0)
             {
-               diffRatio=fabsf(valA-valB);
+               diffRatio=std::abs(valA-valB);
                maxDifference=maxDifference>diffRatio?maxDifference:diffRatio;
             }
             diffRatio-=1.f;
@@ -2896,7 +2896,7 @@ float reg_test_compare_arrays(DTYPE *ptrA,
          }
          else
          {
-            float diffRatio=fabsf(valA-valB);
+            float diffRatio=std::abs(valA-valB);
             maxDifference=maxDifference>diffRatio?maxDifference:diffRatio;
          }
       }
