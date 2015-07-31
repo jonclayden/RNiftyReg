@@ -7,7 +7,7 @@
 dumpNifti(image)
 }
 \arguments{
-\item{An}{image, in any acceptable form (see \code{\link{isImage}}).}
+\item{image}{An image, in any acceptable form (see \code{\link{isImage}}).}
 }
 \value{
 A list with named components corresponding to the elements in a raw

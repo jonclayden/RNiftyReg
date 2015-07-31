@@ -90,7 +90,7 @@ updateNifti <- function (image, template = image)
 #' This function extracts the contents of an internal NIfTI-1 object into an R
 #' list. No processing is done to the elements.
 #' 
-#' @param An image, in any acceptable form (see \code{\link{isImage}}).
+#' @param image An image, in any acceptable form (see \code{\link{isImage}}).
 #' @return A list with named components corresponding to the elements in a raw
 #'   NIfTI-1 file.
 #' 
