@@ -27,10 +27,10 @@ readNifti <- function (file, source = NULL, target = NULL, internal = FALSE)
     if (length(file) == 0)
         stop("File name vector is empty")
     else if (length(file) > 1)
-        lapply(file, function(f) .Call("readNifti", f, internal, PACKAGE="RNiftyReg"))
+        lapply(file, function(f) .Call("readNifti", path.expand(f), internal, PACKAGE="RNiftyReg"))
     else
     {
-        image <- .Call("readNifti", file, internal, PACKAGE="RNiftyReg")
+        image <- .Call("readNifti", path.expand(file), internal, PACKAGE="RNiftyReg")
         if (!is.null(source))
             attr(image, "source") <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
         if (!is.null(target))
