@@ -10,6 +10,7 @@ test_that("Affine operations work", {
     # FSL and NiftyReg transforms are fairly similar for the same source and target images
     expect_that(fslAffine, equals(affine,tolerance=0.1,check.attributes=FALSE))
     expect_that(isAffine(affine), equals(TRUE))
+    expect_that(print(affine), prints_text("origin",fixed=TRUE))
     expect_that(invertAffine(invertAffine(affine)), is_equivalent_to(affine))
     expect_that(buildAffine(decomposeAffine(affine),source=source,target=target), is_equivalent_to(affine))
 })
