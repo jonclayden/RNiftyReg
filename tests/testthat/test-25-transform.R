@@ -8,6 +8,10 @@ test_that("Existing transformations can be applied and combined", {
     t2_to_t1 <- readAffine(system.file("extdata","affine.txt",package="RNiftyReg"), t2, t1)
     t1_to_mni <- readNifti(system.file("extdata","control.nii.gz",package="RNiftyReg"), t1, mni)
     
+    deformation <- deformationField(t2_to_t1, jacobian=TRUE)
+    expect_that(round(worldToVoxel(as.array(deformation)[34,49,64,1,], t2)), equals(c(40,40,20)))
+    expect_that(as.array(jacobian(deformation))[34,49,64], equals(prod(diag(t2_to_t1)),tolerance=0.05))
+    
     expect_that(applyTransform(t2_to_t1,c(40,40,20),nearest=TRUE), equals(c(34,49,64)))
     point <- applyTransform(t2_to_t1, c(40,40,20), nearest=FALSE)
     expect_that(applyTransform(t1_to_mni,point,nearest=TRUE), equals(c(33,49,24)))
