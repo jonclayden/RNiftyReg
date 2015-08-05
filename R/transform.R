@@ -25,6 +25,22 @@ deformationField <- function (transform, jacobian = TRUE)
 }
 
 
+#' Extract a Jacobian determinant map
+#' 
+#' This function extracts the Jacobian determinant map associated with a
+#' deformation field.
+#' 
+#' @param x An R object, probably a deformation field.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{deformationField}}
+#' @export
+jacobian <- function (x)
+{
+    return (attr(x, "jacobian"))
+}
+
+
 #' Apply a precomputed transformation
 #' 
 #' This function allows a precomputed transformation to be applied to a new
