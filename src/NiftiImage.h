@@ -25,9 +25,14 @@ public:
             if (source->datatype != image->datatype)
                 throw std::runtime_error("New data does not have the same datatype as the target block");
             
-            size_t blockSize = 0;
+            size_t blockSize = 1;
             for (int i=1; i<dimension; i++)
-                blockSize += source->dim[i];
+                blockSize *= image->dim[i];
+            
+            if (blockSize != source->nvox)
+                throw std::runtime_error("New data does not have the same size as the target block");
+            
+            blockSize *= image->nbyper;
             memcpy(static_cast<char*>(image->data) + blockSize*index, source->data, blockSize);
             return *this;
         }

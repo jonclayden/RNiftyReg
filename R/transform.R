@@ -65,11 +65,12 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
 {
     source <- attr(transform, "source")
     target <- attr(transform, "target")
+    nSourceDim <- ndim(source)
     
     if (isAffine(transform, strict=TRUE))
     {
         # The argument looks like a suitable image
-        if (isImage(x,TRUE) && isTRUE(all.equal(dim(x),dim(source))))
+        if (isImage(x,TRUE) && isTRUE(all.equal(dim(x)[1:nSourceDim],dim(source))))
         {
             result <- niftyregLinear(x, target, "affine", init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE)
             return (result$image)
@@ -88,7 +89,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
     }
     else if (isImage(transform, FALSE))
     {
-        if (isImage(x,TRUE) && isTRUE(all.equal(dim(x),dim(source))))
+        if (isImage(x,TRUE) && isTRUE(all.equal(dim(x)[1:nSourceDim],dim(source))))
         {
             result <- niftyregNonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE)
             return (result$image)
