@@ -26,7 +26,7 @@ The [`mmand` package](https://github.com/jonclayden/mmand) for image processing 
 `RNiftyReg` may be used to register and manipulate two and three dimensional images of any sort, although its origins are in medical imaging. Medical images in the standard [NIfTI-1 format](http://nifti.nimh.nih.gov/nifti-1) may be read into R using the `readNifti` function.
 
 ```r
-## library(RNiftyReg)
+library(RNiftyReg)
 image <- readNifti(system.file("extdata", "epi_t2.nii.gz", package="RNiftyReg"))
 ```
 
@@ -52,18 +52,19 @@ writeNifti(image, "file.nii.gz")
 As mentioned above, however, images do not have to be in NIfTI-1 format. Any numeric matrix or array can be used, and standard image formats such as JPEG and PNG can be read in using additional packages. For example,
 
 ```r
-library(png)
-image <- readPNG(system.file("extdata", "house.png", package="RNiftyReg"))
+## install.packages("jpeg")
+library(jpeg)
+image <- readJPEG(system.file("extdata", "house_colour_large.jpg", package="RNiftyReg"))
 ```
 
 The utility functions mentioned above can still be applied, but defaults are returned where necessary.
 
 ```r
 dim(image)
-# [1] 182 261
+# [1] 363 523   3
 
 pixdim(image)
-# [1] 1 1
+# [1] 1 1 1
 
 pixunits(image)
 # [1] "Unknown"
@@ -81,7 +82,7 @@ Once two or more images have been read into R, they can be registered. Registrat
 
 There are two main classes of transformation available: linear and nonlinear. Linear, and specifically *affine*, transforms can represent translation, scaling and rotation in 2D or 3D space. They have up to 12 degrees of freedom and are appropriate to capture global shifts between images. Nonlinear transformations have many more degrees of freedom, and can capture localised distortions between images, but they are more time-consuming to estimate and more complex to work with.
 
-Some sample 3D medical images are included with the package. We begin by registering two brain scan images, of the same person, with different contrasts. First we read them in, and then we pass them to the package's core registration function, `niftyreg()`.
+Some sample 3D medical images are included with the package. We begin by registering two brain scan images, of the same person, with different contrasts. First we read them in, and then we pass them to the package's core registration function, `niftyreg`.
 
 ```r
 source <- readNifti(system.file("extdata", "epi_t2.nii.gz", package="RNiftyReg"))
@@ -108,7 +109,7 @@ Let's use a simple image by way of example. We will need the `jpeg` package to r
 
 ```r
 ## install.packages(c("jpeg","mmand"))
-## library(jpeg); library(mmand)
+library(jpeg); library(mmand)
 
 house <- readJPEG(system.file("extdata", "house_colour_large.jpg", package="RNiftyReg"))
 display(house)
@@ -221,7 +222,7 @@ This arrangement is efficient and generally works well, but there is the possibi
 - The `oro.nifti` package is no longer needed, nor used for reading and writing NIfTI files (`RNiftyReg` now offers `readNifti` and `writeNifti`, which are much faster). However, objects of S4 class `nifti` can still be used with the package if desired. Functions return either plain R arrays with attributes or bare-bones `internalImage` objects, which contain only some basic metadata and a pointer to a C-level data structure.
 - There are new functions for halving a transform (`halfTransform`), composing two transforms (`composeTransforms`), and building an affine transform from scratch (`buildAffine`).
 - Registration is now symmetric by default (for both linear and nonlinear), a newer symmetric nonlinear approach is now used, and default cost function weights have been tweaked. Therefore, the arguments to the core `niftyreg` function, and its linear and nonlinear special cases, have changed in both name and defaults. See `?niftyreg` and related help pages for details.
-- It is no longer necessary to use functions specific to transform type to perform many operations. For example, the work of the old `applyAffine`, `applyControlPoints`, `transformWithAffine` and `transformWithControlPoints` functions is done by the flexible new `applyTransform` function. The forward and reverse transforms can always be obtained from a registration using the new `forward` and `reverse` functions, no matter what their type is. Such affine-only functions, such as `decomposeAffine`, retain their names.
+- It is no longer necessary to use functions specific to transform type to perform many operations. For example, the work of the old `applyAffine`, `applyControlPoints`, `transformWithAffine` and `transformWithControlPoints` functions is done by the flexible new `applyTransform` function. The forward and reverse transforms can always be obtained from a registration using the new `forward` and `reverse` functions, no matter what their type is. However, some affine-only functions, such as `decomposeAffine`, retain their names.
 - The `affineType` attribute has gone, and `convertAffine` is no longer a user-visible function. All affine matrices are stored using the NiftyReg convention. FSL-FLIRT affines can still be read in, but they are converted to NiftyReg convention immediately. In addition, source and target image information is attached to the transforms in attributes, and so does not need to be specified in most function calls.
 
 However, it should still be possible to read and use transformations created using `RNiftyReg` 1.x.
