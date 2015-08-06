@@ -32,6 +32,7 @@
 #'   estimated, but images will not be resampled.
 #' @param ... Further arguments to \code{\link{niftyreg.linear}} or
 #'   \code{\link{niftyreg.nonlinear}}.
+#' @param x A \code{"niftyreg"} object.
 #' @return A list of class \code{"niftyreg"} with components:
 #'   \item{image}{An array representing the registered and resampled
 #'     \code{source} image in the space of the \code{target} image. This
@@ -48,6 +49,8 @@
 #'   \item{source}{An internal representation of the source image for each
 #'     registration.}
 #'   \item{target}{An internal representation of the target image.}
+#'   The \code{as.array} method for this class returns the \code{image}
+#'   element.
 #' 
 #' @note If substantial parts of the target image are zero-valued, for example
 #' because the target image has been brain-extracted, it can be useful to pass
@@ -356,6 +359,14 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
     class(result) <- "niftyreg"
     
     return (result)
+}
+
+
+#' @rdname niftyreg
+#' @export
+as.array.niftyreg <- function (x, ...)
+{
+    as.array(x$image)
 }
 
 
