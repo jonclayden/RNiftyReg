@@ -3,8 +3,8 @@
 #' The \code{niftyreg} function performs linear or nonlinear registration for
 #' two and three dimensional images. 4D images may also be registered
 #' volumewise to a 3D image, or 3D images slicewise to a 2D image. This
-#' function is a common wrapper for \code{\link{niftyregLinear}} and
-#' \code{\link{niftyregNonlinear}}.
+#' function is a common wrapper for \code{\link{niftyreg.linear}} and
+#' \code{\link{niftyreg.nonlinear}}.
 #' 
 #' @param source The source image, an object of class \code{"nifti"} or
 #'   \code{"internalImage"}, or a plain array, or a NIfTI-1 filename. Must have
@@ -30,8 +30,8 @@
 #'   be estimated simultaneously?
 #' @param estimateOnly Logical value: if \code{TRUE}, transformations will be
 #'   estimated, but images will not be resampled.
-#' @param ... Further arguments to \code{\link{niftyregLinear}} or
-#'   \code{\link{niftyregNonlinear}}.
+#' @param ... Further arguments to \code{\link{niftyreg.linear}} or
+#'   \code{\link{niftyreg.nonlinear}}.
 #' @return A list of class \code{"niftyreg"} with components:
 #'   \item{image}{An array representing the registered and resampled
 #'     \code{source} image in the space of the \code{target} image. This
@@ -71,12 +71,12 @@
 #' }
 #' 
 #' @author Jon Clayden <code@@clayden.org>
-#' @seealso \code{\link{niftyregLinear}} and \code{\link{niftyregNonlinear}},
+#' @seealso \code{\link{niftyreg.linear}} and \code{\link{niftyreg.nonlinear}},
 #' which do most of the work. Also, \code{\link{forward}} and
 #' \code{\link{reverse}} to extract transformations, and
 #' \code{\link{applyTransform}} to apply them to new images or points.
-#' @references Please see \code{\link{niftyregLinear}} or
-#' \code{\link{niftyregNonlinear}} for references relating to each type of
+#' @references Please see \code{\link{niftyreg.linear}} or
+#' \code{\link{niftyreg.nonlinear}} for references relating to each type of
 #' registration.
 #' @export
 niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, estimateOnly = FALSE, ...)
@@ -86,15 +86,15 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
     
     scope <- match.arg(scope)
     if (scope == "nonlinear")
-        niftyregNonlinear(source, target, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
+        niftyreg.nonlinear(source, target, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
     else
-        niftyregLinear(source, target, scope, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
+        niftyreg.linear(source, target, scope, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
 }
 
 
 #' Two and three dimensional linear image registration
 #' 
-#' The \code{niftyregLinear} function performs linear registration for two and
+#' The \code{niftyreg.linear} function performs linear registration for two and
 #' three dimensional images. 4D images may also be registered volumewise to a
 #' 3D image, or 3D images slicewise to a 2D image. Rigid-body (6 degrees of
 #' freedom) and affine (12 degrees of freedom) registration can currently be
@@ -152,7 +152,7 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg}}, which can be used as an interface to this
-#' function, and \code{\link{niftyregNonlinear}} for nonlinear registration.
+#' function, and \code{\link{niftyreg.nonlinear}} for nonlinear registration.
 #' Also, \code{\link{forward}} and \code{\link{reverse}} to extract
 #' transformations, and \code{\link{applyTransform}} to apply them to new
 #' images or points.
@@ -163,7 +163,7 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
 #' (2014). Global image registration using a symmetric block-matching approach.
 #' Journal of Medical Imaging 1(2):024003.
 #' @export
-niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -206,7 +206,7 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
 
 #' Two and three dimensional nonlinear image registration
 #' 
-#' The \code{niftyregNonlinear} function performs nonlinear registration for
+#' The \code{niftyreg.nonlinear} function performs nonlinear registration for
 #' two and three dimensional images. 4D images may also be registered
 #' volumewise to a 3D image, or 3D images slicewise to a 2D image. The warping
 #' is based on free-form deformations, parameterised using an image of control
@@ -215,7 +215,7 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
 #' This function performs the dual operations of finding a transformation to
 #' optimise image alignment, and resampling the source image into the space of
 #' the target image (and vice-versa, if \code{symmetric} is \code{TRUE}).
-#' Unlike \code{\link{niftyregLinear}}, this transformation is nonlinear, and
+#' Unlike \code{\link{niftyreg.linear}}, this transformation is nonlinear, and
 #' the degree of deformation may vary across the image.
 #' 
 #' The nonlinear warping is based on free-form deformations. A lattice of
@@ -276,7 +276,7 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
 #' parameter), is highly recommended in most circumstances.
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg}}, which can be used as an interface to this
-#' function, and \code{\link{niftyregLinear}} for linear registration. Also,
+#' function, and \code{\link{niftyreg.linear}} for linear registration. Also,
 #' \code{\link{forward}} and \code{\link{reverse}} to extract transformations,
 #' and \code{\link{applyTransform}} to apply them to new images or points.
 #' @references The algorithm used by this function is described in the
@@ -287,7 +287,7 @@ niftyregLinear <- function (source, target, scope = c("affine","rigid"), init = 
 #' processing units. Computer Methods and Programs in Biomedicine
 #' 98(3):278-284.
 #' @export
-niftyregNonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001, linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001, linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")

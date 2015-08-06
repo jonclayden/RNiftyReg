@@ -41,8 +41,8 @@ be estimated simultaneously?}
 \item{estimateOnly}{Logical value: if \code{TRUE}, transformations will be
 estimated, but images will not be resampled.}
 
-\item{...}{Further arguments to \code{\link{niftyregLinear}} or
-\code{\link{niftyregNonlinear}}.}
+\item{...}{Further arguments to \code{\link{niftyreg.linear}} or
+\code{\link{niftyreg.nonlinear}}.}
 }
 \value{
 A list of class \code{"niftyreg"} with components:
@@ -66,8 +66,8 @@ A list of class \code{"niftyreg"} with components:
 The \code{niftyreg} function performs linear or nonlinear registration for
 two and three dimensional images. 4D images may also be registered
 volumewise to a 3D image, or 3D images slicewise to a 2D image. This
-function is a common wrapper for \code{\link{niftyregLinear}} and
-\code{\link{niftyregNonlinear}}.
+function is a common wrapper for \code{\link{niftyreg.linear}} and
+\code{\link{niftyreg.nonlinear}}.
 }
 \note{
 If substantial parts of the target image are zero-valued, for example
@@ -95,12 +95,12 @@ result <- niftyreg(source, target, scope="affine")
 Jon Clayden <code@clayden.org>
 }
 \references{
-Please see \code{\link{niftyregLinear}} or
-\code{\link{niftyregNonlinear}} for references relating to each type of
+Please see \code{\link{niftyreg.linear}} or
+\code{\link{niftyreg.nonlinear}} for references relating to each type of
 registration.
 }
 \seealso{
-\code{\link{niftyregLinear}} and \code{\link{niftyregNonlinear}},
+\code{\link{niftyreg.linear}} and \code{\link{niftyreg.nonlinear}},
 which do most of the work. Also, \code{\link{forward}} and
 \code{\link{reverse}} to extract transformations, and
 \code{\link{applyTransform}} to apply them to new images or points.

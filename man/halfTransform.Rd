@@ -23,6 +23,6 @@ useful common space in some applications.
 Jon Clayden <code@clayden.org>
 }
 \seealso{
-\code{\link{niftyregLinear}}, \code{\link{niftyregNonlinear}}
+\code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}
 }
 

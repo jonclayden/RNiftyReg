@@ -14,7 +14,7 @@
 #'   If requested, the Jacobian map is stored in an attribute.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
-#' @seealso \code{\link{niftyregLinear}}, \code{\link{niftyregNonlinear}}
+#' @seealso \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}
 #' @export
 deformationField <- function (transform, jacobian = TRUE)
 {
@@ -75,7 +75,7 @@ jacobian <- function (x)
 #' @return A resampled image or matrix of transformed points.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
-#' @seealso \code{\link{niftyregLinear}}, \code{\link{niftyregNonlinear}}
+#' @seealso \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}
 #' @export
 applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
 {
@@ -88,7 +88,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
         # The argument looks like a suitable image
         if (isImage(x,TRUE) && isTRUE(all.equal(dim(x)[1:nSourceDim],dim(source))))
         {
-            result <- niftyregLinear(x, target, "affine", init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE)
+            result <- niftyreg.linear(x, target, "affine", init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE)
             return (result$image)
         }
         else if ((is.matrix(x) && ncol(x) == ndim(source)) || length(x) == ndim(source))
@@ -107,7 +107,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
     {
         if (isImage(x,TRUE) && isTRUE(all.equal(dim(x)[1:nSourceDim],dim(source))))
         {
-            result <- niftyregNonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE)
+            result <- niftyreg.nonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE)
             return (result$image)
         }
         else if ((is.matrix(x) && ncol(x) == ndim(source)) || length(x) == ndim(source))
@@ -168,7 +168,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
 #' @return The half-way transform, in a similar format to \code{transform}.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
-#' @seealso \code{\link{niftyregLinear}}, \code{\link{niftyregNonlinear}}
+#' @seealso \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}
 #' @export
 halfTransform <- function (transform)
 {
@@ -188,7 +188,7 @@ halfTransform <- function (transform)
 #'   otherwise it will be a deformation field.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
-#' @seealso \code{\link{niftyregLinear}}, \code{\link{niftyregNonlinear}},
+#' @seealso \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}},
 #'   \code{\link{deformationField}}
 #' @export
 composeTransforms <- function (transform1, transform2)

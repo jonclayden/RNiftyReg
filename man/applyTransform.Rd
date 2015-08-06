@@ -49,6 +49,6 @@ the final location is estimated by local cubic spline regression.
 Jon Clayden <code@clayden.org>
 }
 \seealso{
-\code{\link{niftyregLinear}}, \code{\link{niftyregNonlinear}}
+\code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}
 }
 
