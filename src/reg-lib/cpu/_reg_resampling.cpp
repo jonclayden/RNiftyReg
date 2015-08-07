@@ -509,7 +509,7 @@ void ResampleImage3D(nifti_image *floatingImage,
          case NIFTI_TYPE_UINT32:
             if(intensity!=intensity)
                intensity=0;
-            intensity=(intensity<=4294967295?reg_round(intensity):4294967295); // 4294967295=2^32-1
+            intensity=(intensity<=4294967295U?reg_round(intensity):4294967295U); // 4294967295=2^32-1
             warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
             break;
          default:
@@ -665,7 +665,7 @@ void ResampleImage2D(nifti_image *floatingImage,
                warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
                break;
             case NIFTI_TYPE_UINT32:
-               intensity=(intensity<=4294967295?reg_round(intensity):4294967295); // 4294967295=2^32-1
+               intensity=(intensity<=4294967295U?reg_round(intensity):4294967295U); // 4294967295=2^32-1
                warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
                break;
             default:
@@ -1091,7 +1091,7 @@ void ResampleImage3D_PSF_Sinc(nifti_image *floatingImage,
     shared(warpedVoxelNumber, maskPtr, paddingValue,\
     a, b, c , warpedPlaneNumber, warpedLineNumber, floatingIntensity,\
     deformationFieldPtrX, deformationFieldPtrY, deformationFieldPtrZ, floatingIJKMatrix,\
-    floatingImage, warpedImage, kernelCompFctPtr, kernel_offset, kernel_size, warpedIntensity,stderr)
+    floatingImage, warpedImage, kernelCompFctPtr, kernel_offset, kernel_size, warpedIntensity)
 #endif // _OPENMP
         for(index=0; index<warpedVoxelNumber; index++)
         {
@@ -1268,7 +1268,7 @@ void ResampleImage3D_PSF_Sinc(nifti_image *floatingImage,
             case NIFTI_TYPE_UINT32:
                 if(intensity!=intensity)
                     intensity=0;
-                intensity=(intensity<=4294967295?reg_round(intensity):4294967295); // 4294967295=2^32-1
+                intensity=(intensity<=4294967295U?reg_round(intensity):4294967295U); // 4294967295=2^32-1
                 warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
                 break;
             default:
@@ -1409,7 +1409,7 @@ void ResampleImage3D_PSF(nifti_image *floatingImage,
     shared(warpedVoxelNumber, maskPtr, jacMat, S, T, paddingValue,\
     a, b, c, fwhmToStd, psfKernelShift, warpedPlaneNumber, warpedLineNumber, floatingIntensity,\
     deformationFieldPtrX, deformationFieldPtrY, deformationFieldPtrZ, floatingIJKMatrix,\
-    floatingImage, warpedImage, kernelCompFctPtr, kernel_offset, kernel_size, warpedIntensity,stderr,algorithm)
+    floatingImage, warpedImage, kernelCompFctPtr, kernel_offset, kernel_size, warpedIntensity, algorithm)
 #endif // _OPENMP
         for(index=0; index<warpedVoxelNumber; index++)
         {
@@ -1720,7 +1720,7 @@ void ResampleImage3D_PSF(nifti_image *floatingImage,
             case NIFTI_TYPE_UINT32:
                 if(intensity!=intensity)
                     intensity=0;
-                intensity=(intensity<=4294967295?reg_round(intensity):4294967295); // 4294967295=2^32-1
+                intensity=(intensity<=4294967295U?reg_round(intensity):4294967295U); // 4294967295=2^32-1
                 warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
                 break;
             default:

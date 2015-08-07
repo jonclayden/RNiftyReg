@@ -167,7 +167,6 @@ Rcpp::NumericVector DeformationField::findPoint (const NiftiImage &sourceImage, 
         Rcpp::NumericVector result(int(R_pow_di(4.0,Dim)) * 2 * Dim);
         const mat44 &xform = sourceImage.xform();
         Point offset = sourceLoc - closestLoc;
-        size_t v;
         
         for (int i=0; i<Dim; i++)
             offset[i] = (offset[i] * xform.m[i][i] >= 0.0 ? 0.0 : -1.0);

@@ -90,9 +90,9 @@ the \code{"nifti"} class.
 }
 \examples{
 \dontrun{
-source <- readNifti(system.file("extdata", "source.nii.gz",
+source <- readNifti(system.file("extdata", "epi_t2.nii.gz",
   package="RNiftyReg"))
-target <- readNifti(system.file("extdata", "target.nii.gz",
+target <- readNifti(system.file("extdata", "flash_t1.nii.gz",
   package="RNiftyReg"))
 
 result <- niftyreg(source, target, scope="affine")
