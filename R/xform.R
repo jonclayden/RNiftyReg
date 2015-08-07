@@ -41,7 +41,7 @@ xform <- function (image, useQuaternionFirst = TRUE)
 #' @return A vector or matrix of transformed points.
 #' 
 #' @note Voxel coordinates are assumed by these functions to use R's indexing
-#' convention, beginning from 1.
+#'   convention, beginning from 1.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{xform}}, \code{\link{pixdim}}, \code{\link{pixunits}}

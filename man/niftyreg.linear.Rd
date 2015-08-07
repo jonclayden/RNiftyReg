@@ -119,9 +119,9 @@ Journal of Medical Imaging 1(2):024003.
 }
 \seealso{
 \code{\link{niftyreg}}, which can be used as an interface to this
-function, and \code{\link{niftyreg.nonlinear}} for nonlinear registration.
-Also, \code{\link{forward}} and \code{\link{reverse}} to extract
-transformations, and \code{\link{applyTransform}} to apply them to new
-images or points.
+  function, and \code{\link{niftyreg.nonlinear}} for nonlinear registration.
+  Also, \code{\link{forward}} and \code{\link{reverse}} to extract
+  transformations, and \code{\link{applyTransform}} to apply them to new
+  images or points.
 }
 

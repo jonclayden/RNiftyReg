@@ -53,15 +53,9 @@
 #'   element.
 #' 
 #' @note If substantial parts of the target image are zero-valued, for example
-#' because the target image has been brain-extracted, it can be useful to pass
-#' it as a target mask as well as the target image, viz. \code{niftyreg(source,
-#' target, targetMask=target)}.
-#' 
-#' Also the NIfTI library is used internally by NiftyReg, there is no reason
-#' that arrays that do not represent medical images cannot be registered using
-#' this function. A standard R array can be passed directly as a source or
-#' target image with no problems. It is no longer necessary to convert it to
-#' the \code{"nifti"} class.
+#'   because the target image has been brain-extracted, it can be useful to
+#'   pass it as a target mask as well as the target image, viz.
+#'   \code{niftyreg(source, target, targetMask=target)}.
 #' 
 #' @examples
 #' \dontrun{
@@ -75,9 +69,9 @@
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg.linear}} and \code{\link{niftyreg.nonlinear}},
-#' which do most of the work. Also, \code{\link{forward}} and
-#' \code{\link{reverse}} to extract transformations, and
-#' \code{\link{applyTransform}} to apply them to new images or points.
+#'   which do most of the work. Also, \code{\link{forward}} and
+#'   \code{\link{reverse}} to extract transformations, and
+#'   \code{\link{applyTransform}} to apply them to new images or points.
 #' @references Please see \code{\link{niftyreg.linear}} or
 #' \code{\link{niftyreg.nonlinear}} for references relating to each type of
 #' registration.
@@ -155,10 +149,10 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg}}, which can be used as an interface to this
-#' function, and \code{\link{niftyreg.nonlinear}} for nonlinear registration.
-#' Also, \code{\link{forward}} and \code{\link{reverse}} to extract
-#' transformations, and \code{\link{applyTransform}} to apply them to new
-#' images or points.
+#'   function, and \code{\link{niftyreg.nonlinear}} for nonlinear registration.
+#'   Also, \code{\link{forward}} and \code{\link{reverse}} to extract
+#'   transformations, and \code{\link{applyTransform}} to apply them to new
+#'   images or points.
 #' @references The algorithm used by this function is described in the
 #' following publication.
 #' 
@@ -275,13 +269,14 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
 #' @return See \code{\link{niftyreg}}.
 #' 
 #' @note Performing a linear registration first, and then initialising the
-#' nonlinear transformation with the result (via the \code{initAffine}
-#' parameter), is highly recommended in most circumstances.
+#'   nonlinear transformation with the result (via the \code{init} parameter),
+#'   is highly recommended in most circumstances.
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg}}, which can be used as an interface to this
-#' function, and \code{\link{niftyreg.linear}} for linear registration. Also,
-#' \code{\link{forward}} and \code{\link{reverse}} to extract transformations,
-#' and \code{\link{applyTransform}} to apply them to new images or points.
+#'   function, and \code{\link{niftyreg.linear}} for linear registration. Also,
+#'   \code{\link{forward}} and \code{\link{reverse}} to extract
+#'   transformations, and \code{\link{applyTransform}} to apply them to new
+#'   images or points.
 #' @references The algorithm used by this function is described in the
 #' following publication.
 #' 

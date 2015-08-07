@@ -32,7 +32,7 @@ and back. Actual pixel units can be obtained using the
 }
 \note{
 Voxel coordinates are assumed by these functions to use R's indexing
-convention, beginning from 1.
+  convention, beginning from 1.
 }
 \author{
 Jon Clayden <code@clayden.org>

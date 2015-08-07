@@ -119,8 +119,8 @@ performed.
 }
 \note{
 Performing a linear registration first, and then initialising the
-nonlinear transformation with the result (via the \code{initAffine}
-parameter), is highly recommended in most circumstances.
+  nonlinear transformation with the result (via the \code{init} parameter),
+  is highly recommended in most circumstances.
 }
 \author{
 Jon Clayden <code@clayden.org>
@@ -136,8 +136,9 @@ processing units. Computer Methods and Programs in Biomedicine
 }
 \seealso{
 \code{\link{niftyreg}}, which can be used as an interface to this
-function, and \code{\link{niftyreg.linear}} for linear registration. Also,
-\code{\link{forward}} and \code{\link{reverse}} to extract transformations,
-and \code{\link{applyTransform}} to apply them to new images or points.
+  function, and \code{\link{niftyreg.linear}} for linear registration. Also,
+  \code{\link{forward}} and \code{\link{reverse}} to extract
+  transformations, and \code{\link{applyTransform}} to apply them to new
+  images or points.
 }
 

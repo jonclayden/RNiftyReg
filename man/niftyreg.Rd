@@ -78,15 +78,9 @@ function is a common wrapper for \code{\link{niftyreg.linear}} and
 }
 \note{
 If substantial parts of the target image are zero-valued, for example
-because the target image has been brain-extracted, it can be useful to pass
-it as a target mask as well as the target image, viz. \code{niftyreg(source,
-target, targetMask=target)}.
-
-Also the NIfTI library is used internally by NiftyReg, there is no reason
-that arrays that do not represent medical images cannot be registered using
-this function. A standard R array can be passed directly as a source or
-target image with no problems. It is no longer necessary to convert it to
-the \code{"nifti"} class.
+  because the target image has been brain-extracted, it can be useful to
+  pass it as a target mask as well as the target image, viz.
+  \code{niftyreg(source, target, targetMask=target)}.
 }
 \examples{
 \dontrun{
@@ -108,8 +102,8 @@ registration.
 }
 \seealso{
 \code{\link{niftyreg.linear}} and \code{\link{niftyreg.nonlinear}},
-which do most of the work. Also, \code{\link{forward}} and
-\code{\link{reverse}} to extract transformations, and
-\code{\link{applyTransform}} to apply them to new images or points.
+  which do most of the work. Also, \code{\link{forward}} and
+  \code{\link{reverse}} to extract transformations, and
+  \code{\link{applyTransform}} to apply them to new images or points.
 }
 

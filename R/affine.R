@@ -302,9 +302,9 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
 #'     pitch and yaw.}
 #' 
 #' @note The decomposition is not perfect, and there is one particular
-#' degenerate case when the pitch angle is very close to \code{pi/2} radians,
-#' known as ``Gimbal lock''. In this case the yaw angle is arbitrarily set to
-#' zero.
+#'   degenerate case when the pitch angle is very close to \code{pi/2} radians,
+#'   known as ``Gimbal lock''. In this case the yaw angle is arbitrarily set to
+#'   zero.
 #' 
 #' Affine matrices embodying rigid-body transformations include only 6 degrees
 #' of freedom, rather than the full 12, so skews will always be zero and scales
