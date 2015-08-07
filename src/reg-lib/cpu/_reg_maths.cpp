@@ -5,7 +5,9 @@
 
 #include "_reg_maths.h"
 // Eigen headers are in there because of the nvcc preprocessing step
-#ifndef RNIFTYREG
+#ifdef RNIFTYREG
+#include "print.h"
+#else
 #include "Eigen/Core"
 #include "Eigen/SVD"
 #include "Eigen/unsupported/MatrixFunctions"
@@ -931,7 +933,7 @@ mat44 reg_mat44_avg2(mat44 const* A, mat44 const* B)
 /* *************************************************************** */
 /* *************************************************************** */
 void reg_mat44_disp(mat44 *mat, char * title){
-   printf("%s:\n%.7g\t%.7g\t%.7g\t%.7g\n%.7g\t%.7g\t%.7g\t%.7g\n%.7g\t%.7g\t%.7g\t%.7g\n%.7g\t%.7g\t%.7g\t%.7g\n", title,
+   Rc_printf("%s:\n%.7g\t%.7g\t%.7g\t%.7g\n%.7g\t%.7g\t%.7g\t%.7g\n%.7g\t%.7g\t%.7g\t%.7g\n%.7g\t%.7g\t%.7g\t%.7g\n", title,
           mat->m[0][0], mat->m[0][1], mat->m[0][2], mat->m[0][3],
          mat->m[1][0], mat->m[1][1], mat->m[1][2], mat->m[1][3],
          mat->m[2][0], mat->m[2][1], mat->m[2][2], mat->m[2][3],
@@ -941,7 +943,7 @@ void reg_mat44_disp(mat44 *mat, char * title){
 /* *************************************************************** */
 /* *************************************************************** */
 void reg_mat33_disp(mat33 *mat, char * title){
-	printf("%s:\n%g\t%g\t%g\n%g\t%g\t%g\n%g\t%g\t%g\n", title,
+	Rc_printf("%s:\n%g\t%g\t%g\n%g\t%g\t%g\n%g\t%g\t%g\n", title,
 			 mat->m[0][0], mat->m[0][1], mat->m[0][2],
 			mat->m[1][0], mat->m[1][1], mat->m[1][2],
 			mat->m[2][0], mat->m[2][1], mat->m[2][2]);

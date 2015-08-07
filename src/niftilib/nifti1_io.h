@@ -17,6 +17,7 @@
 #endif
 #include "nifti1.h"                  /*** NIFTI-1 header specification ***/
 
+#include "print.h"
 #include <znzlib.h>
 
 /*=================*/
@@ -510,7 +511,7 @@ typedef struct {
 
 #undef  LNI_FERR /* local nifti file error, to be compact and repetative */
 #define LNI_FERR(func,msg,file)                                      \
-            fprintf(stderr,"** ERROR (%s): %s '%s'\n",func,msg,file)
+            Rc_fprintf_stderr("** ERROR (%s): %s '%s'\n",func,msg,file)
 
 #undef  swap_2
 #undef  swap_4

@@ -885,7 +885,7 @@ void reg_resampleImage(nifti_image *floatingImage,
                                           jacMat);
          break;
       default:
-         printf("floating pixel type unsupported.");
+         reg_print_msg_warn("floating pixel type unsupported.");
          break;
       }
       break;
@@ -973,12 +973,12 @@ void reg_resampleImage(nifti_image *floatingImage,
                                            jacMat);
          break;
       default:
-         printf("floating pixel type unsupported.");
+         reg_print_msg_warn("floating pixel type unsupported.");
          break;
       }
       break;
    default:
-      printf("Deformation field pixel type unsupported.");
+      reg_print_msg_warn("Deformation field pixel type unsupported.");
       break;
    }
    if(MrPropreRules==true)
@@ -1750,7 +1750,9 @@ void reg_resampleImage2_PSF(nifti_image *floatingImage,
     if(deformationFieldImage->nz>1)
     {
         if(algorithm==2){
+#ifndef RNIFTYREG
             std::cout<<"Running ResampleImage3D_PSF_Sinc 1"<<std::endl;
+#endif
             ResampleImage3D_PSF_Sinc<FloatingTYPE,FieldTYPE>(floatingImage,
                                                              deformationFieldImage,
                                                              warpedImage,
@@ -1759,7 +1761,9 @@ void reg_resampleImage2_PSF(nifti_image *floatingImage,
                                                              interp);
         }
         else{
+#ifndef RNIFTYREG
             std::cout<<"Running ResampleImage3D_PSF"<<std::endl;
+#endif
             ResampleImage3D_PSF<FloatingTYPE,FieldTYPE>(floatingImage,
                                                         deformationFieldImage,
                                                         warpedImage,
@@ -1899,7 +1903,7 @@ void reg_resampleImage_PSF(nifti_image *floatingImage,
                                                  algorithm);
             break;
         default:
-            printf("floating pixel type unsupported.");
+            reg_print_msg_warn("floating pixel type unsupported.");
             break;
         }
         break;
@@ -1987,12 +1991,12 @@ void reg_resampleImage_PSF(nifti_image *floatingImage,
                                                   algorithm);
             break;
         default:
-            printf("floating pixel type unsupported.");
+            reg_print_msg_warn("floating pixel type unsupported.");
             break;
         }
         break;
     default:
-        printf("Deformation field pixel type unsupported.");
+        reg_print_msg_warn("Deformation field pixel type unsupported.");
         break;
     }
     if(MrPropreRules==true)

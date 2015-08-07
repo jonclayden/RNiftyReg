@@ -95,7 +95,7 @@ public:
    /// @brief reg_kld class constructor
    reg_kld()
    {
-      fprintf(stderr,"[ERROR] KLD OBJECT - TODO\n");
+      reg_print_msg_error("KLD OBJECT - TODO\n");
       reg_exit(1);
    }
    /// @brief Returns the kld value
