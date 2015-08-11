@@ -181,25 +181,25 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
     if (!object.hasAttribute("dim"))
         throw std::runtime_error("Specified object is not an array");
     
-    this->image = nifti_copy_nim_info(reference);
+    image = nifti_copy_nim_info(reference);
     
     for (int i=0; i<8; i++)
-        this->image->dim[i] = 0;
+        image->dim[i] = 0;
     const std::vector<int> dimVector = object.attr("dim");
     
     const int nDims = std::min(7, int(dimVector.size()));
-    this->image->dim[0] = nDims;
+    image->dim[0] = nDims;
     for (int i=0; i<nDims; i++)
-        this->image->dim[i+1] = dimVector[i];
+        image->dim[i+1] = dimVector[i];
     
     if (object.hasAttribute("pixdim"))
     {
         for (int i=1; i<8; i++)
-            this->image->pixdim[i] = 0.0;
+            image->pixdim[i] = 0.0;
         const std::vector<float> pixdimVector = object.attr("pixdim");
         const int pixdimLength = pixdimVector.size();
         for (int i=0; i<std::min(pixdimLength,nDims); i++)
-            this->image->pixdim[i+1] = pixdimVector[i];
+            image->pixdim[i+1] = pixdimVector[i];
         
         const std::vector<float> referencePixdim(reference->pixdim+1, reference->pixdim+4);
         if (!std::equal(referencePixdim.begin(), referencePixdim.begin() + std::min(3,nDims), pixdimVector.begin()))
@@ -244,24 +244,24 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
     }
     
     // This NIfTI-1 library function clobbers dim[0] if the last dimension is unitary; we undo that here
-    nifti_update_dims_from_array(this->image);
-    this->image->dim[0] = this->image->ndim = nDims;
+    nifti_update_dims_from_array(image);
+    image->dim[0] = image->ndim = nDims;
     
     const int sexpType = object.sexp_type();
     if (sexpType == INTSXP || sexpType == LGLSXP)
-        this->image->datatype = DT_INT32;
+        image->datatype = DT_INT32;
     else if (sexpType == REALSXP)
-        this->image->datatype = DT_FLOAT64;
+        image->datatype = DT_FLOAT64;
     else
         throw std::runtime_error("Array elements must be numeric");
-    nifti_datatype_sizes(this->image->datatype, &this->image->nbyper, NULL);
+    nifti_datatype_sizes(image->datatype, &image->nbyper, NULL);
     
-    const size_t dataSize = nifti_get_volsize(this->image);
-    this->image->data = calloc(1, dataSize);
-    if (this->image->datatype == DT_INT32)
-        memcpy(this->image->data, INTEGER(object), dataSize);
+    const size_t dataSize = nifti_get_volsize(image);
+    image->data = calloc(1, dataSize);
+    if (image->datatype == DT_INT32)
+        memcpy(image->data, INTEGER(object), dataSize);
     else
-        memcpy(this->image->data, REAL(object), dataSize);
+        memcpy(image->data, REAL(object), dataSize);
 }
 
 NiftiImage::NiftiImage (const SEXP object, const bool readData)
