@@ -204,14 +204,14 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
         const std::vector<float> referencePixdim(reference->pixdim+1, reference->pixdim+4);
         if (!std::equal(referencePixdim.begin(), referencePixdim.begin() + std::min(3,nDims), pixdimVector.begin()))
         {
-            mat44 scaleMatrix;
-            for (int i=0; i<4; i++)
+            mat33 scaleMatrix;
+            for (int i=0; i<3; i++)
             {
-                for (int j=0; j<4; j++)
+                for (int j=0; j<3; j++)
                 {
                     if (i != j)
                         scaleMatrix.m[i][j] = 0.0;
-                    else if (i >= std::min(3,nDims))
+                    else if (i >= nDims)
                         scaleMatrix.m[i][j] = 1.0;
                     else
                         scaleMatrix.m[i][j] = pixdimVector[i] / referencePixdim[i];
@@ -220,14 +220,24 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
             
             if (image->qform_code > 0)
             {
-                image->qto_xyz = reg_mat44_mul(&scaleMatrix, &image->qto_xyz);
+                mat33 prod = nifti_mat33_mul(scaleMatrix, reg_mat44_to_mat33(&image->qto_xyz));
+                for (int i=0; i<3; i++)
+                {
+                    for (int j=0; j<3; j++)
+                        image->qto_xyz.m[i][j] = prod.m[i][j];
+                }
                 image->qto_ijk = nifti_mat44_inverse(image->qto_xyz);
                 nifti_mat44_to_quatern(image->qto_xyz, &image->quatern_b, &image->quatern_c, &image->quatern_d, &image->qoffset_x, &image->qoffset_y, &image->qoffset_z, NULL, NULL, NULL, &image->qfac);
             }
             
             if (image->sform_code > 0)
             {
-                image->sto_xyz = reg_mat44_mul(&scaleMatrix, &image->sto_xyz);
+                mat33 prod = nifti_mat33_mul(scaleMatrix, reg_mat44_to_mat33(&image->sto_xyz));
+                for (int i=0; i<3; i++)
+                {
+                    for (int j=0; j<3; j++)
+                        image->sto_xyz.m[i][j] = prod.m[i][j];
+                }
                 image->sto_ijk = nifti_mat44_inverse(image->sto_xyz);
             }
         }
