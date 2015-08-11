@@ -200,6 +200,37 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
         const int pixdimLength = pixdimVector.size();
         for (int i=0; i<std::min(pixdimLength,nDims); i++)
             this->image->pixdim[i+1] = pixdimVector[i];
+        
+        const std::vector<float> referencePixdim(reference->pixdim+1, reference->pixdim+4);
+        if (!std::equal(referencePixdim.begin(), referencePixdim.begin() + std::min(3,nDims), pixdimVector.begin()))
+        {
+            mat44 scaleMatrix;
+            for (int i=0; i<4; i++)
+            {
+                for (int j=0; j<4; j++)
+                {
+                    if (i != j)
+                        scaleMatrix.m[i][j] = 0.0;
+                    else if (i >= std::min(3,nDims))
+                        scaleMatrix.m[i][j] = 1.0;
+                    else
+                        scaleMatrix.m[i][j] = pixdimVector[i] / referencePixdim[i];
+                }
+            }
+            
+            if (image->qform_code > 0)
+            {
+                image->qto_xyz = reg_mat44_mul(&scaleMatrix, &image->qto_xyz);
+                image->qto_ijk = nifti_mat44_inverse(image->qto_xyz);
+                nifti_mat44_to_quatern(image->qto_xyz, &image->quatern_b, &image->quatern_c, &image->quatern_d, &image->qoffset_x, &image->qoffset_y, &image->qoffset_z, NULL, NULL, NULL, &image->qfac);
+            }
+            
+            if (image->sform_code > 0)
+            {
+                image->sto_xyz = reg_mat44_mul(&scaleMatrix, &image->sto_xyz);
+                image->sto_ijk = nifti_mat44_inverse(image->sto_xyz);
+            }
+        }
     }
     
     // This NIfTI-1 library function clobbers dim[0] if the last dimension is unitary; we undo that here
