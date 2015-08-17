@@ -53,18 +53,16 @@ RcppExport SEXP updateNifti (SEXP _image, SEXP _reference)
 {
 BEGIN_RCPP
     const NiftiImage reference(_reference);
-    RObject object(_image);
+    RObject image(_image);
     
     if (!reference.isNull())
     {
-        NiftiImage *updatedImage = new NiftiImage(reference, _image);
-        updatedImage->setPersistence(true);
-        XPtr<NiftiImage> xptr(updatedImage);
-        R_RegisterCFinalizerEx(SEXP(xptr), &finaliseNiftiImage, FALSE);
-        object.attr(".nifti_image_ptr") = xptr;
+        NiftiImage updatedImage = reference;
+        updatedImage.update(image);
+        return updatedImage.toArray();
     }
-    
-    return object;
+    else
+        return image;
 END_RCPP
 }
 

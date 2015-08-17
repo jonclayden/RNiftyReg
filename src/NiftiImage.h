@@ -57,6 +57,9 @@ public:
         : persistent(false)
     {
         this->copy(source);
+#ifndef NDEBUG
+        Rprintf("Creating NiftiImage with pointer %p\n", this->image);
+#endif
     }
     
     NiftiImage (nifti_image * const image, const bool copy = false)
@@ -64,15 +67,22 @@ public:
     {
         if (copy)
             this->copy(image);
+#ifndef NDEBUG
+        Rprintf("Creating NiftiImage with pointer %p\n", this->image);
+#endif
     }
     
-    NiftiImage (const NiftiImage &reference, const SEXP array);
     NiftiImage (const SEXP object, const bool readData = true);
     
     ~NiftiImage ()
     {
         if (!persistent)
+        {
+#ifndef NDEBUG
+            Rprintf("Freeing NiftiImage with pointer %p\n", this->image);
+#endif
             nifti_image_free(image);
+        }
     }
     
     operator nifti_image* () const { return image; }
@@ -91,7 +101,14 @@ public:
         return *this;
     }
     
-    void setPersistence (const bool persistent) { this->persistent = persistent; }
+    void setPersistence (const bool persistent)
+    {
+        this->persistent = persistent;
+#ifndef NDEBUG
+        if (persistent)
+            Rprintf("Setting NiftiImage with pointer %p to be persistent\n", this->image);
+#endif
+    }
     
     bool isNull () const { return (image == NULL); }
     int nDims () const
@@ -113,6 +130,8 @@ public:
         return *this;
     }
     
+    void update (const SEXP array);
+    
     mat44 xform (const bool preferQuaternion = true) const;
     
     const Block slice (const int i) const { return Block(*this, 3, i); }
@@ -127,7 +146,5 @@ public:
 };
 
 NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble);
-
-void finaliseNiftiImage (SEXP xptr);
 
 #endif

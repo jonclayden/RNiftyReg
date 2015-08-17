@@ -174,14 +174,49 @@ void NiftiImage::initFromArray (const RObject &object)
     }
 }
 
-NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
+NiftiImage::NiftiImage (const SEXP object, const bool readData)
     : persistent(false)
+{
+    RObject imageObject(object);
+    
+    if (Rf_isNull(object))
+        this->image = NULL;
+    else if (imageObject.hasAttribute(".nifti_image_ptr"))
+    {
+        XPtr<NiftiImage> imagePtr(SEXP(imageObject.attr(".nifti_image_ptr")));
+        this->image = *imagePtr;
+        this->persistent = true;
+        
+        if (imageObject.hasAttribute("dim"))
+            update(object);
+    }
+    else if (Rf_isString(object))
+    {
+        std::string path = as<std::string>(object);
+        this->image = nifti_image_read(path.c_str(), readData);
+        if (this->image == NULL)
+            throw std::runtime_error("Failed to read image");
+    }
+    else if (imageObject.inherits("nifti"))
+        initFromNiftiS4(imageObject, readData);
+    else if (imageObject.hasAttribute("dim"))
+        initFromArray(imageObject);
+    else
+        throw std::runtime_error("Cannot convert object of class \"" + as<std::string>(imageObject.attr("class")) + "\" to a nifti_image");
+    
+    if (this->image != NULL)
+        reg_checkAndCorrectDimension(this->image);
+    
+#ifndef NDEBUG
+    Rprintf("Creating NiftiImage with pointer %p\n", this->image);
+#endif
+}
+
+void NiftiImage::update (const SEXP array)
 {
     RObject object(array);
     if (!object.hasAttribute("dim"))
-        throw std::runtime_error("Specified object is not an array");
-    
-    image = nifti_copy_nim_info(reference);
+        return;
     
     for (int i=0; i<8; i++)
         image->dim[i] = 0;
@@ -194,6 +229,8 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
     
     if (object.hasAttribute("pixdim"))
     {
+        const std::vector<float> origPixdim(image->pixdim+1, image->pixdim+4);
+        
         for (int i=1; i<8; i++)
             image->pixdim[i] = 0.0;
         const std::vector<float> pixdimVector = object.attr("pixdim");
@@ -201,8 +238,7 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
         for (int i=0; i<std::min(pixdimLength,nDims); i++)
             image->pixdim[i+1] = pixdimVector[i];
         
-        const std::vector<float> referencePixdim(reference->pixdim+1, reference->pixdim+4);
-        if (!std::equal(referencePixdim.begin(), referencePixdim.begin() + std::min(3,nDims), pixdimVector.begin()))
+        if (!std::equal(origPixdim.begin(), origPixdim.begin() + std::min(3,nDims), pixdimVector.begin()))
         {
             mat33 scaleMatrix;
             for (int i=0; i<3; i++)
@@ -214,7 +250,7 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
                     else if (i >= nDims)
                         scaleMatrix.m[i][j] = 1.0;
                     else
-                        scaleMatrix.m[i][j] = pixdimVector[i] / referencePixdim[i];
+                        scaleMatrix.m[i][j] = pixdimVector[i] / origPixdim[i];
                 }
             }
             
@@ -256,43 +292,14 @@ NiftiImage::NiftiImage (const NiftiImage &reference, const SEXP array)
         throw std::runtime_error("Array elements must be numeric");
     nifti_datatype_sizes(image->datatype, &image->nbyper, NULL);
     
+    free(image->data);
+    
     const size_t dataSize = nifti_get_volsize(image);
     image->data = calloc(1, dataSize);
     if (image->datatype == DT_INT32)
         memcpy(image->data, INTEGER(object), dataSize);
     else
         memcpy(image->data, REAL(object), dataSize);
-}
-
-NiftiImage::NiftiImage (const SEXP object, const bool readData)
-    : persistent(false)
-{
-    RObject imageObject(object);
-    
-    if (Rf_isNull(object))
-        this->image = NULL;
-    else if (imageObject.hasAttribute(".nifti_image_ptr"))
-    {
-        XPtr<NiftiImage> imagePtr(SEXP(imageObject.attr(".nifti_image_ptr")));
-        this->image = *imagePtr;
-        this->persistent = true;
-    }
-    else if (Rf_isString(object))
-    {
-        std::string path = as<std::string>(object);
-        this->image = nifti_image_read(path.c_str(), readData);
-        if (this->image == NULL)
-            throw std::runtime_error("Failed to read image");
-    }
-    else if (imageObject.inherits("nifti"))
-        initFromNiftiS4(imageObject, readData);
-    else if (imageObject.hasAttribute("dim"))
-        initFromArray(imageObject);
-    else
-        throw std::runtime_error("Cannot convert object of class \"" + as<std::string>(imageObject.attr("class")) + "\" to a nifti_image");
-    
-    if (this->image != NULL)
-        reg_checkAndCorrectDimension(this->image);
 }
 
 mat44 NiftiImage::xform (const bool preferQuaternion) const

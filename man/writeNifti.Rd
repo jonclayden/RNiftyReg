@@ -4,7 +4,7 @@
 \alias{writeNifti}
 \title{Write a NIfTI-1 format file}
 \usage{
-writeNifti(image, file, template = image)
+writeNifti(image, file, template = NULL)
 }
 \arguments{
 \item{image}{An image, in any acceptable form (see \code{\link{isImage}}).}

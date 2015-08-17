@@ -54,10 +54,10 @@ readNifti <- function (file, source = NULL, target = NULL, internal = FALSE)
 #' @seealso \code{\link{readNifti}}, \code{\link{updateNifti}}
 #' @references The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1}).
 #' @export
-writeNifti <- function (image, file, template = image)
+writeNifti <- function (image, file, template = NULL)
 {
-    if (is.array(image))
-        updateNifti(image, template)
+    if (is.array(image) && !is.null(template))
+        image <- updateNifti(image, template)
     
     invisible(.Call("writeNifti", image, file, PACKAGE="RNiftyReg"))
 }
@@ -68,20 +68,18 @@ writeNifti <- function (image, file, template = image)
 #' This function adds or updates the internal NIfTI-1 object for an array,
 #' using metadata from the template. The dimensions and, if available, pixel
 #' dimensions, from the \code{image} will replace those from the template.
-#' This function is called by \code{\link{writeNifti}} and the
-#' \code{\link{niftyreg}} registration functions.
 #' 
-#' @param image A numeric array. Note that the original object is modified.
+#' @param image A numeric array.
 #' @param template An image, in any acceptable form (see
-#'   \code{\link{isImage}}). Defaults to \code{image} itself.
+#'   \code{\link{isImage}}). The default of \code{NULL} will have no effect.
 #' @return The original \code{image}, with its internal image attribute set or
 #'   updated appropriately.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @export
-updateNifti <- function (image, template = image)
+updateNifti <- function (image, template = NULL)
 {
-    invisible(.Call("updateNifti", image, template, PACKAGE="RNiftyReg"))
+    .Call("updateNifti", image, template, PACKAGE="RNiftyReg")
 }
 
 
