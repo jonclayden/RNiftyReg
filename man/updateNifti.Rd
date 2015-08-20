@@ -13,8 +13,8 @@ updateNifti(image, template = NULL)
 \code{\link{isImage}}). The default of \code{NULL} will have no effect.}
 }
 \value{
-The original \code{image}, with its internal image attribute set or
-  updated appropriately.
+A copy of the original \code{image}, with its internal image
+  attribute set or updated appropriately.
 }
 \description{
 This function adds or updates the internal NIfTI-1 object for an array,

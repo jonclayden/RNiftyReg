@@ -9,12 +9,13 @@
 #'   images, which are stored in attributes of the same name. Only used if
 #'   \code{file} is of unit length.
 #' @param internal Logical value. If \code{FALSE} (the default), an array
-#'   containing the image pixel or voxel values will be returned. If
-#'   \code{TRUE}, the return value will be an object of class
-#'   \code{"internalImage"}, which contains only minimal metadata about the
-#'   image. Either way, the return value has an attribute which points to a
+#'   of class \code{"niftiImage"}, containing the image pixel or voxel values,
+#'   will be returned. If \code{TRUE}, the return value will be an object of
+#'   class \code{"internalImage"}, which contains only minimal metadata about
+#'   the image. Either way, the return value has an attribute which points to a
 #'   C data structure containing the full image.
-#' @return An array or \code{"internalImage"} object.
+#' @return An array or internal image, with class \code{"niftiImage"}, and
+#'   possibly also \code{"internalImage"}.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{writeNifti}}
@@ -72,8 +73,8 @@ writeNifti <- function (image, file, template = NULL)
 #' @param image A numeric array.
 #' @param template An image, in any acceptable form (see
 #'   \code{\link{isImage}}). The default of \code{NULL} will have no effect.
-#' @return The original \code{image}, with its internal image attribute set or
-#'   updated appropriately.
+#' @return A copy of the original \code{image}, with its internal image
+#'   attribute set or updated appropriately.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @export

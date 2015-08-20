@@ -10,8 +10,9 @@
 #'   or \code{\link{reverse}}.
 #' @param jacobian A logical value: if \code{TRUE}, a Jacobian determinant map
 #'   is also calculated and returned in an attribute.
-#' @return An \code{\link{internalImage}} representing the deformation field.
-#'   If requested, the Jacobian map is stored in an attribute.
+#' @return An \code{"internalImage"} representing the deformation field. If
+#'   requested, the Jacobian map is stored in an attribute, which can be
+#'   extracted using the \code{\link{jacobian}} accessor function.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}

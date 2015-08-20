@@ -4,14 +4,11 @@
 \alias{as.array.internalImage}
 \alias{dim.internalImage}
 \alias{internalImage}
-\alias{print.internalImage}
 \title{Internal images}
 \usage{
 \method{dim}{internalImage}(x)
 
 \method{as.array}{internalImage}(x, ...)
-
-\method{print}{internalImage}(x, ...)
 }
 \arguments{
 \item{x}{An \code{"internalImage"} object.}

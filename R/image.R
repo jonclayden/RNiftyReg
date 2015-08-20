@@ -1,11 +1,12 @@
 #' Test whether an object represents an image
 #' 
 #' This function tried to determine whether an object is an image that the
-#' package knows how to handle. If its class is \code{"nifti"} or
-#' \code{"internalImage"} then the result is always \code{TRUE}. Likewise if
-#' it has an internal image pointer. If it has no \code{dim} attribute or
-#' looks like an affine matrix then the result is \code{FALSE}. Otherwise the
-#' value of the \code{unsure} argument is returned.
+#' package knows how to handle. If its class is \code{"nifti"},
+#' \code{"niftiImage"} or \code{"internalImage"}, then the result is always
+#' \code{TRUE}. Likewise if it has an internal image pointer (although in that
+#' case it should also be of class \code{"niftiImage"}). If it has no
+#' \code{dim} attribute, or looks like an affine matrix, then the result is
+#' \code{FALSE}. Otherwise the value of the \code{unsure} argument is returned.
 #' 
 #' @param object An R object.
 #' @param unsure The value to return if the function can't tell whether or not
@@ -15,7 +16,7 @@
 #' @export
 isImage <- function (object, unsure = NA)
 {
-    if (any(c("nifti","internalImage") %in% class(object)))
+    if (any(c("nifti","niftiImage","internalImage") %in% class(object)))
         return (TRUE)
     else if (!is.null(attr(object, ".nifti_image_ptr")))
         return (TRUE)
@@ -56,15 +57,19 @@ as.array.internalImage <- function (x, ...)
 }
 
 
-#' @rdname internalImage
 #' @export
-print.internalImage <- function (x, ...)
+print.niftiImage <- function (x, ...)
 {
-    dim <- attr(x, "imagedim")
+    dim <- dim(x)
     ndim <- length(dim)
     pixdim <- attr(x, "pixdim")
     pixunits <- attr(x, "pixunits")
-    cat(paste0("Internal image: \"", x, "\"\n"))
+    
+    if ("internalImage" %in% class(x))
+        cat(paste0("Internal image: \"", x, "\"\n"))
+    else
+        cat(paste0("Image array of mode \"", storage.mode(x), "\" (", format(object.size(x),"auto"), ")\n"))
+    
     cat(paste("-", paste(dim,collapse=" x "), ifelse(ndim>2,"voxels\n","pixels\n")))
     
     if (!is.null(pixdim))

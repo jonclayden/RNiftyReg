@@ -14,8 +14,9 @@ or \code{\link{reverse}}.}
 is also calculated and returned in an attribute.}
 }
 \value{
-An \code{\link{internalImage}} representing the deformation field.
-  If requested, the Jacobian map is stored in an attribute.
+An \code{"internalImage"} representing the deformation field. If
+  requested, the Jacobian map is stored in an attribute, which can be
+  extracted using the \code{\link{jacobian}} accessor function.
 }
 \description{
 This function is used to calculate the deformation field corresponding to a

@@ -467,7 +467,7 @@ RObject NiftiImage::toArray () const
     }
     
     addAttributes(array, image);
-    
+    array.attr("class") = "niftiImage";
     return array;
 }
 
@@ -479,7 +479,7 @@ RObject NiftiImage::toPointer (const std::string label) const
     {
         RObject string = wrap(label);
         addAttributes(string, image, false);
-        string.attr("class") = "internalImage";
+        string.attr("class") = CharacterVector::create("internalImage", "niftiImage");
         return string;
     }
 }
