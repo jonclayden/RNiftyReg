@@ -396,10 +396,15 @@ void addAttributes (RObject &object, nifti_image *source, const bool realDim = t
     DoubleVector pixdim(source->pixdim+1, source->pixdim+1+nDims);
     object.attr("pixdim") = pixdim;
     
-    CharacterVector pixunits(2);
-    pixunits[0] = nifti_units_string(source->xyz_units);
-    pixunits[1] = nifti_units_string(source->time_units);
-    object.attr("pixunits") = pixunits;
+    if (source->xyz_units == NIFTI_UNITS_UNKNOWN && source->time_units == NIFTI_UNITS_UNKNOWN)
+        object.attr("pixunits") = "Unknown";
+    else
+    {
+        CharacterVector pixunits(2);
+        pixunits[0] = nifti_units_string(source->xyz_units);
+        pixunits[1] = nifti_units_string(source->time_units);
+        object.attr("pixunits") = pixunits;
+    }
     
     NiftiImage *wrappedSource = new NiftiImage(source, true);
     wrappedSource->setPersistence(true);
