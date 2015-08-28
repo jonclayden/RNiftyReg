@@ -32,6 +32,12 @@ isAffine <- function (object, strict = FALSE)
 }
 
 
+asAffine <- function (object, source = NULL, target = NULL)
+{
+    
+}
+
+
 #' @rdname affine
 #' @export
 print.affine <- function (x, ...)
@@ -239,12 +245,14 @@ invertAffine <- function (affine)
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{decomposeAffine}}, \code{\link{isAffine}}
 #' @export
-buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,0,0), angles = c(0,0,0), source = NULL, target = NULL)
+buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,0,0), angles = c(0,0,0), source = NULL, target = NULL, anchor = c("none","origin","centre","center"))
 {
     if (is.null(source) || is.null(target))
         stop("Source and target images must be specified")
     source <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
     target <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
+    
+    anchor <- match.arg(anchor)
     
     if (is.list(translation))
         x <- translation
@@ -272,7 +280,26 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
     affine[1:3,1:3] <- rotationX %*% rotationY %*% rotationZ %*% skewMatrix %*% diag(x$scales)
     affine[1:3,4] <- x$translation
     
-    return (convertAffine(affine, source, target, "niftyreg"))
+    # else if (anchor %in% c("centre","center"))
+    # {
+    #     sourceTranslation <- targetTranslation <- diag(4)
+    #     sourceTranslation[1:ndim(source),4] <- voxelToWorld((dim(source)+1)/2, source)
+    #     targetTranslation[1:ndim(target),4] <- voxelToWorld((dim(target)+1)/2, target)
+    #     affine <- targetTranslation %*% affine %*% solve(sourceTranslation)
+    # }
+    
+    affine <- convertAffine(affine, source, target, "niftyreg")
+    
+    if (anchor == "origin")
+        affine[1:3,4] <- 0
+    else if (anchor %in% c("centre","center"))
+    {
+        sourceCentre <- voxelToWorld((dim(source)+1)/2, source)
+        targetCentre <- voxelToWorld((dim(target)+1)/2, target)
+        affine[,4] <- (affine %*% c(targetCentre,1)) - c(sourceCentre,0)
+    }
+    
+    return (affine)
 }
 
 
