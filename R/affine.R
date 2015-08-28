@@ -252,6 +252,10 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
     source <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
     target <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
     
+    if (ndim(source) != ndim(target))
+        stop("Source and target image dimensions must match")
+    nDims <- ndim(source)
+    
     anchor <- match.arg(anchor)
     
     if (is.list(translation))
@@ -280,26 +284,20 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
     affine[1:3,1:3] <- rotationX %*% rotationY %*% rotationZ %*% skewMatrix %*% diag(x$scales)
     affine[1:3,4] <- x$translation
     
-    # else if (anchor %in% c("centre","center"))
-    # {
-    #     sourceTranslation <- targetTranslation <- diag(4)
-    #     sourceTranslation[1:ndim(source),4] <- voxelToWorld((dim(source)+1)/2, source)
-    #     targetTranslation[1:ndim(target),4] <- voxelToWorld((dim(target)+1)/2, target)
-    #     affine <- targetTranslation %*% affine %*% solve(sourceTranslation)
-    # }
-    
-    affine <- convertAffine(affine, source, target, "niftyreg")
+    affine <- solve(affine)
     
     if (anchor == "origin")
-        affine[1:3,4] <- 0
+        affine[,4] <- affine[,4] - (affine %*% c(0,0,0,1))
     else if (anchor %in% c("centre","center"))
     {
         sourceCentre <- voxelToWorld((dim(source)+1)/2, source)
         targetCentre <- voxelToWorld((dim(target)+1)/2, target)
-        affine[,4] <- (affine %*% c(targetCentre,1)) - c(sourceCentre,0)
+        affine[,4] <- affine[,4] + c(sourceCentre,rep(1,4-nDims)) - (affine %*% c(targetCentre,rep(1,4-nDims)))
     }
     
-    return (affine)
+    affine[4,] <- c(0,0,0,1)
+    
+    return (structure(affine, class="affine", source=source, target=target))
 }
 
 
@@ -346,9 +344,8 @@ decomposeAffine <- function (affine)
 {
     if (!isAffine(affine))
         stop("Specified affine matrix is not valid")
-    source <- attr(affine, "source")
-    target <- attr(affine, "target")
-    affine <- convertAffine(affine, source, target, "fsl")
+    
+    affine <- solve(affine)
     
     # Full matrix is rotationX %*% rotationY %*% rotationZ %*% skew %*% scale
     submatrix <- affine[1:3,1:3]
