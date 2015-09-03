@@ -2,6 +2,14 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 1.1.5
+
+- The transformWithControlPoints() function should no longer return NAs when its
+  "nearest" argument is FALSE.
+- A workaround has been implemented for an OpenMP error raised by Clang 3.7.0.
+
+=================================================================================
+
 VERSION 1.1.4
 
 - The package was not consistent about how to treat images without NIfTI
@@ -14,7 +22,7 @@ VERSION 1.1.4
 VERSION 1.1.3
 
 - The C++ code is now more careful to avoid buffer overruns when text fields in
-  a "nifti" object are too long.
+  a "nifti" object are too long. (Reported by Tim Tierney.)
 
 =================================================================================
 
