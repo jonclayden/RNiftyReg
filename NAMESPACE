@@ -3,5 +3,8 @@ useDynLib("RNiftyReg")
 import(reportr)
 importFrom(oro.nifti, nifti, is.nifti, as.nifti, convert.datatype)
 importFrom(splines, bs)
+importFrom(methods, as, new, slot, "slot<-")
+importFrom(stats, lm, predict)
+importFrom(utils, read.table)
 
 exportPattern("^[^\\.]")
