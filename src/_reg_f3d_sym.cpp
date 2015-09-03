@@ -1195,9 +1195,7 @@ void reg_f3d_sym<T>::UpdateControlPointPosition(T scale)
         T *gradientValuesX = static_cast<T *>(this->backwardNodeBasedGradientImage->data);
         T *gradientValuesY = &gradientValuesX[nodeNumber];
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
-    shared(controlPointValuesX, controlPointValuesY, bestControlPointValuesX, \
-    bestControlPointValuesY, gradientValuesX, gradientValuesY, nodeNumber, scale) \
+#pragma omp parallel for default(shared) \
     private(i)
 #endif
         for(i=0; i<nodeNumber;i++){
@@ -1216,10 +1214,7 @@ void reg_f3d_sym<T>::UpdateControlPointPosition(T scale)
         T *gradientValuesY = &gradientValuesX[nodeNumber];
         T *gradientValuesZ = &gradientValuesY[nodeNumber];
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
-    shared(controlPointValuesX, controlPointValuesY, controlPointValuesZ, \
-    bestControlPointValuesX, bestControlPointValuesY, bestControlPointValuesZ, \
-    gradientValuesX, gradientValuesY, gradientValuesZ, nodeNumber, scale) \
+#pragma omp parallel for default(shared) \
     private(i)
 #endif
         for(i=0; i<nodeNumber;i++){

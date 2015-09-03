@@ -317,12 +317,9 @@ void LinearResampleSourceImage(  nifti_image *sourceImage,
         SourceTYPE *zPointer, *xyzPointer;
         FieldTYPE xTempNewValue, yTempNewValue, intensity, world[3], position[3];
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
+#pragma omp parallel for default(shared) \
     private(index, intensity, world, position, previous, xBasis, yBasis, zBasis, relative, \
-    a, b, c, Y, Z, zPointer, xyzPointer, xTempNewValue, yTempNewValue) \
-    shared(sourceIntensity, resultIntensity, targetVoxelNumber, sourceVoxelNumber, \
-    deformationFieldPtrX, deformationFieldPtrY, deformationFieldPtrZ, maskPtr, \
-    sourceIJKMatrix, sourceImage, bgValue)
+    a, b, c, Y, Z, zPointer, xyzPointer, xTempNewValue, yTempNewValue)
 #endif // _OPENMP
         for(index=0;index<targetVoxelNumber; index++){
 
@@ -440,12 +437,9 @@ void LinearResampleSourceImage2D(nifti_image *sourceImage,
         SourceTYPE *xyPointer;
         FieldTYPE xTempNewValue, intensity, world[2], voxel[2];
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
+#pragma omp parallel for default(shared) \
     private(index, intensity, world, voxel, previous, xBasis, yBasis, relative, \
-    a, b, Y, xyPointer, xTempNewValue) \
-    shared(sourceIntensity, resultIntensity, targetVoxelNumber, sourceVoxelNumber, \
-    deformationFieldPtrX, deformationFieldPtrY, maskPtr, \
-    sourceIJKMatrix, sourceImage, bgValue)
+    a, b, Y, xyPointer, xTempNewValue)
 #endif // _OPENMP
         for(index=0;index<targetVoxelNumber; index++){
 
@@ -552,11 +546,8 @@ void NearestNeighborResampleSourceImage(nifti_image *sourceImage,
         int previous[3];
         int index;
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
-    private(index, intensity, world, position, previous) \
-    shared(sourceIntensity, resultIntensity, targetVoxelNumber, sourceVoxelNumber, \
-    deformationFieldPtrX, deformationFieldPtrY, deformationFieldPtrZ, maskPtr, \
-    sourceIJKMatrix, sourceImage, bgValue)
+#pragma omp parallel for default(shared) \
+    private(index, intensity, world, position, previous)
 #endif // _OPENMP
         for(index=0; index<targetVoxelNumber; index++){
 
@@ -621,11 +612,8 @@ void NearestNeighborResampleSourceImage2D(nifti_image *sourceImage,
         int previous[2];
         int index;
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
-    private(index, intensity, world, position, previous) \
-    shared(sourceIntensity, resultIntensity, targetVoxelNumber, sourceVoxelNumber, \
-    deformationFieldPtrX, deformationFieldPtrY, maskPtr, \
-    sourceIJKMatrix, sourceImage, bgValue)
+#pragma omp parallel for default(shared) \
+    private(index, intensity, world, position, previous)
 #endif // _OPENMP
         for(index=0;index<targetVoxelNumber; index++){
 

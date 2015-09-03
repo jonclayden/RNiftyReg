@@ -883,9 +883,7 @@ void reg_bspline_computeJacobianMatrices_2D(nifti_image *referenceImage,
     int index, coord, x, y, a, b, xPre, yPre, oldXpre, oldYpre;
     DTYPE Tx_x, Tx_y, Ty_x, Ty_y;
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
-    shared(referenceImage, gridVoxelSpacing, splineControlPoint, reorient, realSpacing, \
-    controlPointPtrX, controlPointPtrY, jacobianDeterminant, jacobianMatrices) \
+#pragma omp parallel for default(shared) \
     private(index, coord, x, y, a, b, xPre, yPre, basis, xBasis, xFirst, yBasis, yFirst, \
     oldXpre, oldYpre, basisX, basisY, xControlPointCoordinates, yControlPointCoordinates, \
     Tx_x, Tx_y, Ty_x, Ty_y, jacobianMatrix)
@@ -1035,10 +1033,7 @@ void reg_bspline_computeJacobianMatrices_3D(nifti_image *referenceImage,
     DTYPE Tz_x, Tz_y, Tz_z;
 #ifdef _OPENMP
 #ifdef _USE_SSE
-#pragma omp parallel for default(none) \
-    shared(referenceImage, gridVoxelSpacing, splineControlPoint, \
-    controlPointPtrX, controlPointPtrY, controlPointPtrZ, reorient, \
-    jacobianDeterminant, jacobianMatrices, realSpacing) \
+#pragma omp parallel for default(shared) \
     private(x, y, z, xPre, yPre, zPre, a, index, basis, val, \
     _xBasis, _xFirst, _yBasis, _yFirst, \
     tempX, tempY, tempZ, basisX, basisY, basisZ, \
@@ -1047,10 +1042,7 @@ void reg_bspline_computeJacobianMatrices_3D(nifti_image *referenceImage,
     Tx_x, Tx_y, Tx_z, Ty_x, Ty_y, Ty_z, Tz_x, Tz_y, Tz_z, jacobianMatrix, \
     tempX_x, tempX_y, tempX_z, tempY_x, tempY_y, tempY_z, tempZ_x, tempZ_y, tempZ_z)
 #else // _USE_SEE
-#pragma omp parallel for default(none) \
-    shared(referenceImage, gridVoxelSpacing, splineControlPoint, \
-    controlPointPtrX, controlPointPtrY, controlPointPtrZ, reorient, \
-    jacobianDeterminant, jacobianMatrices, realSpacing) \
+#pragma omp parallel for default(shared) \
     private(x, y, z, xPre, yPre, zPre, a, b, c, bc, index, basis, \
     basisX, basisY, basisZ, coord, tempX, tempY, tempZ, \
     xBasis, yBasis, zBasis, xFirst, yFirst, zFirst, oldXpre, oldYpre, oldZpre, \
