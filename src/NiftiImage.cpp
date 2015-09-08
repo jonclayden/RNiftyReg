@@ -11,10 +11,13 @@ void NiftiImage::copy (nifti_image * const source)
 {
     if (source != NULL)
     {
-        size_t dataSize = nifti_get_volsize(source);
         image = nifti_copy_nim_info(source);
-        image->data = calloc(1, dataSize);
-        memcpy(image->data, source->data, dataSize);
+        if (source->data != NULL)
+        {
+            size_t dataSize = nifti_get_volsize(source);
+            image->data = calloc(1, dataSize);
+            memcpy(image->data, source->data, dataSize);
+        }
     }
 }
 
@@ -35,9 +38,12 @@ void NiftiImage::copy (const Block &source)
         image->pixdim[source.dimension] = 1.0;
         nifti_update_dims_from_array(image);
         
-        size_t blockSize = nifti_get_volsize(image);
-        image->data = calloc(1, blockSize);
-        memcpy(image->data, static_cast<char*>(source.image->data) + blockSize*source.index, blockSize);
+        if (sourceStruct->data != NULL)
+        {
+            size_t blockSize = nifti_get_volsize(image);
+            image->data = calloc(1, blockSize);
+            memcpy(image->data, static_cast<char*>(source.image->data) + blockSize*source.index, blockSize);
+        }
     }
 }
 
