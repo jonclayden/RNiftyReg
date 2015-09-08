@@ -5,7 +5,8 @@
 \title{Build an affine matrix up from its constituent transformations}
 \usage{
 buildAffine(translation = c(0, 0, 0), scales = c(1, 1, 1), skews = c(0, 0,
-  0), angles = c(0, 0, 0), source = NULL, target = NULL)
+  0), angles = c(0, 0, 0), source = NULL, target = NULL,
+  anchor = c("none", "origin", "centre", "center"))
 }
 \arguments{
 \item{translation}{Translations along each axis, in \code{\link{pixunits}}
@@ -19,17 +20,27 @@ skews and angles.}
 
 \item{angles}{Roll, pitch and yaw rotation angles, in radians.}
 
-\item{source}{The source image for the transformation.}
+\item{source}{The source image for the transformation (required).}
 
-\item{target}{The target image for the transformation. Can be the same as
-\code{source}, if appropriate.}
+\item{target}{The target image for the transformation. If \code{NULL} (the
+default), it will be equal to \code{source}, or a rescaled version of it
+if any of the \code{scales} are not 1. In the latter case the scales will
+be reset back to 1 to produce the right effect.}
+
+\item{anchor}{The fixed point for the transformation. Setting this parameter
+to a value other than \code{"none"} will override the \code{translation}
+parameter, with the final translation set to ensure that the requested
+point remains in the same place after transformation.}
 }
 \value{
-A 4x4 affine matrix representing the composite transformation.
+A 4x4 affine matrix representing the composite transformation. Note
+  that NiftyReg affines logically transform backwards, from target to source
+  space, so the matrix may be the inverse of what is expected.
 }
 \description{
 This function does the opposite to \code{\link{decomposeAffine}}, building
-up an affine matrix from its components. It can be useful for testing.
+up an affine matrix from its components. It can be useful for testing, or
+for rescaling images.
 }
 \author{
 Jon Clayden <code@clayden.org>

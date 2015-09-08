@@ -34,9 +34,12 @@ isImage <- function (object, unsure = NA)
 #' An internal image is a simple R object with a few attributes including a
 #' pointer to an internal C structure, which contains the full image data. They
 #' are used in the package for efficiency, but can be converted to a normal
-#' R array using the \code{as.array} method.
+#' R array using the \code{as.array} method. Attributes of these objects should
+#' not be changed.
 #' 
 #' @param x An \code{"internalImage"} object.
+#' @param value Not used. Changing the dimensions of an internal image is
+#'   invalid, and will produce an error.
 #' @param ... Additional parameters to methods. Currently unused.
 #' 
 #' @author Jon Clayden <code@@clayden.org>

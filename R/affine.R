@@ -228,7 +228,8 @@ invertAffine <- function (affine)
 #' Build an affine matrix up from its constituent transformations
 #' 
 #' This function does the opposite to \code{\link{decomposeAffine}}, building
-#' up an affine matrix from its components. It can be useful for testing.
+#' up an affine matrix from its components. It can be useful for testing, or
+#' for rescaling images.
 #' 
 #' @param translation Translations along each axis, in \code{\link{pixunits}}
 #'   units. May also be a list, such as that produced by
@@ -237,10 +238,18 @@ invertAffine <- function (affine)
 #' @param scales Scale factors along each axis.
 #' @param skews Skews in the XY, XZ and YZ planes.
 #' @param angles Roll, pitch and yaw rotation angles, in radians.
-#' @param source The source image for the transformation.
-#' @param target The target image for the transformation. Can be the same as
-#'   \code{source}, if appropriate.
-#' @return A 4x4 affine matrix representing the composite transformation.
+#' @param source The source image for the transformation (required).
+#' @param target The target image for the transformation. If \code{NULL} (the
+#'   default), it will be equal to \code{source}, or a rescaled version of it
+#'   if any of the \code{scales} are not 1. In the latter case the scales will
+#'   be reset back to 1 to produce the right effect.
+#' @param anchor The fixed point for the transformation. Setting this parameter
+#'   to a value other than \code{"none"} will override the \code{translation}
+#'   parameter, with the final translation set to ensure that the requested
+#'   point remains in the same place after transformation.
+#' @return A 4x4 affine matrix representing the composite transformation. Note
+#'   that NiftyReg affines logically transform backwards, from target to source
+#'   space, so the matrix may be the inverse of what is expected.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{decomposeAffine}}, \code{\link{isAffine}}
