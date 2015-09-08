@@ -51,6 +51,14 @@ dim.internalImage <- function (x)
 
 #' @rdname internalImage
 #' @export
+"dim<-.internalImage" <- function (x, value)
+{
+    stop("Dimensions of an internal image cannot be changed")
+}
+
+
+#' @rdname internalImage
+#' @export
 as.array.internalImage <- function (x, ...)
 {
     return (.Call("pointerToArray", x, PACKAGE="RNiftyReg"))
@@ -141,6 +149,9 @@ pixdim <- function (object)
 #' @export
 "pixdim<-" <- function (object, value)
 {
+    if ("internalImage" %in% class(object))
+        stop("Pixel dimensions of an internal image cannot be changed")
+    
     if (is.numeric(value))
     {
         if (length(value) == ndim(object))
