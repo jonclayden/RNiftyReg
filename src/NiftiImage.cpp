@@ -218,6 +218,79 @@ NiftiImage::NiftiImage (const SEXP object, const bool readData)
 #endif
 }
 
+void NiftiImage::updatePixdim (const std::vector<float> pixdim)
+{
+    const int nDims = image->dim[0];
+    const std::vector<float> origPixdim(image->pixdim+1, image->pixdim+4);
+    
+    for (int i=1; i<8; i++)
+        image->pixdim[i] = 0.0;
+    
+    const int pixdimLength = pixdim.size();
+    for (int i=0; i<std::min(pixdimLength,nDims); i++)
+        image->pixdim[i+1] = pixdim[i];
+    
+    if (!std::equal(origPixdim.begin(), origPixdim.begin() + std::min(3,nDims), pixdim.begin()))
+    {
+        mat33 scaleMatrix;
+        for (int i=0; i<3; i++)
+        {
+            for (int j=0; j<3; j++)
+            {
+                if (i != j)
+                    scaleMatrix.m[i][j] = 0.0;
+                else if (i >= nDims)
+                    scaleMatrix.m[i][j] = 1.0;
+                else
+                    scaleMatrix.m[i][j] = pixdim[i] / origPixdim[i];
+            }
+        }
+        
+        if (image->qform_code > 0)
+        {
+            mat33 prod = nifti_mat33_mul(scaleMatrix, reg_mat44_to_mat33(&image->qto_xyz));
+            for (int i=0; i<3; i++)
+            {
+                for (int j=0; j<3; j++)
+                    image->qto_xyz.m[i][j] = prod.m[i][j];
+            }
+            image->qto_ijk = nifti_mat44_inverse(image->qto_xyz);
+            nifti_mat44_to_quatern(image->qto_xyz, &image->quatern_b, &image->quatern_c, &image->quatern_d, &image->qoffset_x, &image->qoffset_y, &image->qoffset_z, NULL, NULL, NULL, &image->qfac);
+        }
+        
+        if (image->sform_code > 0)
+        {
+            mat33 prod = nifti_mat33_mul(scaleMatrix, reg_mat44_to_mat33(&image->sto_xyz));
+            for (int i=0; i<3; i++)
+            {
+                for (int j=0; j<3; j++)
+                    image->sto_xyz.m[i][j] = prod.m[i][j];
+            }
+            image->sto_ijk = nifti_mat44_inverse(image->sto_xyz);
+        }
+    }
+}
+
+void NiftiImage::rescale (const std::vector<float> scales)
+{
+    std::vector<float> pixdim(image->pixdim+1, image->pixdim+4);
+    
+    for (int i=0; i<std::min(3, int(scales.size())); i++)
+    {
+        if (scales[i] != 1.0)
+        {
+            pixdim[i] /= scales[i];
+            image->dim[i+1] = static_cast<int>(std::floor(image->dim[i+1] * scales[i]));
+        }
+    }
+    
+    updatePixdim(pixdim);
+    nifti_update_dims_from_array(image);
+    
+    // Data vector is now the wrong size, so drop it
+    free(image->data);
+}
+
 void NiftiImage::update (const SEXP array)
 {
     RObject object(array);
@@ -235,54 +308,8 @@ void NiftiImage::update (const SEXP array)
     
     if (object.hasAttribute("pixdim"))
     {
-        const std::vector<float> origPixdim(image->pixdim+1, image->pixdim+4);
-        
-        for (int i=1; i<8; i++)
-            image->pixdim[i] = 0.0;
         const std::vector<float> pixdimVector = object.attr("pixdim");
-        const int pixdimLength = pixdimVector.size();
-        for (int i=0; i<std::min(pixdimLength,nDims); i++)
-            image->pixdim[i+1] = pixdimVector[i];
-        
-        if (!std::equal(origPixdim.begin(), origPixdim.begin() + std::min(3,nDims), pixdimVector.begin()))
-        {
-            mat33 scaleMatrix;
-            for (int i=0; i<3; i++)
-            {
-                for (int j=0; j<3; j++)
-                {
-                    if (i != j)
-                        scaleMatrix.m[i][j] = 0.0;
-                    else if (i >= nDims)
-                        scaleMatrix.m[i][j] = 1.0;
-                    else
-                        scaleMatrix.m[i][j] = pixdimVector[i] / origPixdim[i];
-                }
-            }
-            
-            if (image->qform_code > 0)
-            {
-                mat33 prod = nifti_mat33_mul(scaleMatrix, reg_mat44_to_mat33(&image->qto_xyz));
-                for (int i=0; i<3; i++)
-                {
-                    for (int j=0; j<3; j++)
-                        image->qto_xyz.m[i][j] = prod.m[i][j];
-                }
-                image->qto_ijk = nifti_mat44_inverse(image->qto_xyz);
-                nifti_mat44_to_quatern(image->qto_xyz, &image->quatern_b, &image->quatern_c, &image->quatern_d, &image->qoffset_x, &image->qoffset_y, &image->qoffset_z, NULL, NULL, NULL, &image->qfac);
-            }
-            
-            if (image->sform_code > 0)
-            {
-                mat33 prod = nifti_mat33_mul(scaleMatrix, reg_mat44_to_mat33(&image->sto_xyz));
-                for (int i=0; i<3; i++)
-                {
-                    for (int j=0; j<3; j++)
-                        image->sto_xyz.m[i][j] = prod.m[i][j];
-                }
-                image->sto_ijk = nifti_mat44_inverse(image->sto_xyz);
-            }
-        }
+        updatePixdim(pixdimVector);
     }
     
     // This NIfTI-1 library function clobbers dim[0] if the last dimension is unitary; we undo that here

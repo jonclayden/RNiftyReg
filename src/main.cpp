@@ -85,6 +85,18 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP rescaleImage (SEXP _image, SEXP _scales)
+{
+BEGIN_RCPP
+    const std::vector<float> scales = as< std::vector<float> >(_scales);
+    const NiftiImage image(_image);
+    
+    NiftiImage newImage(nifti_copy_nim_info(image));
+    newImage.rescale(scales);
+    return newImage.toPointer("NIfTI image");
+END_RCPP
+}
+
 void checkImages (const NiftiImage &sourceImage, const NiftiImage &targetImage)
 {
     if (sourceImage.isNull())

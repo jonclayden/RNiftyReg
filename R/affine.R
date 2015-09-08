@@ -247,16 +247,9 @@ invertAffine <- function (affine)
 #' @export
 buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,0,0), angles = c(0,0,0), source = NULL, target = NULL, anchor = c("none","origin","centre","center"))
 {
-    if (is.null(source) || is.null(target))
-        stop("Source and target images must be specified")
+    if (is.null(source))
+        stop("Source image must be specified")
     source <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
-    target <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
-    
-    if (ndim(source) != ndim(target))
-        stop("Source and target image dimensions must match")
-    nDims <- ndim(source)
-    
-    anchor <- match.arg(anchor)
     
     if (is.list(translation))
         x <- translation
@@ -270,6 +263,25 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
         if (length(x[[name]]) < 3)
             x[[name]] <- c(x[[name]], rep(0,3-length(x[[name]])))
     }
+    
+    if (is.null(target))
+    {
+        if (all(x$scales == 1))
+            target <- source
+        else
+        {
+            target <- .Call("rescaleImage", source, x$scales[1:ndim(source)], PACKAGE="RNiftyReg")
+            x$scales <- c(1,1,1)
+        }
+    }
+    else
+        target <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
+    
+    if (ndim(source) != ndim(target))
+        stop("Source and target images must be of the same dimensionality")
+    nDims <- ndim(source)
+    
+    anchor <- match.arg(anchor)
     
     affine <- diag(4)
     

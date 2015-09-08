@@ -49,6 +49,8 @@ protected:
     void initFromNiftiS4 (const Rcpp::RObject &object, const bool copyData = true);
     void initFromArray (const Rcpp::RObject &object);
     
+    void updatePixdim (const std::vector<float> pixdim);
+    
 public:
     NiftiImage ()
         : image(NULL), persistent(false) {}
@@ -130,6 +132,7 @@ public:
         return *this;
     }
     
+    void rescale (const std::vector<float> scales);
     void update (const SEXP array);
     
     mat44 xform (const bool preferQuaternion = true) const;
