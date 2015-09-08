@@ -129,7 +129,7 @@ display(house_bw)
 Now, instead of registering the image to another image, let's create a simple affine transformation that applies a skew to the image.
 
 ```r
-affine <- buildAffine(skews=0.1, source=house_bw, target=house_bw)
+affine <- buildAffine(skews=0.1, source=house_bw)
 print(affine)
 # NiftyReg affine matrix:
 #  1.0  -0.1   0.0   0.0
@@ -140,7 +140,7 @@ print(affine)
 # Target origin: (1, 1, 1)
 ```
 
-So, this is a diagonal matrix with just a single off-diagonal element, which produces the skew effect. Let's apply it to the image using the important `applyTransform` function, and see the effect.
+So, this is a diagonal matrix with just a single off-diagonal element, which produces the skew effect. (The sign is negative because NiftyReg actually represents transforms from target to source space, not the more intuitive reverse.) Let's apply it to the image using the important `applyTransform` function, and see the effect.
 
 ```r
 house_skewed_bw <- applyTransform(affine, house_bw)
@@ -217,12 +217,12 @@ This arrangement is efficient and generally works well, but many R operations st
 
 ## Upgrading to RNiftyReg 2.x
 
-`RNiftyReg` 2.0.0 is a more-or-less complete rewrite of the package, with the goals of simplifying both the package's dependencies and its usage. The upstream NiftyReg code has also been updated. The core changes are
+`RNiftyReg` 2.0.0 is a more-or-less complete rewrite of the package, with the goals of simplifying both the package's dependencies and its usage. The upstream NiftyReg code has also been updated. However, it should still be possible to read and use transformations created using `RNiftyReg` 1.x.
+
+The core changes are
 
 - The `oro.nifti` package is no longer needed, nor used for reading and writing NIfTI files (`RNiftyReg` now offers `readNifti` and `writeNifti`, which are much faster). However, objects of S4 class `nifti` can still be used with the package if desired. Functions return either plain R arrays with attributes or bare-bones `internalImage` objects, which contain only some basic metadata and a pointer to a C-level data structure.
 - There are new functions for halving a transform (`halfTransform`), composing two transforms (`composeTransforms`), and building an affine transform from scratch (`buildAffine`).
 - Registration is now symmetric by default (for both linear and nonlinear), a newer symmetric nonlinear approach is now used, and default cost function weights have been tweaked. Therefore, the arguments to the core `niftyreg` function, and its linear and nonlinear special cases, have changed in both name and defaults. See `?niftyreg` and related help pages for details.
 - It is no longer necessary to use functions specific to transform type to perform many operations. For example, the work of the old `applyAffine`, `applyControlPoints`, `transformWithAffine` and `transformWithControlPoints` functions is done by the flexible new `applyTransform` function. The forward and reverse transforms can always be obtained from a registration using the new `forward` and `reverse` functions, no matter what their type is. However, some affine-only functions, such as `decomposeAffine`, retain their names.
 - The `affineType` attribute has gone, and `convertAffine` is no longer a user-visible function. All affine matrices are stored using the NiftyReg convention. FSL-FLIRT affines can still be read in, but they are converted to NiftyReg convention immediately. In addition, source and target image information is attached to the transforms in attributes, and so does not need to be specified in most function calls.
-
-However, it should still be possible to read and use transformations created using `RNiftyReg` 1.x.
