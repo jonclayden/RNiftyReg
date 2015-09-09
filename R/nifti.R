@@ -50,17 +50,22 @@ readNifti <- function (file, source = NULL, target = NULL, internal = FALSE)
 #' @param file A character string containing a file name.
 #' @param template An optional template object to derive NIfTI-1 properties
 #'   from. Passed to \code{\link{updateNifti}} if \code{image} is an array.
+#' @param datatype The NIfTI datatype to use when writing the data out. The
+#'   default, \code{"auto"} uses the R type or, for internal images, the
+#'   original datatype. Other possibilities are \code{"float"}, \code{"int16"},
+#'   etc., which may be preferred to reduce file size. However, no checks are
+#'   done to ensure that the coercion maintains precision.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{readNifti}}, \code{\link{updateNifti}}
 #' @references The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1}).
 #' @export
-writeNifti <- function (image, file, template = NULL)
+writeNifti <- function (image, file, template = NULL, datatype = "auto")
 {
     if (is.array(image) && !is.null(template))
         image <- updateNifti(image, template)
     
-    invisible(.Call("writeNifti", image, file, PACKAGE="RNiftyReg"))
+    invisible(.Call("writeNifti", image, file, tolower(datatype), PACKAGE="RNiftyReg"))
 }
 
 

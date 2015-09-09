@@ -360,6 +360,138 @@ mat44 NiftiImage::xform (const bool preferQuaternion) const
         return image->sto_xyz;
 }
 
+template <typename SourceType, typename TargetType>
+TargetType convertValue (SourceType value)
+{
+    return static_cast<TargetType>(value);
+}
+
+template <typename SourceType, typename TargetType>
+void convertArray (const SourceType *source, const size_t length, TargetType *target)
+{
+    std::transform(source, source + length, target, convertValue<SourceType,TargetType>);
+}
+
+template <typename TargetType>
+void changeDatatype (nifti_image *image, const short datatype)
+{
+    TargetType *data;
+    const size_t dataSize = image->nvox * sizeof(TargetType);
+    data = static_cast<TargetType *>(calloc(1, dataSize));
+    
+    switch (image->datatype)
+    {
+        case DT_UINT8:
+        convertArray(static_cast<uint8_t *>(image->data), image->nvox, data);
+        break;
+
+        case DT_INT16:
+        convertArray(static_cast<int16_t *>(image->data), image->nvox, data);
+        break;
+
+        case DT_INT32:
+        convertArray(static_cast<int32_t *>(image->data), image->nvox, data);
+        break;
+
+        case DT_FLOAT32:
+        convertArray(static_cast<float *>(image->data), image->nvox, data);
+        break;
+
+        case DT_FLOAT64:
+        convertArray(static_cast<double *>(image->data), image->nvox, data);
+        break;
+
+        case DT_INT8:
+        convertArray(static_cast<int8_t *>(image->data), image->nvox, data);
+        break;
+
+        case DT_UINT16:
+        convertArray(static_cast<uint16_t *>(image->data), image->nvox, data);
+        break;
+
+        case DT_UINT32:
+        convertArray(static_cast<uint32_t *>(image->data), image->nvox, data);
+        break;
+
+        case DT_INT64:
+        convertArray(static_cast<int64_t *>(image->data), image->nvox, data);
+        break;
+
+        case DT_UINT64:
+        convertArray(static_cast<uint64_t *>(image->data), image->nvox, data);
+        break;
+
+        default:
+        throw std::runtime_error("Unsupported data type (" + std::string(nifti_datatype_string(image->datatype)) + ")");
+    }
+    
+    free(image->data);
+    image->data = data;
+    image->datatype = datatype;
+    nifti_datatype_sizes(datatype, &image->nbyper, &image->swapsize);
+}
+
+void NiftiImage::toFile (const std::string fileName, const short datatype) const
+{
+    // Copy the source image only if the datatype will be changed
+    NiftiImage imageToWrite(image, datatype != DT_NONE);
+    
+    switch (datatype)
+    {
+        case DT_NONE:
+        imageToWrite.setPersistence(true);
+        break;
+        
+        case DT_UINT8:
+        changeDatatype<uint8_t>(imageToWrite, datatype);
+        break;
+
+        case DT_INT16:
+        changeDatatype<int16_t>(imageToWrite, datatype);
+        break;
+
+        case DT_INT32:
+        changeDatatype<int32_t>(imageToWrite, datatype);
+        break;
+
+        case DT_FLOAT32:
+        changeDatatype<float>(imageToWrite, datatype);
+        break;
+
+        case DT_FLOAT64:
+        changeDatatype<double>(imageToWrite, datatype);
+        break;
+
+        case DT_INT8:
+        changeDatatype<int8_t>(imageToWrite, datatype);
+        break;
+
+        case DT_UINT16:
+        changeDatatype<uint16_t>(imageToWrite, datatype);
+        break;
+
+        case DT_UINT32:
+        changeDatatype<uint32_t>(imageToWrite, datatype);
+        break;
+
+        case DT_INT64:
+        changeDatatype<int64_t>(imageToWrite, datatype);
+        break;
+
+        case DT_UINT64:
+        changeDatatype<uint64_t>(imageToWrite, datatype);
+        break;
+
+        default:
+        throw std::runtime_error("Unsupported data type (" + std::string(nifti_datatype_string(datatype)) + ")");
+    }
+    
+    const int status = nifti_set_filenames(imageToWrite, fileName.c_str(), false, true);
+    if (status != 0)
+        throw std::runtime_error("Failed to set filenames for NIfTI object");
+    nifti_image_write(imageToWrite);
+}
+
 NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble)
 {
     nifti_image *newStruct = nifti_copy_nim_info(target);
@@ -379,12 +511,6 @@ NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &t
     newStruct->data = calloc(1, dataSize);
     
     return NiftiImage(newStruct);
-}
-
-template <typename SourceType, typename TargetType>
-TargetType convertValue (SourceType value)
-{
-    return static_cast<TargetType>(value);
 }
 
 template <typename SourceType, int SexpType>

@@ -38,6 +38,31 @@ public:
         }
     };
     
+    static std::map<std::string,short> DatatypeCodes;
+    static std::map<std::string,short> buildDatatypeCodes ()
+    {
+        std::map<std::string,short> codes;
+        codes["auto"] = DT_NONE;
+        codes["none"] = DT_NONE;
+        codes["unknown"] = DT_NONE;
+        codes["uint8"] = DT_UINT8;
+        codes["char"] = DT_UINT8;
+        codes["int16"] = DT_INT16;
+        codes["short"] = DT_INT16;
+        codes["int32"] = DT_INT32;
+        codes["int"] = DT_INT32;
+        codes["float32"] = DT_FLOAT32;
+        codes["float"] = DT_FLOAT32;
+        codes["float64"] = DT_FLOAT64;
+        codes["double"] = DT_FLOAT64;
+        codes["int8"] = DT_INT8;
+        codes["uint16"] = DT_UINT16;
+        codes["uint32"] = DT_UINT32;
+        codes["int64"] = DT_INT64;
+        codes["uint64"] = DT_UINT64;
+        return codes;
+    }
+    
 protected:
     nifti_image *image;
     bool persistent;
@@ -142,6 +167,8 @@ public:
     
     Block slice (const int i) { return Block(*this, 3, i); }
     Block volume (const int i) { return Block(*this, 4, i); }
+    
+    void toFile (const std::string fileName, const short datatype) const;
     
     Rcpp::RObject toArray () const;
     Rcpp::RObject toPointer (const std::string label) const;

@@ -14,6 +14,8 @@ using namespace Rcpp;
 
 typedef std::vector<float> float_vector;
 
+std::map<std::string,short> NiftiImage::DatatypeCodes = NiftiImage::buildDatatypeCodes();
+
 RcppExport SEXP retrieveImage (SEXP _image)
 {
 BEGIN_RCPP
@@ -34,17 +36,20 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP writeNifti (SEXP _image, SEXP _file)
+RcppExport SEXP writeNifti (SEXP _image, SEXP _file, SEXP _datatype)
 {
 BEGIN_RCPP
     NiftiImage image(_image);
-    
-    const int status = nifti_set_filenames(image, as<std::string>(_file).c_str(), false, true);
-    if (status != 0)
-        throw std::runtime_error("Failed to set filenames for NIfTI object");
-    
-    nifti_image_write(image);
-    
+    std::string datatypeString = as<std::string>(_datatype);
+    if (NiftiImage::DatatypeCodes.count(datatypeString) == 0)
+    {
+        std::ostringstream message;
+        message << "Datatype \"" << datatypeString << "\" is not valid";
+        warning(message.str());
+        
+        datatypeString = "auto";
+    }
+    image.toFile(as<std::string>(_file), NiftiImage::DatatypeCodes[datatypeString]);
     return R_NilValue;
 END_RCPP
 }
@@ -88,7 +93,7 @@ END_RCPP
 RcppExport SEXP rescaleImage (SEXP _image, SEXP _scales)
 {
 BEGIN_RCPP
-    const std::vector<float> scales = as< std::vector<float> >(_scales);
+    const std::vector<float> scales = as<float_vector>(_scales);
     const NiftiImage image(_image);
     
     NiftiImage newImage(nifti_copy_nim_info(image));

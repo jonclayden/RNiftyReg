@@ -4,7 +4,7 @@
 \alias{writeNifti}
 \title{Write a NIfTI-1 format file}
 \usage{
-writeNifti(image, file, template = NULL)
+writeNifti(image, file, template = NULL, datatype = "auto")
 }
 \arguments{
 \item{image}{An image, in any acceptable form (see \code{\link{isImage}}).}
@@ -12,7 +12,13 @@ writeNifti(image, file, template = NULL)
 \item{file}{A character string containing a file name.}
 
 \item{template}{An optional template object to derive NIfTI-1 properties
-  from. Passed to \code{\link{updateNifti}} if \code{image} is an array.}
+from. Passed to \code{\link{updateNifti}} if \code{image} is an array.}
+
+\item{datatype}{The NIfTI datatype to use when writing the data out. The
+  default, \code{"auto"} uses the R type or, for internal images, the
+  original datatype. Other possibilities are \code{"float"}, \code{"int16"},
+  etc., which may be preferred to reduce file size. However, no checks are
+  done to ensure that the coercion maintains precision.}
 }
 \description{
 This function writes an image to NIfTI-1 format, using the standard NIfTI-1
