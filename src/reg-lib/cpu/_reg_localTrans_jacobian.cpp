@@ -182,9 +182,7 @@ void reg_spline_jacobian2D(nifti_image *splineControlPoint,
          }
       }
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
-   shared(splineControlPoint, coeffPtrX, coeffPtrY, \
-   basisX, basisY, reorientation, JacobianMatrices, JacobianDeterminants) \
+#pragma omp parallel for default(shared) \
    private(x, y, incr0, coeffX, coeffY, \
    jacobianMatrix, voxelIndex)
 #endif
@@ -480,9 +478,7 @@ void reg_spline_jacobian3D(nifti_image *splineControlPoint,
          }
       }
 #ifdef _OPENMP
-#pragma omp parallel for default(none) \
-   shared(splineControlPoint, coeffPtrX, coeffPtrY, coeffPtrZ, \
-   basisX, basisY, basisZ, reorientation, JacobianMatrices, JacobianDeterminants) \
+#pragma omp parallel for default(shared) \
    private(x, y, z, incr0, coeffX, coeffY, coeffZ, \
    jacobianMatrix, voxelIndex)
 #endif
@@ -876,10 +872,7 @@ void reg_spline_jacobian3D(nifti_image *splineControlPoint,
          // The grid is assumed to be aligned with the reference image
 #ifdef _OPENMP
 #ifdef _USE_SSE
-#pragma omp parallel for default(none) \
-   shared(referenceImage, gridVoxelSpacing, splineControlPoint, \
-   coeffPtrX, coeffPtrY, coeffPtrZ,reorientation, JacobianMatrices, \
-   JacobianDeterminants) \
+#pragma omp parallel for default(shared) \
    private(x, y, z, pre, oldPre, basis, val, \
    _xBasis, _xFirst, _yBasis, _yFirst, \
    tempX, tempY, tempZ, basisX, basisY, basisZ, \
@@ -888,10 +881,7 @@ void reg_spline_jacobian3D(nifti_image *splineControlPoint,
    jacobianMatrix, voxelIndex, \
    tempX_x, tempX_y, tempX_z, tempY_x, tempY_y, tempY_z, tempZ_x, tempZ_y, tempZ_z)
 #else // _USE_SEE
-#pragma omp parallel for default(none) \
-   shared(referenceImage, gridVoxelSpacing, splineControlPoint, \
-   coeffPtrX, coeffPtrY, coeffPtrZ, reorientation, JacobianMatrices, \
-   JacobianDeterminants) \
+#pragma omp parallel for default(shared) \
    private(x, y, z, pre, oldPre, basis, \
    basisX, basisY, basisZ, coord, tempX, tempY, tempZ, \
    xBasis, xFirst, yBasis, yFirst, zBasis, zFirst, \

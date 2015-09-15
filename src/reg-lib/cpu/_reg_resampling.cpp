@@ -418,12 +418,9 @@ void ResampleImage3D(nifti_image *floatingImage,
       FloatingTYPE *zPointer, *xyzPointer;
       double xTempNewValue, yTempNewValue, intensity, world[3], position[3];
 #if defined (_OPENMP)
-#pragma omp parallel for default(none) \
+#pragma omp parallel for default(shared) \
    private(index, intensity, world, position, previous, xBasis, yBasis, zBasis, relative, \
-   a, b, c, Y, Z, zPointer, xyzPointer, xTempNewValue, yTempNewValue) \
-   shared(floatingIntensity, warpedIntensity, warpedVoxelNumber, floatingVoxelNumber, \
-   deformationFieldPtrX, deformationFieldPtrY, deformationFieldPtrZ, maskPtr, \
-   floatingIJKMatrix, floatingImage, paddingValue, kernel_size, kernel_offset, kernelCompFctPtr)
+   a, b, c, Y, Z, zPointer, xyzPointer, xTempNewValue, yTempNewValue)
 #endif // _OPENMP
       for(index=0; index<warpedVoxelNumber; index++)
       {
@@ -593,12 +590,9 @@ void ResampleImage2D(nifti_image *floatingImage,
       FloatingTYPE *xyzPointer;
       FieldTYPE xTempNewValue, intensity, world[3], position[3];
 #if defined (_OPENMP)
-#pragma omp parallel for default(none) \
+#pragma omp parallel for default(shared) \
    private(index, intensity, world, position, previous, xBasis, yBasis, relative, \
-   a, b, Y, xyzPointer, xTempNewValue) \
-   shared(floatingIntensity, warpedIntensity, warpedVoxelNumber, floatingVoxelNumber, \
-   deformationFieldPtrX, deformationFieldPtrY, maskPtr, \
-   floatingIJKMatrix, floatingImage, paddingValue, kernel_size, kernel_offset, kernelCompFctPtr)
+   a, b, Y, xyzPointer, xTempNewValue)
 #endif // _OPENMP
       for(index=0; index<warpedVoxelNumber; index++)
       {
