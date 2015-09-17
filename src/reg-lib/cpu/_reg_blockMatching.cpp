@@ -382,7 +382,12 @@ void block_matching_method2D(nifti_image * target, nifti_image * result, _reg_bl
 					}
 				}
 
+#ifdef RNIFTYREG
+				if (R_FINITE(bestDisplacement[0])) {
+#else
+				// NB: This is C++11; in C99 it's a macro, and hence not part of the std namespace
 				if (std::isfinite(bestDisplacement[0])) {
+#endif
 					float targetPosition_temp[3];
 					targetPosition_temp[0] = (float) (i * BLOCK_WIDTH);
 					targetPosition_temp[1] = (float) (j * BLOCK_WIDTH);
