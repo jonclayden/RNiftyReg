@@ -1192,7 +1192,7 @@ void reg_base<T>::Run()
 #endif
 
    // Update the maximal number of iteration to perform per level
-   this->maxiterationNumber = this->maxiterationNumber * pow(2, this->levelToPerform-1);
+   this->maxiterationNumber = this->maxiterationNumber * static_cast<int>(powf(2.0, this->levelToPerform-1));
 
    // Loop over the different resolution level to perform
    for(this->currentLevel=0;
