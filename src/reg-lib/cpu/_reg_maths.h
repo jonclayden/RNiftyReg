@@ -120,6 +120,8 @@ inline int fabs(int _x)
 {
    return (int)fabs((float)(_x));
 }
+#else
+using std::isinf;
 #endif // If on windows...
 
 /* *************************************************************** */
