@@ -1098,7 +1098,7 @@ void ResampleImage3D_PSF_Sinc(nifti_image *floatingImage,
                 //initialise weights
                 psfWeightSum=0.0f;
                 intensity=0.0f;
-                currentC=reg_floor(index/warpedPlaneNumber);
+                currentC=index/warpedPlaneNumber;
                 currentB=reg_floor((index-currentC*warpedPlaneNumber)/warpedLineNumber);
                 currentA=(index-currentB*warpedLineNumber-currentC*warpedPlaneNumber);
 
@@ -1530,7 +1530,7 @@ void ResampleImage3D_PSF(nifti_image *floatingImage,
                 psfKernelShift[2]=TmS_EigVal.m[2][2]<0.01f?0.0f:(float)(psfNumbSamples)*psfSampleSpacing;
 
                 // Get image coordinates of the centre
-                currentC=reg_floor(index/warpedPlaneNumber);
+                currentC=index/warpedPlaneNumber;
                 currentB=reg_floor((index-currentC*warpedPlaneNumber)/warpedLineNumber);
                 currentA=(index-currentB*warpedLineNumber-currentC*warpedPlaneNumber);
 
