@@ -335,7 +335,11 @@ reduction(+:activeVoxel_num)
                             ) /
                             (refSdevPtr0[voxel]*warSdevPtr0[voxel]);
 
+#ifdef RNIFTYREG
+               if(R_FINITE(lncc_value))
+#else
                if(lncc_value==lncc_value && isinf(lncc_value)==0)
+#endif
                {
                   lncc_value_sum += fabs(lncc_value);
                   ++activeVoxel_num;
@@ -538,9 +542,13 @@ void reg_getVoxelBasedLNCCGradient(nifti_image *referenceImage,
                     (refSdevValue*warSdevValue*warSdevValue*warSdevValue)
                     -
                     refMeanValue / (refSdevValue * warSdevValue);
+#ifdef RNIFTYREG
+            if(R_FINITE(temp1) && R_FINITE(temp2) && R_FINITE(temp3))
+#else
             if(temp1==temp1 && isinf(temp1)==0 &&
                   temp2==temp2 && isinf(temp2)==0 &&
                   temp3==temp3 && isinf(temp3)==0)
+#endif
             {
                // Derivative of the absolute function
                if(correlaValue<0)
@@ -613,7 +621,11 @@ void reg_getVoxelBasedLNCCGradient(nifti_image *referenceImage,
    for(voxel=0; voxel<voxelNumber; ++voxel)
    {
       val=lnccGradPtrX[voxel];
+#ifdef RNIFTYREG
+      if(R_FINITE(val))
+#else
       if(val!=val || isinf(val)!=0)
+#endif
          lnccGradPtrX[voxel]=static_cast<DTYPE>(0);
    }
 }
