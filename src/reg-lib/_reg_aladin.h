@@ -80,8 +80,8 @@ protected:
 	float FloatingSigma;
 	float ReferenceSigma;
 
-	float ReferenceUpperThreshold;
-	float ReferenceLowerThreshold;
+	T ReferenceUpperThreshold;
+	T ReferenceLowerThreshold;
 	float FloatingUpperThreshold;
 	float FloatingLowerThreshold;
 	int clIdx;
