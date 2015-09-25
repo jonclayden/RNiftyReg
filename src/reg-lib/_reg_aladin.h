@@ -82,8 +82,8 @@ protected:
 
 	T ReferenceUpperThreshold;
 	T ReferenceLowerThreshold;
-	float FloatingUpperThreshold;
-	float FloatingLowerThreshold;
+	T FloatingUpperThreshold;
+	T FloatingLowerThreshold;
 	int clIdx;
 
 	Platform *platform;
@@ -213,15 +213,15 @@ public:
 	SetMacro(ReferenceSigma,float)
 	GetMacro(ReferenceSigma,float)
 
-	SetMacro(ReferenceUpperThreshold,float)
-	GetMacro(ReferenceUpperThreshold,float)
-	SetMacro(ReferenceLowerThreshold,float)
-	GetMacro(ReferenceLowerThreshold,float)
+	SetMacro(ReferenceUpperThreshold,T)
+	GetMacro(ReferenceUpperThreshold,T)
+	SetMacro(ReferenceLowerThreshold,T)
+	GetMacro(ReferenceLowerThreshold,T)
 
-	SetMacro(FloatingUpperThreshold,float)
-	GetMacro(FloatingUpperThreshold,float)
-	SetMacro(FloatingLowerThreshold,float)
-	GetMacro(FloatingLowerThreshold,float)
+	SetMacro(FloatingUpperThreshold,T)
+	GetMacro(FloatingUpperThreshold,T)
+	SetMacro(FloatingLowerThreshold,T)
+	GetMacro(FloatingLowerThreshold,T)
 
 	SetMacro(FloatingSigma,float)
 	GetMacro(FloatingSigma,float)
