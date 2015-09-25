@@ -2,6 +2,12 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.0.1
+
+- Fixes for Solaris compilation and UBSAN issues.
+
+=================================================================================
+
 VERSION 2.0.0
 
 - This is a more-or-less complete rewrite of the package, with the goals of
