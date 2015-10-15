@@ -11,4 +11,11 @@ test_that("NIfTI sform/qform operations work", {
     expect_that(voxelToWorld(point,image,simple=TRUE), equals(c(97.5,97.5,47.5)))
     expect_that(worldToVoxel(voxelToWorld(point,image),image), equals(point))
     expect_that(worldToVoxel(voxelToWorld(point,image,simple=TRUE),image,simple=TRUE), equals(point))
+    
+    xform <- structure(round(xform(image)), code=4)
+    qform(image) <- xform
+    sform(image) <- xform
+    expect_that(dumpNifti(image)$qform_code, equals(4L))
+    expect_that(dumpNifti(image)$sform_code, equals(4L))
+    expect_that(dumpNifti(image)$srow_x, equals(c(-2,0,0,122)))
 })

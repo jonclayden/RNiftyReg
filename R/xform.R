@@ -1,18 +1,24 @@
-#' Obtain an affine matrix corresponding to the ``xform'' of an image
+#' Obtain or replace the ``xform'' transforms for an image
 #' 
-#' This function converts the ``qform'' or ``sform'' information in a NIfTI
-#' header into its corresponding affine matrix. These two ``xform'' mechanisms
-#' are defined by the NIfTI standard and may both be in use in a particular
-#' image header.
+#' These functions convert the ``qform'' or ``sform'' information in a NIfTI
+#' header to or from a corresponding affine matrix. These two ``xform''
+#' mechanisms are defined by the NIfTI standard, and may both be in use in a
+#' particular image header.
 #' 
-#' @param image An image, in any acceptable form (see \code{\link{isImage}}).
+#' @param image,x An image, in any acceptable form (see \code{\link{isImage}}).
 #' @param useQuaternionFirst A single logical value. If \code{TRUE}, the
 #'   ``qform'' matrix will be used first, if it is defined; otherwise the
 #'   ``sform'' matrix will take priority.
+#' @param value A new 4x4 qform or sform matrix. If the matrix has a
+#'   \code{"code"} attribute, the appropriate qform or sform code is also set.
 #' @return A affine matrix corresponding to the ``qform'' or ``sform''
 #'   information in the image header. This is a plain matrix, which does not
 #'   have the \code{"affine"} class or \code{source} and \code{target}
 #'   attributes.
+#' 
+#' @note The qform and sform replacement functions are for advanced users only.
+#'   Modifying the transforms without knowing what you're doing is usually
+#'   unwise, as you can make the image object inconsistent.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @references The NIfTI-1 standard (\url{http://nifti.nimh.nih.gov/nifti-1})
@@ -21,6 +27,22 @@
 xform <- function (image, useQuaternionFirst = TRUE)
 {
     return (.Call("getXform", image, isTRUE(useQuaternionFirst), PACKAGE="RNiftyReg"))
+}
+
+
+#' @rdname xform
+#' @export
+"qform<-" <- function (x, value)
+{
+    return (.Call("setXform", x, value, TRUE, PACKAGE="RNiftyReg"))
+}
+
+
+#' @rdname xform
+#' @export
+"sform<-" <- function (x, value)
+{
+    return (.Call("setXform", x, value, FALSE, PACKAGE="RNiftyReg"))
 }
 
 

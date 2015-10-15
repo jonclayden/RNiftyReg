@@ -90,6 +90,41 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP setXform (SEXP _image, SEXP _matrix, SEXP _isQform)
+{
+BEGIN_RCPP
+    NiftiImage image(_image);
+    AffineMatrix matrix(_matrix);
+    
+    int code = -1;
+    if (!Rf_isNull(matrix.attr("code")))
+        code = as<int>(matrix.attr("code"));
+    
+    if (!image.isNull())
+    {
+        if (as<bool>(_isQform))
+        {
+            image->qto_xyz = mat44(matrix);
+            image->qto_ijk = nifti_mat44_inverse(image->qto_xyz);
+            nifti_mat44_to_quatern(image->qto_xyz, &image->quatern_b, &image->quatern_c, &image->quatern_d, &image->qoffset_x, &image->qoffset_y, &image->qoffset_z, NULL, NULL, NULL, &image->qfac);
+            
+            if (code >= 0)
+                image->qform_code = code;
+        }
+        else
+        {
+            image->sto_xyz = mat44(matrix);
+            image->sto_ijk = nifti_mat44_inverse(image->sto_xyz);
+            
+            if (code >= 0)
+                image->sform_code = code;
+        }
+    }
+    
+    return _image;
+END_RCPP
+}
+
 RcppExport SEXP rescaleImage (SEXP _image, SEXP _scales)
 {
 BEGIN_RCPP
