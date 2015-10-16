@@ -13,6 +13,9 @@ test_that("Existing transformations can be applied and combined", {
     expect_that(as.array(jacobian(deformation))[34,49,64], equals(prod(diag(t2_to_t1)),tolerance=0.05))
     
     expect_that(applyTransform(t2_to_t1,c(40,40,20),nearest=TRUE), equals(c(34,49,64)))
+    
+    skip_on_os("solaris")
+    
     point <- applyTransform(t2_to_t1, c(40,40,20), nearest=FALSE)
     expect_that(applyTransform(t1_to_mni,point,nearest=TRUE), equals(c(33,49,24)))
     expect_that(round(applyTransform(t1_to_mni,point,nearest=FALSE)), equals(c(33,49,24)))

@@ -10,10 +10,10 @@ test_that("Core registration functions work", {
         skewedHouse <- applyTransform(affine, house)
         
         reg <- niftyreg(skewedHouse, house, symmetric=FALSE)
-        expect_that(forward(reg)[1,2], equals(0.1,tolerance=0.05))
+        expect_that(forward(reg)[1,2], equals(0.1,tolerance=0.1))
         
         reg <- niftyreg(skewedHouse, house, symmetric=TRUE)
-        expect_that(forward(reg)[1,2], equals(0.1,tolerance=0.05))
+        expect_that(forward(reg)[1,2], equals(0.1,tolerance=0.1))
         
         # Only true for the symmetric case
         expect_that(invertAffine(forward(reg)), equals(reverse(reg),tolerance=0.0001,check.attributes=FALSE))
