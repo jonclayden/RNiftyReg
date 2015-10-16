@@ -126,7 +126,7 @@ template <int Dim>
 Rcpp::NumericVector DeformationField::findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const
 {
     typedef Eigen::Matrix<double,Dim,1> Point;
-    Point closestLoc;
+    Point closestLoc = Point::Zero();
     
     const PRECISION_TYPE *deformationPointer = (const PRECISION_TYPE *) deformationFieldImage->data;
     const size_t nVoxels = deformationFieldImage->nx * deformationFieldImage->ny * deformationFieldImage->nz;
