@@ -1,6 +1,6 @@
 Package: RNiftyReg
-Version: 2.0.1
-Date: 2015-09-22
+Version: 2.1.0
+Date: 2015-10-16
 Title: Image Registration Using the NiftyReg Library
 Author: Jon Clayden, based on original code by Marc Modat, Pankaj Daga and others
 Maintainer: Jon Clayden <code@clayden.org>

@@ -2,6 +2,15 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.1.0
+
+- New functions for replacing an image's sform and qform matrices have been
+  added. These are for advanced use only.
+- Some tests are skipped on Solaris, to avoid failures which have been hard to
+  reproduce.
+
+=================================================================================
+
 VERSION 2.0.1
 
 - Fixes for Solaris compilation and UBSAN issues.
