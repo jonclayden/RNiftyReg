@@ -93,7 +93,7 @@ void reg_lncc::UpdateLocalStatImages(nifti_image *originalImage,
    reg_tools_kernelConvolution(meanImage, this->kernelStandardDeviation, this->kernelType, mask, this->activeTimePoint);
    reg_tools_kernelConvolution(stdDevImage, this->kernelStandardDeviation, this->kernelType, mask, this->activeTimePoint);
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxel;
    long voxelNumber=(long)originalImage->nvox;
 #else
@@ -295,7 +295,7 @@ double reg_getLNCCValue(nifti_image *referenceImage,
    DTYPE *refSdevPtr=static_cast<DTYPE *>(referenceSdevImage->data);
    DTYPE *warSdevPtr=static_cast<DTYPE *>(warpedSdevImage->data);
    DTYPE *correlaPtr=static_cast<DTYPE *>(correlationImage->data);
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxel;
    long voxelNumber=(long)referenceImage->nx*
          referenceImage->ny*referenceImage->nz;
@@ -481,7 +481,7 @@ void reg_getVoxelBasedLNCCGradient(nifti_image *referenceImage,
    DTYPE *warSdevPtr=static_cast<DTYPE *>(warpedSdevImage->data);
    DTYPE *correlaPtr=static_cast<DTYPE *>(correlationImage->data);
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxel;
    long voxelNumber=(long)referenceImage->nx*
          referenceImage->ny*referenceImage->nz;
@@ -608,7 +608,7 @@ void reg_getVoxelBasedLNCCGradient(nifti_image *referenceImage,
    }
    // Check for NaN
    DTYPE val;
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    voxelNumber=(long)lnccGradientImage->nvox;
 #else
    voxelNumber=lnccGradientImage->nvox;

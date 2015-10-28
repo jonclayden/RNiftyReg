@@ -249,7 +249,7 @@ void reg_dti_resampling_postprocessing(nifti_image *inputImage,
          DTYPE *inputIntensityZZ = &firstWarpVox[voxelNumber*(dtIndicies[5]+inputImage->nt*u)];
 
          // Step through each voxel in the warped image
-         double testSum=0;
+         double testSum;
          mat33 jacobianMatrix, R;
          mat33 inputTensor, warpedTensor, RotMat, RotMatT;
          int col, row;
@@ -279,6 +279,7 @@ void reg_dti_resampling_postprocessing(nifti_image *inputImage,
                if(warpedImage==NULL)
                {
                   reg_exponentiate_logged_tensor(&inputTensor);
+                  testSum = 0.0;
                }
                else
                {
@@ -351,7 +352,7 @@ void ResampleImage3D(nifti_image *floatingImage,
                      FieldTYPE paddingValue,
                      int kernel)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long  index;
    long warpedVoxelNumber = (long)warpedImage->nx*warpedImage->ny*warpedImage->nz;
    long floatingVoxelNumber = (long)floatingImage->nx*floatingImage->ny*floatingImage->nz;
@@ -527,7 +528,7 @@ void ResampleImage2D(nifti_image *floatingImage,
                      FieldTYPE paddingValue,
                      int kernel)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long  index;
    long warpedVoxelNumber = (long)warpedImage->nx*warpedImage->ny;
    long floatingVoxelNumber = (long)floatingImage->nx*floatingImage->ny;
@@ -991,7 +992,7 @@ void ResampleImage3D_PSF_Sinc(nifti_image *floatingImage,
                               FieldTYPE paddingValue,
                               int kernel)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
     long index;
     long warpedVoxelNumber = (long)warpedImage->nx*warpedImage->ny*warpedImage->nz;
     long warpedPlaneNumber = (long)warpedImage->nx*warpedImage->ny;
@@ -1289,7 +1290,7 @@ void ResampleImage3D_PSF(nifti_image *floatingImage,
                          mat33 * jacMat,
                          char algorithm)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
     long  index;
     long warpedVoxelNumber = (long)warpedImage->nx*warpedImage->ny*warpedImage->nz;
     long warpedPlaneNumber = (long)warpedImage->nx*warpedImage->ny;
@@ -2498,7 +2499,7 @@ void TrilinearImageGradient(nifti_image *floatingImage,
                             int *mask,
                             float paddingValue)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long index;
    long referenceVoxelNumber = (long)warpedGradientImage->nx*warpedGradientImage->ny*warpedGradientImage->nz;
    long floatingVoxelNumber = (long)floatingImage->nx*floatingImage->ny*floatingImage->nz;
@@ -2692,7 +2693,7 @@ void BilinearImageGradient(nifti_image *floatingImage,
                            int *mask,
                            float paddingValue)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long index;
    long referenceVoxelNumber = (long)warpedGradientImage->nx*warpedGradientImage->ny;
    long floatingVoxelNumber = (long)floatingImage->nx*floatingImage->ny;
@@ -2824,7 +2825,7 @@ void CubicSplineImageGradient3D(nifti_image *floatingImage,
                                 int *mask,
                                 float paddingValue)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long index;
    long referenceVoxelNumber = (long)warpedGradientImage->nx*warpedGradientImage->ny*warpedGradientImage->nz;
    long floatingVoxelNumber = (long)floatingImage->nx*floatingImage->ny*floatingImage->nz;
@@ -2987,7 +2988,7 @@ void CubicSplineImageGradient2D(nifti_image *floatingImage,
                                 nifti_image *warpedGradientImage,
                                 int *mask)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long index;
    long referenceVoxelNumber = (long)warpedGradientImage->nx*warpedGradientImage->ny;
    long floatingVoxelNumber = (long)floatingImage->nx*floatingImage->ny;

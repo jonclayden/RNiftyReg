@@ -760,7 +760,7 @@ void reg_spline_getDeformationField2D(nifti_image *splineControlPoint,
       float f[4];
    } val;
    __m128 tempCurrent, tempX, tempY;
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    __declspec(align(16)) DTYPE temp[4];
    __declspec(align(16)) DTYPE yBasis[4];
    union
@@ -1087,7 +1087,7 @@ void reg_spline_getDeformationField3D(nifti_image *splineControlPoint,
    __m128 tempX, tempY, tempZ, tempCurrent;
    __m128 xBasis_sse, yBasis_sse, zBasis_sse, temp_basis_sse, basis_sse;
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    __declspec(align(16)) DTYPE temp[4];
    __declspec(align(16)) DTYPE zBasis[4];
    union
@@ -1156,7 +1156,7 @@ void reg_spline_getDeformationField3D(nifti_image *splineControlPoint,
          referenceMatrix_real_to_voxel=(splineControlPoint->sto_ijk);
       else referenceMatrix_real_to_voxel=(splineControlPoint->qto_ijk);
 #ifdef _USE_SSE
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
       __declspec(align(16)) DTYPE xBasis[4];
       __declspec(align(16)) DTYPE yBasis[4];
 #else
@@ -1354,7 +1354,7 @@ void reg_spline_getDeformationField3D(nifti_image *splineControlPoint,
       gridVoxelSpacing[1] = splineControlPoint->dy / deformationField->dy;
       gridVoxelSpacing[2] = splineControlPoint->dz / deformationField->dz;
 #ifdef _USE_SSE
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
       union u1
       {
          __m128 m[4];
@@ -2461,7 +2461,7 @@ void reg_defField_compose2D(nifti_image *deformationField,
                             int *mask)
 {
    size_t DFVoxelNumber=(size_t)deformationField->nx*deformationField->ny;
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long i;
    long warVoxelNumber=(size_t)dfToUpdate->nx*dfToUpdate->ny;
 #else
@@ -2565,7 +2565,7 @@ void reg_defField_compose3D(nifti_image *deformationField,
 {
    const int DefFieldDim[3]= {deformationField->nx,deformationField->ny,deformationField->nz};
    const size_t DFVoxelNumber=(size_t)DefFieldDim[0]*DefFieldDim[1]*DefFieldDim[2];
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long i;
    long warVoxelNumber=(size_t)dfToUpdate->nx*
          dfToUpdate->ny*dfToUpdate->nz;
@@ -2583,7 +2583,7 @@ void reg_defField_compose3D(nifti_image *deformationField,
    DTYPE *resPtrY = &resPtrX[warVoxelNumber];
    DTYPE *resPtrZ = &resPtrY[warVoxelNumber];
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    __declspec(align(16))mat44 df_real2Voxel;
 #else
    mat44 df_real2Voxel __attribute__((aligned(16)));
@@ -3399,7 +3399,7 @@ void reg_spline_cppComposition_2D(nifti_image *grid1,
 
    DTYPE basis;
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    __declspec(align(16)) DTYPE xBasis[4];
    __declspec(align(16)) DTYPE yBasis[4];
 #if _USE_SSE
@@ -3584,7 +3584,7 @@ void reg_spline_cppComposition_3D(nifti_image *grid1,
 
    DTYPE basis;
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    __declspec(align(16)) DTYPE xBasis[4];
    __declspec(align(16)) DTYPE yBasis[4];
    __declspec(align(16)) DTYPE zBasis[4];
@@ -4194,7 +4194,7 @@ void compute_lie_bracket(nifti_image *img1,
                          )
 {
    reg_exit(1); // to update
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxNumber=(long)img1->nx*img1->ny*img1->nz;
 #else
    size_t voxNumber=(size_t)img1->nx*img1->ny*img1->nz;
@@ -4318,7 +4318,7 @@ void compute_lie_bracket(nifti_image *img1,
    DTYPE *two_onePtr=static_cast<DTYPE *>(two_one->data);
    // Compute the lie bracket value using difference of composition
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long i;
    voxNumber=(long)res->nvox;
 #else
@@ -4347,7 +4347,7 @@ void compute_BCH_update1(nifti_image *img1, // current field
 {
    DTYPE *res=(DTYPE *)malloc(img1->nvox*sizeof(DTYPE));
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long i;
    long voxelNumber=(long)img1->nvox;
 #else

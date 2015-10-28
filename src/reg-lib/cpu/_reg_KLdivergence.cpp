@@ -19,7 +19,7 @@ double reg_getKLDivergence1(nifti_image *referenceImage,
                             nifti_image *jacobianDetImg,
                             int *mask)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxel;
    long voxelNumber = (long)referenceImage->nx*referenceImage->ny*referenceImage->nz;
 #else
@@ -141,7 +141,7 @@ void reg_getKLDivergenceVoxelBasedGradient1(nifti_image *referenceImage,
       nifti_image *jacobianDetImg,
       int *mask)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxel;
    long voxelNumber = (long)referenceImage->nx*referenceImage->ny*referenceImage->nz;
 #else

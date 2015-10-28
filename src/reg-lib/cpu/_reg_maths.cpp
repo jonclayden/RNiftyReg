@@ -87,7 +87,7 @@ void svd(T **in, size_t size_m, size_t size_n, T * w, T **v) {
 		reg_exit(1);
 	}
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
 	long sm, sn, sn2;
 	long size__m=(long)size_m,size__n=(long)size_n;
 #else

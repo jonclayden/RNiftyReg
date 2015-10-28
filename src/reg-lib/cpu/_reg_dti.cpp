@@ -83,7 +83,7 @@ double reg_getDTIMeasureValue(nifti_image *referenceImage,
                               unsigned int * dtIndicies
                              )
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxel;
    long voxelNumber = (long)referenceImage->nx*
                         referenceImage->ny*referenceImage->nz;
@@ -232,7 +232,7 @@ void reg_getVoxelBasedDTIMeasureGradient(nifti_image *referenceImage,
       unsigned int * dtIndicies)
 {
    // Create pointers to the reference and warped images
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxel;
    long voxelNumber = (long)referenceImage->nx*referenceImage->ny*referenceImage->nz;
 #else

@@ -91,7 +91,7 @@ double reg_getSSDValue(nifti_image *referenceImage,
                       )
 {
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxel;
    long voxelNumber = (long)referenceImage->nx*referenceImage->ny*referenceImage->nz;
 #else
@@ -256,7 +256,7 @@ void reg_getVoxelBasedSSDGradient(nifti_image *referenceImage,
                                   int *mask)
 {
    // Create pointers to the reference and warped images
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long voxel;
    long voxelNumber = (long)referenceImage->nx*referenceImage->ny*referenceImage->nz;
 #else

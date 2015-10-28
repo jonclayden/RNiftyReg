@@ -535,7 +535,7 @@ void reg_tools_operationImageToImage(nifti_image *img1,
    res->scl_inter=img1->scl_inter;
 
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long i;
    long voxelNumber=(long)res->nvox;
 #else
@@ -806,7 +806,7 @@ void reg_tools_operationValueToImage(nifti_image *img1,
    res->scl_slope=img1->scl_slope;
    res->scl_inter=img1->scl_inter;
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(__GNUC__)
    long i;
    long voxelNumber=(long)res->nvox;
 #else
