@@ -647,6 +647,11 @@ RObject NiftiImage::toPointer (const std::string label) const
     }
 }
 
+RObject NiftiImage::toArrayOrPointer (const bool internal, const std::string label) const
+{
+    return (internal ? toPointer(label) : toArray());
+}
+
 RObject NiftiImage::headerToList () const
 {
     if (this->image == NULL)

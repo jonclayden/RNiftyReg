@@ -28,15 +28,27 @@
 #'   region will be taken as the region of interest for the registration.
 #' @param symmetric Logical value. Should forward and reverse transformations
 #'   be estimated simultaneously?
+#' @param interpolation A single integer specifying the type of interpolation
+#'   to be applied to the final resampled image. May be 0 (nearest neighbour),
+#'   1 (trilinear) or 3 (cubic spline). No other values are valid.
 #' @param estimateOnly Logical value: if \code{TRUE}, transformations will be
 #'   estimated, but images will not be resampled.
+#' @param sequentialInit If \code{TRUE} and \code{source} has higher
+#'   dimensionality than \code{target}, transformations which are not
+#'   explicitly initialised will begin from the result of the previous
+#'   registration.
+#' @param internal If \code{FALSE}, the default, the returned image will be
+#'   returned as a standard R array. If \code{TRUE}, it will instead be an
+#'   object of class \code{"internalImage"}, containing only basic metadata and
+#'   a C-level pointer to the full image. (See also \code{\link{readNifti}}.)
+#'   This can occasionally be useful to save memory.
 #' @param ... Further arguments to \code{\link{niftyreg.linear}} or
 #'   \code{\link{niftyreg.nonlinear}}.
 #' @param x A \code{"niftyreg"} object.
 #' @return A list of class \code{"niftyreg"} with components:
-#'   \item{image}{An array representing the registered and resampled
-#'     \code{source} image in the space of the \code{target} image. This
-#'     element is \code{NULL} if the \code{estimateOnly} parameter is
+#'   \item{image}{An array or internal image representing the registered and
+#'     resampled \code{source} image in the space of the \code{target} image.
+#'     This element is \code{NULL} if the \code{estimateOnly} parameter is
 #'     \code{TRUE}.}
 #'   \item{forwardTransforms}{A list of (linear or nonlinear) transformations
 #'     from source to target space.}
@@ -76,16 +88,16 @@
 #' \code{\link{niftyreg.nonlinear}} for references relating to each type of
 #' registration.
 #' @export
-niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, estimateOnly = FALSE, ...)
+niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, interpolation = 3L, estimateOnly = FALSE, sequentialInit = FALSE, internal = FALSE, ...)
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
     
     scope <- match.arg(scope)
     if (scope == "nonlinear")
-        niftyreg.nonlinear(source, target, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
+        niftyreg.nonlinear(source, target, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, ...)
     else
-        niftyreg.linear(source, target, scope, init, sourceMask, targetMask, symmetric=symmetric, estimateOnly=estimateOnly, ...)
+        niftyreg.linear(source, target, scope, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, ...)
 }
 
 
@@ -134,17 +146,10 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
 #' @param useBlockPercentage A single integer giving the percentage of blocks
 #'   to use for calculating correspondence at each step of the algorithm. The
 #'   blocks with the highest intensity variance will be chosen.
-#' @param interpolation A single integer specifying the type of interpolation
-#'   to be applied to the final resampled image. May be 0 (nearest neighbour),
-#'   1 (trilinear) or 3 (cubic spline). No other values are valid.
 #' @param verbose A single logical value: if \code{TRUE}, the code will give
 #'   some feedback on its progress; otherwise, nothing will be output while the
 #'   algorithm runs. Run time can be seconds or more, depending on the size and
 #'   dimensionality of the images.
-#' @param sequentialInit If \code{TRUE} and \code{source} has higher
-#'   dimensionality than \code{target}, transformations which are not
-#'   explicitly initialised will begin from the result of the previous
-#'   registration.
 #' @return See \code{\link{niftyreg}}.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
@@ -160,7 +165,7 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
 #' (2014). Global image registration using a symmetric block-matching approach.
 #' Journal of Medical Imaging 1(2):024003.
 #' @export
-niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = FALSE)
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -190,7 +195,7 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
             return (x)
     })
     
-    result <- .Call("regLinear", source, target, ifelse(scope=="affine",1L,0L), symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, PACKAGE="RNiftyReg")
+    result <- .Call("regLinear", source, target, ifelse(scope=="affine",1L,0L), symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, internal, PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)
@@ -251,17 +256,10 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
 #' @param spacingUnit A character string giving the units in which the
 #'   \code{finalSpacing} is specified: either \code{"voxel"} for pixels/voxels,
 #'   or \code{"world"} for real-world units (see \code{\link{pixunits}}).
-#' @param interpolation A single integer specifying the type of interpolation
-#'   to be applied to the final resampled image. May be 0 (nearest neighbour),
-#'   1 (trilinear) or 3 (cubic spline). No other values are valid.
 #' @param verbose A single logical value: if \code{TRUE}, the code will give
 #'   some feedback on its progress; otherwise, nothing will be output while the
 #'   algorithm runs. Run time can be seconds or more, depending on the size and
 #'   dimensionality of the images.
-#' @param sequentialInit If \code{TRUE} and \code{source} has higher
-#'   dimensionality than \code{target}, transformations which are not
-#'   explicitly initialised will begin from the result of the previous
-#'   registration.
 #' @return See \code{\link{niftyreg}}.
 #' 
 #' @note Performing a linear registration first, and then initialising the
@@ -281,7 +279,7 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
 #' processing units. Computer Methods and Programs in Biomedicine
 #' 98(3):278-284.
 #' @export
-niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001, linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE)
+niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001, linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = FALSE)
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -342,7 +340,7 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
     else
         finalSpacing <- finalSpacing[1:3]
     
-    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, linearEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, PACKAGE="RNiftyReg")
+    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, linearEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, internal, PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)

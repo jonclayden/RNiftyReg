@@ -73,12 +73,17 @@ jacobian <- function (x)
 #' @param nearest Logical value: if \code{TRUE} and \code{x} contains points,
 #'   the nearest voxel centre location in target space will be returned.
 #'   Otherwise a more precise subvoxel location will be given.
+#' @param internal If \code{FALSE}, the default, the returned image will be
+#'   returned as a standard R array. If \code{TRUE}, it will instead be an
+#'   object of class \code{"internalImage"}, containing only basic metadata and
+#'   a C-level pointer to the full image. (See also \code{\link{readNifti}}.)
+#'   This can occasionally be useful to save memory.
 #' @return A resampled image or matrix of transformed points.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}
 #' @export
-applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
+applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE, internal = FALSE)
 {
     source <- attr(transform, "source")
     target <- attr(transform, "target")
@@ -89,7 +94,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
         # The argument looks like a suitable image
         if (isImage(x,TRUE) && isTRUE(all.equal(dim(x)[1:nSourceDim],dim(source))))
         {
-            result <- niftyreg.linear(x, target, "affine", init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE)
+            result <- niftyreg.linear(x, target, "affine", init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE, internal=internal)
             return (result$image)
         }
         else if ((is.matrix(x) && ncol(x) == ndim(source)) || length(x) == ndim(source))
@@ -108,7 +113,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE)
     {
         if (isImage(x,TRUE) && isTRUE(all.equal(dim(x)[1:nSourceDim],dim(source))))
         {
-            result <- niftyreg.nonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE)
+            result <- niftyreg.nonlinear(x, target, init=transform, nLevels=0L, interpolation=interpolation, verbose=FALSE, estimateOnly=FALSE, internal=internal)
             return (result$image)
         }
         else if ((is.matrix(x) && ncol(x) == ndim(source)) || length(x) == ndim(source))

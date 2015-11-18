@@ -172,6 +172,7 @@ public:
     
     Rcpp::RObject toArray () const;
     Rcpp::RObject toPointer (const std::string label) const;
+    Rcpp::RObject toArrayOrPointer (const bool internal, const std::string label) const;
     Rcpp::RObject headerToList () const;
 };
 

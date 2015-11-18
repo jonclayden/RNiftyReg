@@ -28,11 +28,7 @@ RcppExport SEXP readNifti (SEXP _file, SEXP _internal)
 {
 BEGIN_RCPP
     NiftiImage image(_file);
-    
-    if (as<bool>(_internal))
-        return image.toPointer("NIfTI image");
-    else
-        return image.toArray();
+    return image.toArrayOrPointer(as<bool>(_internal), "NIfTI image");
 END_RCPP
 }
 
@@ -153,7 +149,7 @@ void checkImages (const NiftiImage &sourceImage, const NiftiImage &targetImage)
         throw std::runtime_error("Target image should have 2 or 3 dimensions");
 }
 
-RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
+RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit, SEXP _internal)
 {
 BEGIN_RCPP
     NiftiImage sourceImage(_source);
@@ -182,7 +178,7 @@ BEGIN_RCPP
     
         AladinResult result = regAladin(sourceImage, targetImage, scope, symmetric, as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, initAffine, as<bool>(_verbose), estimateOnly);
         
-        returnValue["image"] = result.image.toArray();
+        returnValue["image"] = result.image.toArrayOrPointer(as<bool>(_internal), "Result image");
         returnValue["forwardTransforms"] = List::create(result.forwardTransform);
         if (symmetric)
             returnValue["reverseTransforms"] = List::create(result.reverseTransform);
@@ -230,7 +226,7 @@ BEGIN_RCPP
             iterations[i] = result.iterations;
         }
         
-        returnValue["image"] = finalImage.toArray();
+        returnValue["image"] = finalImage.toArrayOrPointer(as<bool>(_internal), "Result image");
         returnValue["forwardTransforms"] = forwardTransforms;
         if (symmetric)
             returnValue["reverseTransforms"] = reverseTransforms;
@@ -253,7 +249,7 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _linearEnergyWeight, SEXP _jacobianWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit)
+RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _linearEnergyWeight, SEXP _jacobianWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit, SEXP _internal)
 {
 BEGIN_RCPP
     NiftiImage sourceImage(_source);
@@ -289,7 +285,7 @@ BEGIN_RCPP
     
         F3dResult result = regF3d(sourceImage, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_linearEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
         
-        returnValue["image"] = result.image.toArray();
+        returnValue["image"] = result.image.toArrayOrPointer(as<bool>(_internal), "Result image");
         returnValue["forwardTransforms"] = List::create(result.forwardTransform.toPointer("F3D control points"));
         if (symmetric)
             returnValue["reverseTransforms"] = List::create(result.reverseTransform.toPointer("F3D control points"));
@@ -345,7 +341,7 @@ BEGIN_RCPP
             iterations[i] = result.iterations;
         }
         
-        returnValue["image"] = finalImage.toArray();
+        returnValue["image"] = finalImage.toArrayOrPointer(as<bool>(_internal), "Result image");
         returnValue["forwardTransforms"] = forwardTransforms;
         if (symmetric)
             returnValue["reverseTransforms"] = reverseTransforms;
