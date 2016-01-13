@@ -265,6 +265,8 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
     else
         x <- list(translation=translation, scales=scales, skews=skews, angles=angles)
     
+    if (any(x$scales == 0))
+        stop("Scales should not be zero")
     if (length(x$scales) < 3)
         x$scales <- c(x$scales, rep(1,3-length(x$scales)))
     for (name in c("translation","skews","angles"))
@@ -275,12 +277,12 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
     
     if (is.null(target))
     {
-        if (all(x$scales == 1))
+        if (all(abs(x$scales) == 1))
             target <- source
         else
         {
-            target <- .Call("rescaleImage", source, x$scales[1:ndim(source)], PACKAGE="RNiftyReg")
-            x$scales <- c(1,1,1)
+            target <- .Call("rescaleImage", source, abs(x$scales[1:ndim(source)]), PACKAGE="RNiftyReg")
+            x$scales <- sign(x$scales)
         }
     }
     else
