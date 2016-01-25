@@ -77,7 +77,9 @@ writeNifti <- function (image, file, template = NULL, datatype = "auto")
 #' 
 #' @param image A numeric array.
 #' @param template An image, in any acceptable form (see
-#'   \code{\link{isImage}}). The default of \code{NULL} will have no effect.
+#'   \code{\link{isImage}}), or a named list of NIfTI-1 properties like that
+#'   produced by \code{\link{dumpNifti}}. The default of \code{NULL} will have
+#'   no effect.
 #' @return A copy of the original \code{image}, with its internal image
 #'   attribute set or updated appropriately.
 #' 

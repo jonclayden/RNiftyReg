@@ -144,6 +144,102 @@ void NiftiImage::initFromNiftiS4 (const RObject &object, const bool copyData)
     UNPROTECT(1);
 }
 
+template <typename TargetType>
+void copyIfPresent (const List &list, const std::set<std::string> names, const std::string &name, TargetType &target)
+{
+    if (names.count(name) == 1)
+        target = as<TargetType>(list[name]);
+}
+
+void NiftiImage::initFromList (const RObject &object)
+{
+    List list(object);
+    nifti_1_header *header = nifti_make_new_header(NULL, DT_FLOAT64);
+    
+    const CharacterVector _names = list.names();
+    std::set<std::string> names;
+    for (CharacterVector::const_iterator it=_names.begin(); it!=_names.end(); it++)
+        names.insert(as<std::string>(*it));
+    
+    copyIfPresent(list, names, "sizeof_hdr", header->sizeof_hdr);
+    
+    copyIfPresent(list, names, "dim_info", header->dim_info);
+    if (names.count("dim") == 1)
+    {
+        std::vector<short> dim = list["dim"];
+        for (int i=0; i<std::min(dim.size(),size_t(8)); i++)
+            header->dim[i] = dim[i];
+    }
+    
+    copyIfPresent(list, names, "intent_p1", header->intent_p1);
+    copyIfPresent(list, names, "intent_p2", header->intent_p2);
+    copyIfPresent(list, names, "intent_p3", header->intent_p3);
+    copyIfPresent(list, names, "intent_code", header->intent_code);
+    
+    copyIfPresent(list, names, "datatype", header->datatype);
+    copyIfPresent(list, names, "bitpix", header->bitpix);
+    
+    copyIfPresent(list, names, "slice_start", header->slice_start);
+    if (names.count("pixdim") == 1)
+    {
+        std::vector<float> pixdim = list["pixdim"];
+        for (int i=0; i<std::min(pixdim.size(),size_t(8)); i++)
+            header->pixdim[i] = pixdim[i];
+    }
+    copyIfPresent(list, names, "vox_offset", header->vox_offset);
+    copyIfPresent(list, names, "scl_slope", header->scl_slope);
+    copyIfPresent(list, names, "scl_inter", header->scl_inter);
+    copyIfPresent(list, names, "slice_end", header->slice_end);
+    copyIfPresent(list, names, "slice_code", header->slice_code);
+    copyIfPresent(list, names, "xyzt_units", header->xyzt_units);
+    copyIfPresent(list, names, "cal_max", header->cal_max);
+    copyIfPresent(list, names, "cal_min", header->cal_min);
+    copyIfPresent(list, names, "slice_duration", header->slice_duration);
+    copyIfPresent(list, names, "toffset", header->toffset);
+    
+    if (names.count("descrip") == 1)
+        strcpy(header->descrip, as<std::string>(list["descrip"]).substr(0,79).c_str());
+    if (names.count("aux_file") == 1)
+        strcpy(header->aux_file, as<std::string>(list["aux_file"]).substr(0,23).c_str());
+    
+    copyIfPresent(list, names, "qform_code", header->qform_code);
+    copyIfPresent(list, names, "sform_code", header->sform_code);
+    copyIfPresent(list, names, "quatern_b", header->quatern_b);
+    copyIfPresent(list, names, "quatern_c", header->quatern_c);
+    copyIfPresent(list, names, "quatern_d", header->quatern_d);
+    copyIfPresent(list, names, "qoffset_x", header->qoffset_x);
+    copyIfPresent(list, names, "qoffset_y", header->qoffset_y);
+    copyIfPresent(list, names, "qoffset_z", header->qoffset_z);
+    
+    if (names.count("srow_x") == 1)
+    {
+        std::vector<float> srow_x = list["srow_x"];
+        for (int i=0; i<std::min(srow_x.size(),size_t(4)); i++)
+            header->srow_x[i] = srow_x[i];
+    }
+    if (names.count("srow_y") == 1)
+    {
+        std::vector<float> srow_y = list["srow_y"];
+        for (int i=0; i<std::min(srow_y.size(),size_t(4)); i++)
+            header->srow_y[i] = srow_y[i];
+    }
+    if (names.count("srow_z") == 1)
+    {
+        std::vector<float> srow_z = list["srow_z"];
+        for (int i=0; i<std::min(srow_z.size(),size_t(4)); i++)
+            header->srow_z[i] = srow_z[i];
+    }
+    
+    if (names.count("intent_name") == 1)
+        strcpy(header->intent_name, as<std::string>(list["intent_name"]).substr(0,15).c_str());
+    if (names.count("magic") == 1)
+        strcpy(header->magic, as<std::string>(list["magic"]).substr(0,3).c_str());
+    
+    this->image = nifti_convert_nhdr2nim(*header, NULL);
+    this->image->data = NULL;
+    free(header);
+}
+
 void NiftiImage::initFromArray (const RObject &object)
 {
     int dims[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -203,6 +299,8 @@ NiftiImage::NiftiImage (const SEXP object, const bool readData)
         if (this->image == NULL)
             throw std::runtime_error("Failed to read image");
     }
+    else if (Rf_isVectorList(object))
+        initFromList(imageObject);
     else if (imageObject.inherits("nifti"))
         initFromNiftiS4(imageObject, readData);
     else if (imageObject.hasAttribute("dim"))
