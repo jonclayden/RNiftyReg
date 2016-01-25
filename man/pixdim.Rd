@@ -4,6 +4,7 @@
 \alias{pixdim}
 \alias{pixdim<-}
 \alias{pixunits}
+\alias{pixunits<-}
 \title{Pixel dimensions and units}
 \usage{
 pixdim(object)
@@ -11,11 +12,14 @@ pixdim(object)
 pixdim(object) <- value
 
 pixunits(object)
+
+pixunits(object) <- value
 }
 \arguments{
 \item{object}{An R object, generally an image.}
 
-\item{value}{Numeric vector of pixel dimensions along each axis. A scalar
+\item{value}{Numeric vector of pixel dimensions along each axis, or
+character vector of abbreviated units. For dimensions, a scalar
 \code{value} will be recycled if necessary.}
 }
 \value{

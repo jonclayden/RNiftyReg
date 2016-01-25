@@ -410,6 +410,32 @@ void NiftiImage::update (const SEXP array)
         updatePixdim(pixdimVector);
     }
     
+    if (object.hasAttribute("pixunits"))
+    {
+        const std::vector<std::string> pixunitsVector = object.attr("pixunits");
+        for (int i=0; i<pixunitsVector.size(); i++)
+        {
+            if (pixunitsVector[i] == "m")
+                image->xyz_units = NIFTI_UNITS_METER;
+            else if (pixunitsVector[i] == "mm")
+                image->xyz_units = NIFTI_UNITS_MM;
+            else if (pixunitsVector[i] == "um")
+                image->xyz_units = NIFTI_UNITS_MICRON;
+            else if (pixunitsVector[i] == "s")
+                image->time_units = NIFTI_UNITS_SEC;
+            else if (pixunitsVector[i] == "ms")
+                image->time_units = NIFTI_UNITS_MSEC;
+            else if (pixunitsVector[i] == "us")
+                image->time_units = NIFTI_UNITS_USEC;
+            else if (pixunitsVector[i] == "Hz")
+                image->time_units = NIFTI_UNITS_HZ;
+            else if (pixunitsVector[i] == "ppm")
+                image->time_units = NIFTI_UNITS_PPM;
+            else if (pixunitsVector[i] == "rad/s")
+                image->time_units = NIFTI_UNITS_RADS;
+        }
+    }
+    
     // This NIfTI-1 library function clobbers dim[0] if the last dimension is unitary; we undo that here
     nifti_update_dims_from_array(image);
     image->dim[0] = image->ndim = nDims;

@@ -22,6 +22,8 @@ test_that("NIfTI files can be read and written", {
     expect_that(dumpNifti(image)$dim, equals(c(3L,96L,96L,60L,1L,1L,1L,1L)))
     pixdim(image) <- c(5,5,5)
     expect_that(dumpNifti(image)$pixdim, equals(c(-1,5,5,5,0,0,0,0)))
+    pixunits(image) <- c("m","ms")
+    expect_that(dumpNifti(image)$xyzt_units, equals(17L))
     
     image <- updateNifti(image, list(intent_code=1000L))
     expect_that(dumpNifti(image)$intent_code, equals(1000L))
