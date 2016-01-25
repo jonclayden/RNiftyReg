@@ -1,15 +1,17 @@
-#' Check whether an object is an affine matrix
+#' Create, test for and print affine matrices
 #' 
-#' This function returns a logical value indicating whether its argument is, or
-#' resembles a 4x4 affine matrix. Affine transformations are a class of linear
-#' transformations which preserve points, straight lines and planes, and may
-#' consist of a combination of rotation, translation, scale and skew
-#' operations.
+#' \code{isAffine} returns a logical value indicating whether its argument is,
+#' or resembles, a 4x4 affine matrix. \code{asAffine} converts a suitable
+#' matrix to the affine class, attaching the source and target images as
+#' attributes. Affine transformations are a class of linear transformations
+#' which preserve points, straight lines and planes, and may consist of a
+#' combination of rotation, translation, scale and skew operations.
 #' 
-#' @param object Any R object.
+#' @param object An R object.
 #' @param strict If \code{TRUE}, this function just tests whether the object is
 #'   of class \code{"affine"}. Otherwise it also tests for an affine-like 4x4
 #'   matrix.
+#' @param source,target Source and target images for the transformation.
 #' @param x An \code{"affine"} object.
 #' @param ... Additional parameters to methods. Currently unused.
 #' @return A logical value, which is \code{TRUE} if \code{object} appears to be
@@ -32,9 +34,25 @@ isAffine <- function (object, strict = FALSE)
 }
 
 
+#' @rdname affine
+#' @export
 asAffine <- function (object, source = NULL, target = NULL)
 {
+    if ("affine" %in% class(object))
+        return (object)
+    else
+        object <- as.matrix(object)
     
+    if (!isTRUE(all.equal(dim(object), c(4,4))))
+        stop("Affine matrix should be 4x4")
+    
+    object <- structure(object, source=source, target=target, class="affine")
+    if (!("niftiImage" %in% class(attr(object,"source"))))
+        attr(object,"source") <- .Call("retrieveImage", attr(object,"source"), PACKAGE="RNiftyReg")
+    if (!("niftiImage" %in% class(attr(object,"target"))))
+        attr(object,"target") <- .Call("retrieveImage", attr(object,"target"), PACKAGE="RNiftyReg")
+    
+    return (object)
 }
 
 
@@ -115,13 +133,11 @@ readAffine <- function (fileName, source = NULL, target = NULL, type = NULL)
     if (!isTRUE(all.equal(dim(affine), c(4,4))))
         stop("The specified file does not contain a 4x4 affine matrix")
     
-    source <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
-    target <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
-    
+    affine <- asAffine(affine, source, target)
     if (type != "niftyreg")
-        return (convertAffine(affine, source, target, "niftyreg"))
-    else
-        return (structure(affine, class="affine", source=source, target=target))
+        affine <- convertAffine(affine, source, target, "niftyreg")
+    
+    return (affine)
 }
 
 
@@ -195,7 +211,7 @@ convertAffine <- function (affine, source = NULL, target = NULL, newType = c("ni
     else
         newAffine <- sourceXform %*% solve(sourceScaling) %*% solve(affine) %*% targetScaling %*% solve(targetXform)
     
-    return (structure(newAffine, class="affine", source=source, target=target))
+    return (asAffine(newAffine, source, target))
 }
 
 
@@ -221,7 +237,7 @@ invertAffine <- function (affine)
         stop("Specified affine matrix is not valid")
     
     newAffine <- solve(affine)
-    return (structure(newAffine, class="affine", source=attr(affine,"target"), target=attr(affine,"source")))
+    return (asAffine(newAffine, attr(affine,"target"), attr(affine,"source")))
 }
 
 
@@ -320,7 +336,7 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
     
     affine[4,] <- c(0,0,0,1)
     
-    return (structure(affine, class="affine", source=source, target=target))
+    return (asAffine(affine, source, target))
 }
 
 
