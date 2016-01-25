@@ -751,10 +751,7 @@ RObject NiftiImage::toArray () const
     
     addAttributes(array, image);
     const IntegerVector dim = array.attr("dim");
-    if (dim.length() == 2)
-        array.attr("class") = CharacterVector::create("niftiImage", "matrix");
-    else
-        array.attr("class") = CharacterVector::create("niftiImage", "array");
+    array.attr("class") = CharacterVector::create("niftiImage");
     return array;
 }
 
