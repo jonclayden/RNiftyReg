@@ -117,7 +117,10 @@ BEGIN_RCPP
         }
     }
     
-    return _image;
+    if (image.isPersistent())
+        return _image;
+    else
+        return image.toArray();
 END_RCPP
 }
 

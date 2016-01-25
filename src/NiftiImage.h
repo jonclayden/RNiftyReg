@@ -139,6 +139,7 @@ public:
     }
     
     bool isNull () const { return (image == NULL); }
+    bool isPersistent () const { return persistent; }
     int nDims () const
     {
         if (image == NULL)
