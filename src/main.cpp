@@ -70,7 +70,7 @@ END_RCPP
 RcppExport SEXP dumpNifti (SEXP _image)
 {
 BEGIN_RCPP
-    const NiftiImage image(_image);
+    const NiftiImage image(_image, false);
     return image.headerToList();
 END_RCPP
 }
@@ -78,7 +78,7 @@ END_RCPP
 RcppExport SEXP getXform (SEXP _image, SEXP _preferQuaternion)
 {
 BEGIN_RCPP
-    const NiftiImage image(_image);
+    const NiftiImage image(_image, false);
     const bool preferQuaternion = as<bool>(_preferQuaternion);
     
     AffineMatrix matrix(image.xform(preferQuaternion), false);
@@ -402,8 +402,8 @@ RcppExport SEXP transformPoints (SEXP _transform, SEXP _points, SEXP _nearest)
 BEGIN_RCPP
     NiftiImage transformationImage(_transform);
     RObject transform(_transform);
-    NiftiImage sourceImage(SEXP(transform.attr("source")));
-    NiftiImage targetImage(SEXP(transform.attr("target")));
+    NiftiImage sourceImage(SEXP(transform.attr("source")), false);
+    NiftiImage targetImage(SEXP(transform.attr("target")), false);
     DeformationField deformationField(targetImage, transformationImage);
     NumericMatrix points(_points);
     List result(points.nrow());

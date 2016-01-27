@@ -240,7 +240,7 @@ void NiftiImage::initFromList (const RObject &object)
     free(header);
 }
 
-void NiftiImage::initFromArray (const RObject &object)
+void NiftiImage::initFromArray (const RObject &object, const bool copyData)
 {
     int dims[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     const std::vector<int> dimVector = object.attr("dim");
@@ -261,11 +261,16 @@ void NiftiImage::initFromArray (const RObject &object)
     
     this->image = nifti_make_new_nim(dims, datatype, TRUE);
     
-    const size_t dataSize = nifti_get_volsize(image);
-    if (datatype == DT_INT32)
-        memcpy(this->image->data, INTEGER(object), dataSize);
+    if (copyData)
+    {
+        const size_t dataSize = nifti_get_volsize(image);
+        if (datatype == DT_INT32)
+            memcpy(this->image->data, INTEGER(object), dataSize);
+        else
+            memcpy(this->image->data, REAL(object), dataSize);
+    }
     else
-        memcpy(this->image->data, REAL(object), dataSize);
+        this->image->data = NULL;
     
     if (object.hasAttribute("pixdim"))
     {
@@ -273,6 +278,12 @@ void NiftiImage::initFromArray (const RObject &object)
         const int pixdimLength = pixdimVector.size();
         for (int i=0; i<std::min(pixdimLength,nDims); i++)
             this->image->pixdim[i+1] = pixdimVector[i];
+    }
+    
+    if (object.hasAttribute("pixunits"))
+    {
+        const std::vector<std::string> pixunitsVector = object.attr("pixunits");
+        setPixunits(pixunitsVector);
     }
 }
 
@@ -316,7 +327,7 @@ NiftiImage::NiftiImage (const SEXP object, const bool readData)
 #endif
 }
 
-void NiftiImage::updatePixdim (const std::vector<float> pixdim)
+void NiftiImage::updatePixdim (const std::vector<float> &pixdim)
 {
     const int nDims = image->dim[0];
     const std::vector<float> origPixdim(image->pixdim+1, image->pixdim+4);
@@ -369,7 +380,32 @@ void NiftiImage::updatePixdim (const std::vector<float> pixdim)
     }
 }
 
-void NiftiImage::rescale (const std::vector<float> scales)
+void NiftiImage::setPixunits (const std::vector<std::string> &pixunits)
+{
+    for (int i=0; i<pixunits.size(); i++)
+    {
+        if (pixunits[i] == "m")
+            image->xyz_units = NIFTI_UNITS_METER;
+        else if (pixunits[i] == "mm")
+            image->xyz_units = NIFTI_UNITS_MM;
+        else if (pixunits[i] == "um")
+            image->xyz_units = NIFTI_UNITS_MICRON;
+        else if (pixunits[i] == "s")
+            image->time_units = NIFTI_UNITS_SEC;
+        else if (pixunits[i] == "ms")
+            image->time_units = NIFTI_UNITS_MSEC;
+        else if (pixunits[i] == "us")
+            image->time_units = NIFTI_UNITS_USEC;
+        else if (pixunits[i] == "Hz")
+            image->time_units = NIFTI_UNITS_HZ;
+        else if (pixunits[i] == "ppm")
+            image->time_units = NIFTI_UNITS_PPM;
+        else if (pixunits[i] == "rad/s")
+            image->time_units = NIFTI_UNITS_RADS;
+    }
+}
+
+void NiftiImage::rescale (const std::vector<float> &scales)
 {
     std::vector<float> pixdim(image->pixdim+1, image->pixdim+4);
     
@@ -413,27 +449,7 @@ void NiftiImage::update (const SEXP array)
     if (object.hasAttribute("pixunits"))
     {
         const std::vector<std::string> pixunitsVector = object.attr("pixunits");
-        for (int i=0; i<pixunitsVector.size(); i++)
-        {
-            if (pixunitsVector[i] == "m")
-                image->xyz_units = NIFTI_UNITS_METER;
-            else if (pixunitsVector[i] == "mm")
-                image->xyz_units = NIFTI_UNITS_MM;
-            else if (pixunitsVector[i] == "um")
-                image->xyz_units = NIFTI_UNITS_MICRON;
-            else if (pixunitsVector[i] == "s")
-                image->time_units = NIFTI_UNITS_SEC;
-            else if (pixunitsVector[i] == "ms")
-                image->time_units = NIFTI_UNITS_MSEC;
-            else if (pixunitsVector[i] == "us")
-                image->time_units = NIFTI_UNITS_USEC;
-            else if (pixunitsVector[i] == "Hz")
-                image->time_units = NIFTI_UNITS_HZ;
-            else if (pixunitsVector[i] == "ppm")
-                image->time_units = NIFTI_UNITS_PPM;
-            else if (pixunitsVector[i] == "rad/s")
-                image->time_units = NIFTI_UNITS_RADS;
-        }
+        setPixunits(pixunitsVector);
     }
     
     // This NIfTI-1 library function clobbers dim[0] if the last dimension is unitary; we undo that here
