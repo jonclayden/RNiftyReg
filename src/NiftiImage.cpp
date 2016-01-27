@@ -315,7 +315,7 @@ NiftiImage::NiftiImage (const SEXP object, const bool readData)
     else if (imageObject.inherits("nifti"))
         initFromNiftiS4(imageObject, readData);
     else if (imageObject.hasAttribute("dim"))
-        initFromArray(imageObject);
+        initFromArray(imageObject, readData);
     else
         throw std::runtime_error("Cannot convert object of class \"" + as<std::string>(imageObject.attr("class")) + "\" to a nifti_image");
     
