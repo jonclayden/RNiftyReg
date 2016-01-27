@@ -67,21 +67,23 @@ This can occasionally be useful to save memory.}
 }
 \value{
 A list of class \code{"niftyreg"} with components:
-  \item{image}{An array or internal image representing the registered and
-    resampled \code{source} image in the space of the \code{target} image.
-    This element is \code{NULL} if the \code{estimateOnly} parameter is
-    \code{TRUE}.}
-  \item{forwardTransforms}{A list of (linear or nonlinear) transformations
-    from source to target space.}
-  \item{reverseTransforms}{A list of (linear or nonlinear) transformations
-    from target to source space.}
-  \item{iterations}{A list of integer vectors, giving the number of
-    iterations completed at each ``level'' of the algorithm. Note that for
-    the first level of the linear algorithm specifically, twice the
-    specified number of iterations is allowed.}
-  \item{source}{An internal representation of the source image for each
-    registration.}
-  \item{target}{An internal representation of the target image.}
+  \describe{
+    \item{image}{An array or internal image representing the registered and
+      resampled \code{source} image in the space of the \code{target} image.
+      This element is \code{NULL} if the \code{estimateOnly} parameter is
+      \code{TRUE}.}
+    \item{forwardTransforms}{A list of (linear or nonlinear) transformations
+      from source to target space.}
+    \item{reverseTransforms}{A list of (linear or nonlinear) transformations
+      from target to source space.}
+    \item{iterations}{A list of integer vectors, giving the number of
+      iterations completed at each ``level'' of the algorithm. Note that for
+      the first level of the linear algorithm specifically, twice the
+      specified number of iterations is allowed.}
+    \item{source}{An internal representation of the source image for each
+      registration.}
+    \item{target}{An internal representation of the target image.}
+  }
   The \code{as.array} method for this class returns the \code{image}
   element.
 }
