@@ -144,23 +144,26 @@ readAffine <- function (fileName, source = NULL, target = NULL, type = NULL)
 #' Write an affine matrix to a file
 #' 
 #' This function is used to write a 4x4 numeric matrix representing an affine
-#' transformation to a file. A comment is also written which specifies the
-#' matrix as using the NiftyReg convention, for the benefit of
+#' transformation to a file. A comment is also (optionally) written, which
+#' specifies the matrix as using the NiftyReg convention, for the benefit of
 #' \code{\link{readAffine}}.
 #' 
 #' @param affine A 4x4 affine matrix.
 #' @param fileName A string giving the file name to write the matrix to.
+#' @param comments Logical value: if \code{TRUE} comments are written to the
+#'   file in lines beginning with \code{#}.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{write.table}}, \code{\link{readAffine}}
 #' @export
-writeAffine <- function (affine, fileName)
+writeAffine <- function (affine, fileName, comments = TRUE)
 {
     if (!isAffine(affine))
         stop("Specified affine matrix is not valid")
     
     lines <- apply(format(affine,scientific=FALSE), 1, paste, collapse="  ")
-    lines <- c("# affineType: niftyreg", lines)
+    if (comments)
+        lines <- c("# affineType: niftyreg", lines)
     writeLines(lines, fileName)
 }
 
