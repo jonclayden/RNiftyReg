@@ -47,9 +47,9 @@ asAffine <- function (object, source = NULL, target = NULL)
         stop("Affine matrix should be 4x4")
     
     object <- structure(object, source=source, target=target, class="affine")
-    if (!("niftiImage" %in% class(attr(object,"source"))))
+    if (!is.null(source) && !("niftiImage" %in% class(source)))
         attr(object,"source") <- .Call("retrieveImage", attr(object,"source"), PACKAGE="RNiftyReg")
-    if (!("niftiImage" %in% class(attr(object,"target"))))
+    if (!is.null(target) && !("niftiImage" %in% class(target)))
         attr(object,"target") <- .Call("retrieveImage", attr(object,"target"), PACKAGE="RNiftyReg")
     
     return (object)
