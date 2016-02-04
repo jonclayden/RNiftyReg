@@ -38,7 +38,7 @@ isAffine <- function (object, strict = FALSE)
 #' @export
 asAffine <- function (object, source = NULL, target = NULL)
 {
-    if ("affine" %in% class(object))
+    if ("affine" %in% class(object) && is.null(source) && is.null(target))
         return (object)
     else
         object <- as.matrix(object)
