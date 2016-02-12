@@ -840,5 +840,7 @@ RObject NiftiImage::headerToList () const
     result["intent_name"] = std::string(header.intent_name, 16);
     result["magic"] = std::string(header.magic, 4);
     
+    result.attr("class") = CharacterVector::create("niftiHeader");
+    
     return result;
 }

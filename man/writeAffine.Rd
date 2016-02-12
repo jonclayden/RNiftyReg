@@ -4,17 +4,20 @@
 \alias{writeAffine}
 \title{Write an affine matrix to a file}
 \usage{
-writeAffine(affine, fileName)
+writeAffine(affine, fileName, comments = TRUE)
 }
 \arguments{
 \item{affine}{A 4x4 affine matrix.}
 
 \item{fileName}{A string giving the file name to write the matrix to.}
+
+\item{comments}{Logical value: if \code{TRUE} comments are written to the
+file in lines beginning with \code{#}.}
 }
 \description{
 This function is used to write a 4x4 numeric matrix representing an affine
-transformation to a file. A comment is also written which specifies the
-matrix as using the NiftyReg convention, for the benefit of
+transformation to a file. A comment is also (optionally) written, which
+specifies the matrix as using the NiftyReg convention, for the benefit of
 \code{\link{readAffine}}.
 }
 \author{

@@ -2,16 +2,23 @@
 % Please edit documentation in R/nifti.R
 \name{dumpNifti}
 \alias{dumpNifti}
+\alias{print.niftiHeader}
 \title{Dump the contents of an internal NIfTI-1 object}
 \usage{
 dumpNifti(image)
+
+\method{print}{niftiHeader}(x, ...)
 }
 \arguments{
 \item{image}{An image, in any acceptable form (see \code{\link{isImage}}).}
+
+\item{x}{A \code{"niftiHeader"} object.}
+
+\item{...}{Ignored.}
 }
 \value{
-A list with named components corresponding to the elements in a raw
-  NIfTI-1 file.
+For \code{dumpNifti}, a list of class \code{"niftiHeader"}, with
+  named components corresponding to the elements in a raw NIfTI-1 file.
 }
 \description{
 This function extracts the contents of an internal NIfTI-1 object into an R
