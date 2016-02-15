@@ -6,8 +6,8 @@ Author: Jon Clayden, based on original code by Marc Modat, Pankaj Daga and
     others
 Maintainer: Jon Clayden <code@clayden.org>
 Imports:
+    Rcpp (>= 0.11.0),
     ore,
-    Rcpp,
     splines,
     stats,
     utils
