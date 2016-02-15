@@ -7,6 +7,10 @@
 #' which preserve points, straight lines and planes, and may consist of a
 #' combination of rotation, translation, scale and skew operations.
 #' 
+#' NiftyReg's convention is for affine matrices to transform world coordinates
+#' (in the sense of \code{voxelToWorld}) from TARGET to SOURCE space, although
+#' transforms are logically applied the other way.
+#' 
 #' @param object An R object.
 #' @param strict If \code{TRUE}, this function just tests whether the object is
 #'   of class \code{"affine"}. Otherwise it also tests for an affine-like 4x4
@@ -209,6 +213,8 @@ convertAffine <- function (affine, source = NULL, target = NULL, newType = c("ni
     sourceScaling <- diag(c(sqrt(colSums(sourceXform[1:3,1:3]^2)), 1))
     targetScaling <- diag(c(sqrt(colSums(targetXform[1:3,1:3]^2)), 1))
     
+    # NiftyReg transforms convert world coordinates from target to source space
+    # FSL transforms convert pseudo-world coordinates (scaled only) from source to target space
     if (newType == "fsl")
         newAffine <- targetScaling %*% solve(targetXform) %*% solve(affine) %*% sourceXform %*% solve(sourceScaling)
     else
@@ -346,38 +352,41 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
 #' Decompose an affine matrix into its constituent transformations
 #' 
 #' An affine matrix is composed of translation, scale, skew and rotation
-#' transformations. This function extracts these components.
+#' transformations. This function extracts these components, after first
+#' inverting the matrix so that it transforms from source to target space.
 #' 
 #' @param affine A 4x4 matrix representing an affine transformation matrix.
 #' @return A list with components:
-#'   \item{scaleMatrix}{A 3x3 matrix representing only the scale operation
-#'     embodied in the full affine transformation.}
-#'   \item{skewMatrix}{A 3x3 matrix representing only the skew operation
-#'     embodied in the full affine transformation.}
-#'   \item{rotationMatrix}{A 3x3 matrix representing only the rotation
-#'     operation embodied in the full affine transformation.}
-#'   \item{translation}{A length-3 named numeric vector representing the
-#'     translations (in \code{\link{pixunits}} units) in each of the X, Y and Z
-#'     directions.}
-#'   \item{scales}{A length-3 named numeric vector representing the scale
-#'     factors in each of the X, Y and Z directions. Scale factors of 1
-#'     represent no effect.}
-#'   \item{skews}{A length-3 named numeric vector representing the skews in
-#'     each of the XY, XZ and YZ planes.}
-#'   \item{angles}{A length-3 named numeric vector representing the rotation
-#'     angles (in radians) about each of the X, Y and Z directions, i.e., roll,
-#'     pitch and yaw.}
+#'   \describe{
+#'     \item{scaleMatrix}{A 3x3 matrix representing only the scale operation
+#'       embodied in the full affine transformation.}
+#'     \item{skewMatrix}{A 3x3 matrix representing only the skew operation
+#'       embodied in the full affine transformation.}
+#'     \item{rotationMatrix}{A 3x3 matrix representing only the rotation
+#'       operation embodied in the full affine transformation.}
+#'     \item{translation}{A length-3 named numeric vector representing the
+#'       translations (in \code{\link{pixunits}} units) in each of the X, Y and
+#'       Z directions.}
+#'     \item{scales}{A length-3 named numeric vector representing the scale
+#'       factors in each of the X, Y and Z directions. Scale factors of 1
+#'       represent no effect.}
+#'     \item{skews}{A length-3 named numeric vector representing the skews in
+#'       each of the XY, XZ and YZ planes.}
+#'     \item{angles}{A length-3 named numeric vector representing the rotation
+#'       angles (in radians) about each of the X, Y and Z directions, i.e.,
+#'       roll, pitch and yaw.}
+#'   }
 #' 
 #' @note The decomposition is not perfect, and there is one particular
 #'   degenerate case when the pitch angle is very close to \code{pi/2} radians,
 #'   known as ``Gimbal lock''. In this case the yaw angle is arbitrarily set to
 #'   zero.
-#' 
-#' Affine matrices embodying rigid-body transformations include only 6 degrees
-#' of freedom, rather than the full 12, so skews will always be zero and scales
-#' will always be unity (to within rounding error). Likewise, affine matrices
-#' derived from 2D registration will not include components relating to the Z
-#' direction.
+#'   
+#'   Affine matrices embodying rigid-body transformations include only 6
+#'   degrees of freedom, rather than the full 12, so skews will always be zero
+#'   and scales will always be unity (to within rounding error). Likewise,
+#'   affine matrices derived from 2D registration will not include components
+#'   relating to the Z direction.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{buildAffine}}, \code{\link{isAffine}}

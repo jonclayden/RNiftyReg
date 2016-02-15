@@ -38,6 +38,11 @@ attributes. Affine transformations are a class of linear transformations
 which preserve points, straight lines and planes, and may consist of a
 combination of rotation, translation, scale and skew operations.
 }
+\details{
+NiftyReg's convention is for affine matrices to transform world coordinates
+(in the sense of \code{voxelToWorld}) from TARGET to SOURCE space, although
+transforms are logically applied the other way.
+}
 \note{
 2D affines are a subset of 3D affines, and are stored in a 4x4 matrix
   for internal consistency, even though a 3x3 matrix would suffice.
