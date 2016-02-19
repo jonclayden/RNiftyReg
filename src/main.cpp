@@ -41,7 +41,7 @@ BEGIN_RCPP
     {
         std::ostringstream message;
         message << "Datatype \"" << datatypeString << "\" is not valid";
-        warning(message.str());
+        Rf_warning(message.str().c_str());
         
         datatypeString = "auto";
     }
