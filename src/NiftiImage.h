@@ -72,6 +72,7 @@ protected:
     void copy (const Block &source);
     
     void initFromNiftiS4 (const Rcpp::RObject &object, const bool copyData = true);
+    void initFromMriImage (const Rcpp::RObject &object, const bool copyData = true);
     void initFromList (const Rcpp::RObject &object);
     void initFromArray (const Rcpp::RObject &object, const bool copyData = true);
     

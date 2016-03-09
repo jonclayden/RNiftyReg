@@ -3,6 +3,7 @@
 #include "nifti1_io.h"
 #include "_reg_tools.h"
 
+#include "AffineMatrix.h"
 #include "NiftiImage.h"
 
 using namespace Rcpp;
@@ -142,6 +143,32 @@ void NiftiImage::initFromNiftiS4 (const RObject &object, const bool copyData)
         }
     }
     UNPROTECT(1);
+}
+
+void NiftiImage::initFromMriImage (const RObject &object, const bool copyData)
+{
+    Reference mriImage(object);
+    Function getXform = mriImage.field("getXform");
+    AffineMatrix xform = getXform();
+    
+    this->image = NULL;
+    
+    if (Rf_length(mriImage.field("tags")) > 0)
+        initFromList(mriImage.field("tags"));
+    
+    RObject data = mriImage.field("data");
+    if (Rf_isNull(data))
+    {
+        
+    }
+    else if (data.inherits("SparseArray"))
+    {
+        Language call("as.array", data);
+        RObject dataArray = call.eval();
+        initFromArray(dataArray, copyData);
+    }
+    else if (data.hasAttribute("dim"))
+        initFromArray(data, copyData);
 }
 
 template <typename TargetType>
@@ -310,10 +337,12 @@ NiftiImage::NiftiImage (const SEXP object, const bool readData)
         if (this->image == NULL)
             throw std::runtime_error("Failed to read image");
     }
-    else if (Rf_isVectorList(object))
-        initFromList(imageObject);
     else if (imageObject.inherits("nifti"))
         initFromNiftiS4(imageObject, readData);
+    else if (imageObject.inherits("MriImage"))
+        initFromMriImage(imageObject, readData);
+    else if (Rf_isVectorList(object))
+        initFromList(imageObject);
     else if (imageObject.hasAttribute("dim"))
         initFromArray(imageObject, readData);
     else
