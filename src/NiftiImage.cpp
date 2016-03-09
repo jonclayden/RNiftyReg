@@ -3,7 +3,6 @@
 #include "nifti1_io.h"
 #include "_reg_tools.h"
 
-#include "AffineMatrix.h"
 #include "NiftiImage.h"
 
 using namespace Rcpp;
@@ -149,7 +148,7 @@ void NiftiImage::initFromMriImage (const RObject &object, const bool copyData)
 {
     Reference mriImage(object);
     Function getXform = mriImage.field("getXform");
-    AffineMatrix xform = getXform();
+    NumericMatrix xform = getXform();
     
     this->image = NULL;
     
@@ -157,18 +156,72 @@ void NiftiImage::initFromMriImage (const RObject &object, const bool copyData)
         initFromList(mriImage.field("tags"));
     
     RObject data = mriImage.field("data");
-    if (Rf_isNull(data))
-    {
-        
-    }
-    else if (data.inherits("SparseArray"))
+    if (data.inherits("SparseArray"))
     {
         Language call("as.array", data);
-        RObject dataArray = call.eval();
-        initFromArray(dataArray, copyData);
+        data = call.eval();
     }
-    else if (data.hasAttribute("dim"))
-        initFromArray(data, copyData);
+    
+    const short datatype = (Rf_isNull(data) ? DT_NONE : sexpTypeToNiftiType(data.sexp_type()));
+    
+    int dims[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    const std::vector<int> dimVector = mriImage.field("imageDims");
+    const int nDims = std::min(7, int(dimVector.size()));
+    dims[0] = nDims;
+    for (int i=0; i<nDims; i++)
+        dims[i+1] = dimVector[i];
+    
+    if (this->image == NULL)
+        this->image = nifti_make_new_nim(dims, datatype, FALSE);
+    else
+    {
+        std::copy(dims, dims+8, this->image->dim);
+        this->image->datatype = datatype;
+        nifti_datatype_sizes(image->datatype, &image->nbyper, NULL);
+    }
+    
+    if (copyData && !Rf_isNull(data))
+    {
+        const size_t dataSize = nifti_get_volsize(image);
+        this->image->data = calloc(1, dataSize);
+        if (datatype == DT_INT32)
+            memcpy(this->image->data, INTEGER(data), dataSize);
+        else
+            memcpy(this->image->data, REAL(data), dataSize);
+    }
+    else
+        this->image->data = NULL;
+    
+    const std::vector<float> pixdimVector = mriImage.field("voxelDims");
+    const int pixdimLength = pixdimVector.size();
+    for (int i=0; i<std::min(pixdimLength,nDims); i++)
+        this->image->pixdim[i+1] = std::abs(pixdimVector[i]);
+    
+    const std::vector<std::string> pixunitsVector = mriImage.field("voxelDimUnits");
+    setPixunits(pixunitsVector);
+    
+    nifti_update_dims_from_array(image);
+    
+    if (xform.rows() != 4 || xform.cols() != 4)
+        this->image->qform_code = this->image->sform_code = 0;
+    else
+    {
+        mat44 matrix;
+        for (int i=0; i<4; i++)
+        {
+            for (int j=0; j<4; j++)
+                matrix.m[i][j] = static_cast<float>(xform(i,j));
+        }
+        
+        this->image->qto_xyz = matrix;
+        this->image->qto_ijk = nifti_mat44_inverse(image->qto_xyz);
+        nifti_mat44_to_quatern(image->qto_xyz, &image->quatern_b, &image->quatern_c, &image->quatern_d, &image->qoffset_x, &image->qoffset_y, &image->qoffset_z, NULL, NULL, NULL, &image->qfac);
+        
+        this->image->sto_xyz = matrix;
+        this->image->sto_ijk = nifti_mat44_inverse(image->sto_xyz);
+        
+        this->image->qform_code = this->image->sform_code = 2;
+    }
 }
 
 template <typename TargetType>
@@ -277,16 +330,8 @@ void NiftiImage::initFromArray (const RObject &object, const bool copyData)
     for (int i=0; i<nDims; i++)
         dims[i+1] = dimVector[i];
     
-    short datatype = DT_NONE;
-    const int sexpType = object.sexp_type();
-    if (sexpType == INTSXP || sexpType == LGLSXP)
-        datatype = DT_INT32;
-    else if (sexpType == REALSXP)
-        datatype = DT_FLOAT64;
-    else
-        throw std::runtime_error("Array elements must be numeric");
-    
-    this->image = nifti_make_new_nim(dims, datatype, TRUE);
+    const short datatype = sexpTypeToNiftiType(object.sexp_type());
+    this->image = nifti_make_new_nim(dims, datatype, int(copyData));
     
     if (copyData)
     {
@@ -485,13 +530,7 @@ void NiftiImage::update (const SEXP array)
     nifti_update_dims_from_array(image);
     image->dim[0] = image->ndim = nDims;
     
-    const int sexpType = object.sexp_type();
-    if (sexpType == INTSXP || sexpType == LGLSXP)
-        image->datatype = DT_INT32;
-    else if (sexpType == REALSXP)
-        image->datatype = DT_FLOAT64;
-    else
-        throw std::runtime_error("Array elements must be numeric");
+    image->datatype = NiftiImage::sexpTypeToNiftiType(object.sexp_type());
     nifti_datatype_sizes(image->datatype, &image->nbyper, NULL);
     
     free(image->data);

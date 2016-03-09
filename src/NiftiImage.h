@@ -63,6 +63,16 @@ public:
         return codes;
     }
     
+    static short sexpTypeToNiftiType (const int sexpType)
+    {
+        if (sexpType == INTSXP || sexpType == LGLSXP)
+            return DT_INT32;
+        else if (sexpType == REALSXP)
+            return DT_FLOAT64;
+        else
+            throw std::runtime_error("Array elements must be numeric");
+    }
+    
 protected:
     nifti_image *image;
     bool persistent;
