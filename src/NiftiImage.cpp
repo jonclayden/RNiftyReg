@@ -162,7 +162,7 @@ void NiftiImage::initFromMriImage (const RObject &object, const bool copyData)
         data = call.eval();
     }
     
-    const short datatype = (Rf_isNull(data) ? DT_NONE : sexpTypeToNiftiType(data.sexp_type()));
+    const short datatype = (Rf_isNull(data) ? DT_INT32 : sexpTypeToNiftiType(data.sexp_type()));
     
     int dims[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     const std::vector<int> dimVector = mriImage.field("imageDims");
