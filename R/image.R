@@ -16,7 +16,7 @@
 #' @export
 isImage <- function (object, unsure = NA)
 {
-    if (any(c("nifti","niftiImage","internalImage") %in% class(object)))
+    if (any(c("nifti","niftiImage","internalImage","MriImage") %in% class(object)))
         return (TRUE)
     else if (!is.null(attr(object, ".nifti_image_ptr")))
         return (TRUE)
