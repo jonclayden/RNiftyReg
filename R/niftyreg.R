@@ -315,7 +315,7 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
     init <- lapply(init, function(x) {
         if (is.null(x))
             return (x)
-        else if (!is.null(attr(x, ".nifti_image_ptr")))
+        else if (isImage(x))
         {
             currentSpacing <- pixdim(x)[1:3] / 2^max(0,nLevels-1)
             if (spacingChanged && !isTRUE(all.equal(currentSpacing, finalSpacing)))
