@@ -2,11 +2,11 @@
 #' 
 #' This function tried to determine whether an object is an image that the
 #' package knows how to handle. If its class is \code{"nifti"},
-#' \code{"niftiImage"} or \code{"internalImage"}, then the result is always
-#' \code{TRUE}. Likewise if it has an internal image pointer (although in that
-#' case it should also be of class \code{"niftiImage"}). If it has no
-#' \code{dim} attribute, or looks like an affine matrix, then the result is
-#' \code{FALSE}. Otherwise the value of the \code{unsure} argument is returned.
+#' \code{"niftiImage"}, \code{"internalImage"} or \code{"MriImage"}, then the
+#' result is always \code{TRUE}. Likewise if it has an internal image pointer.
+#' If it has no \code{dim} attribute, or looks like an affine matrix, then the
+#' result is \code{FALSE}. Otherwise the value of the \code{unsure} argument
+#' is returned.
 #' 
 #' @param object An R object.
 #' @param unsure The value to return if the function can't tell whether or not
@@ -123,10 +123,11 @@ ndim <- function (object)
 
 #' Pixel dimensions and units
 #' 
-#' These functions return the \code{"pixdim"} and \code{"pixunits"} attributes
-#' of their arguments. These represent the physical step size between pixel or
-#' voxel centre points, and the spatial and temporal units that they are given
-#' in. The former defaults to 1 in each dimension, if there is no attribute.
+#' By default, these generic functions return or replace the \code{"pixdim"}
+#' and \code{"pixunits"} attributes of their arguments. These represent the
+#' physical step size between pixel or voxel centre points, and the spatial and
+#' temporal units that they are given in. The former defaults to 1 in each
+#' dimension, if there is no attribute.
 #' 
 #' @param object An R object, generally an image.
 #' @param value Numeric vector of pixel dimensions along each axis, or
@@ -140,6 +141,14 @@ ndim <- function (object)
 #' @export
 pixdim <- function (object)
 {
+    UseMethod("pixdim")
+}
+
+
+#' @rdname pixdim
+#' @export
+pixdim.default <- function (object)
+{
     if (!is.null(attr(object, "pixdim")))
         return (attr(object, "pixdim"))
     else if (!is.null(dim(object)))
@@ -152,6 +161,14 @@ pixdim <- function (object)
 #' @rdname pixdim
 #' @export
 "pixdim<-" <- function (object, value)
+{
+    UseMethod("pixdim<-")
+}
+
+
+#' @rdname pixdim
+#' @export
+"pixdim<-.default" <- function (object, value)
 {
     if ("internalImage" %in% class(object))
         stop("Pixel dimensions of an internal image cannot be changed")
@@ -171,6 +188,14 @@ pixdim <- function (object)
 #' @export
 pixunits <- function (object)
 {
+    UseMethod("pixunits")
+}
+
+
+#' @rdname pixdim
+#' @export
+pixunits.default <- function (object)
+{
     if (!is.null(attr(object, "pixunits")))
         return (attr(object, "pixunits"))
     else
@@ -181,6 +206,14 @@ pixunits <- function (object)
 #' @rdname pixdim
 #' @export
 "pixunits<-" <- function (object, value)
+{
+    UseMethod("pixunits<-")
+}
+
+
+#' @rdname pixdim
+#' @export
+"pixunits<-.default" <- function (object, value)
 {
     if ("internalImage" %in% class(object))
         stop("Pixel units of an internal image cannot be changed")

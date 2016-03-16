@@ -2,18 +2,30 @@
 % Please edit documentation in R/image.R
 \name{pixdim}
 \alias{pixdim}
+\alias{pixdim.default}
 \alias{pixdim<-}
+\alias{pixdim<-.default}
 \alias{pixunits}
+\alias{pixunits.default}
 \alias{pixunits<-}
+\alias{pixunits<-.default}
 \title{Pixel dimensions and units}
 \usage{
 pixdim(object)
 
+\method{pixdim}{default}(object)
+
 pixdim(object) <- value
+
+\method{pixdim}{default}(object) <- value
 
 pixunits(object)
 
+\method{pixunits}{default}(object)
+
 pixunits(object) <- value
+
+\method{pixunits}{default}(object) <- value
 }
 \arguments{
 \item{object}{An R object, generally an image.}
@@ -28,10 +40,11 @@ character vector of abbreviated units. For dimensions, a scalar
   spatial and temporal unit names.
 }
 \description{
-These functions return the \code{"pixdim"} and \code{"pixunits"} attributes
-of their arguments. These represent the physical step size between pixel or
-voxel centre points, and the spatial and temporal units that they are given
-in. The former defaults to 1 in each dimension, if there is no attribute.
+By default, these generic functions return or replace the \code{"pixdim"}
+and \code{"pixunits"} attributes of their arguments. These represent the
+physical step size between pixel or voxel centre points, and the spatial and
+temporal units that they are given in. The former defaults to 1 in each
+dimension, if there is no attribute.
 }
 \author{
 Jon Clayden <code@clayden.org>

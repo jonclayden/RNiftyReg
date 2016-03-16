@@ -15,11 +15,11 @@ the \code{object} is an image.}
 \description{
 This function tried to determine whether an object is an image that the
 package knows how to handle. If its class is \code{"nifti"},
-\code{"niftiImage"} or \code{"internalImage"}, then the result is always
-\code{TRUE}. Likewise if it has an internal image pointer (although in that
-case it should also be of class \code{"niftiImage"}). If it has no
-\code{dim} attribute, or looks like an affine matrix, then the result is
-\code{FALSE}. Otherwise the value of the \code{unsure} argument is returned.
+\code{"niftiImage"}, \code{"internalImage"} or \code{"MriImage"}, then the
+result is always \code{TRUE}. Likewise if it has an internal image pointer.
+If it has no \code{dim} attribute, or looks like an affine matrix, then the
+result is \code{FALSE}. Otherwise the value of the \code{unsure} argument
+is returned.
 }
 \author{
 Jon Clayden <code@clayden.org>
