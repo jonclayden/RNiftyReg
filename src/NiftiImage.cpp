@@ -168,8 +168,12 @@ void NiftiImage::initFromMriImage (const RObject &object, const bool copyData)
     const std::vector<int> dimVector = mriImage.field("imageDims");
     const int nDims = std::min(7, int(dimVector.size()));
     dims[0] = nDims;
+    size_t nVoxels = 1;
     for (int i=0; i<nDims; i++)
+    {
         dims[i+1] = dimVector[i];
+        nVoxels *= dimVector[i];
+    }
     
     if (this->image == NULL)
         this->image = nifti_make_new_nim(dims, datatype, FALSE);
@@ -182,7 +186,8 @@ void NiftiImage::initFromMriImage (const RObject &object, const bool copyData)
     
     if (copyData && !Rf_isNull(data))
     {
-        const size_t dataSize = nifti_get_volsize(image);
+        // NB: nifti_get_volsize() will not be right here if there were tags
+        const size_t dataSize = nVoxels * image->nbyper;
         this->image->data = calloc(1, dataSize);
         if (datatype == DT_INT32)
             memcpy(this->image->data, INTEGER(data), dataSize);
