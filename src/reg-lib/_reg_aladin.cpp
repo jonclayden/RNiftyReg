@@ -602,6 +602,9 @@ void reg_aladin<T>::resolveMatrix(unsigned int iterations, const unsigned int op
 		this->UpdateTransformationMatrix(optimizationFlag);
 
 		iteration++;
+#ifdef RNIFTYREG
+        Rcpp::checkUserInterrupt();
+#endif
 	}
     
 #ifdef RNIFTYREG

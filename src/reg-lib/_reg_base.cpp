@@ -1272,6 +1272,10 @@ void reg_base<T>::Run()
 
             // Update the obecjtive function variables and print some information
             this->PrintCurrentObjFunctionValue(currentSize);
+            
+#ifdef RNIFTYREG
+            Rcpp::checkUserInterrupt();
+#endif
          } // while
          
 #ifdef RNIFTYREG
