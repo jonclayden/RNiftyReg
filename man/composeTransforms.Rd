@@ -2,21 +2,20 @@
 % Please edit documentation in R/transform.R
 \name{composeTransforms}
 \alias{composeTransforms}
-\title{Compose two transformations}
+\title{Compose transformations}
 \usage{
-composeTransforms(transform1, transform2)
+composeTransforms(...)
 }
 \arguments{
-\item{transform1, transform2}{Affine or nonlinear transforms, possibly
-obtained from \code{\link{forward}} or \code{\link{reverse}}.}
+\item{...}{Affine or nonlinear transforms, possibly obtained from
+\code{\link{forward}} or \code{\link{reverse}}.}
 }
 \value{
-The composed transform. If both \code{transform1} and
-  \code{transform2} are affines then the result will also be an affine;
-  otherwise it will be a deformation field.
+The composed transform. If all arguments are affines then the result
+  will also be an affine; otherwise it will be a deformation field.
 }
 \description{
-Compute the composition of two transforms, the single transform that
+Compute the composition of two or more transforms, the single transform that
 combines their effects in order.
 }
 \author{

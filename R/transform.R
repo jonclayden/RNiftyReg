@@ -182,22 +182,22 @@ halfTransform <- function (transform)
 }
 
 
-#' Compose two transformations
+#' Compose transformations
 #' 
-#' Compute the composition of two transforms, the single transform that
+#' Compute the composition of two or more transforms, the single transform that
 #' combines their effects in order.
 #' 
-#' @param transform1,transform2 Affine or nonlinear transforms, possibly
-#'   obtained from \code{\link{forward}} or \code{\link{reverse}}.
-#' @return The composed transform. If both \code{transform1} and
-#'   \code{transform2} are affines then the result will also be an affine;
-#'   otherwise it will be a deformation field.
+#' @param ... Affine or nonlinear transforms, possibly obtained from
+#'   \code{\link{forward}} or \code{\link{reverse}}.
+#' @return The composed transform. If all arguments are affines then the result
+#'   will also be an affine; otherwise it will be a deformation field.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}},
 #'   \code{\link{deformationField}}
 #' @export
-composeTransforms <- function (transform1, transform2)
+composeTransforms <- function (...)
 {
-    invisible (.Call("composeTransforms", transform1, transform2, PACKAGE="RNiftyReg"))
+    composePair <- function(t1,t2) .Call("composeTransforms", t1, t2, PACKAGE="RNiftyReg")
+    invisible (Reduce(composePair, list(...)))
 }
