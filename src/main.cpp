@@ -5,6 +5,7 @@
 #include "DeformationField.h"
 #include "aladin.h"
 #include "f3d.h"
+#include "_reg_nmi.h"
 
 // Registration types (degrees of freedom)
 #define TYPE_RIGID  0
@@ -150,6 +151,50 @@ void checkImages (const NiftiImage &sourceImage, const NiftiImage &targetImage)
         throw std::runtime_error("Source image should have 2, 3 or 4 dimensions");
     if (nTargetDim < 2 || nTargetDim > 3)
         throw std::runtime_error("Target image should have 2 or 3 dimensions");
+}
+
+RcppExport SEXP calculateMeasure (SEXP _source, SEXP _target, SEXP _targetMask, SEXP _interpolation)
+{
+BEGIN_RCPP
+    NiftiImage sourceImage(_source);
+    NiftiImage targetImage(_target);
+    NiftiImage targetMask(_targetMask);
+    
+    checkImages(sourceImage.drop(), targetImage.drop());
+    if (sourceImage.nDims() != targetImage.nDims())
+        throw std::runtime_error("Images should have the same dimensionality");
+    
+    int *targetMaskData = NULL;
+    int targetVoxelCount3D = targetImage->nx * targetImage->ny * targetImage->nz;
+    if (targetMask.isNull())
+    {
+        targetMaskData = (int *) calloc(targetVoxelCount3D, sizeof(int));
+        for (int i=0; i<targetVoxelCount3D; i++)
+            targetMaskData[i] = i;
+    }
+    else
+    {
+        reg_checkAndCorrectDimension(targetMask);
+        reg_createMaskPyramid<PRECISION_TYPE>(targetMask, &targetMaskData, 1, 1, &targetVoxelCount3D);
+    }
+    
+    reg_tools_changeDatatype<PRECISION_TYPE>(sourceImage);
+    reg_tools_changeDatatype<PRECISION_TYPE>(targetImage);
+    
+    AffineMatrix affine(sourceImage, targetImage);
+    DeformationField deformationField(targetImage, affine);
+    NiftiImage resampledSourceImage = deformationField.resampleImage(sourceImage, as<int>(_interpolation));
+    
+    reg_nmi nmi;
+    for (int i=0; i<std::min(targetImage->nt,resampledSourceImage->nt); i++)
+        nmi.SetActiveTimepoint(i);
+    nmi.InitialiseMeasure(targetImage, resampledSourceImage, targetMaskData, resampledSourceImage, NULL, NULL);
+    double measure = nmi.GetSimilarityMeasureValue();
+    
+    free(targetMaskData);
+    
+    return wrap(measure);
+END_RCPP
 }
 
 RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit, SEXP _internal)
