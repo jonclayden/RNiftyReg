@@ -18,6 +18,9 @@ test_that("Core registration functions work", {
         # Only true for the symmetric case
         expect_that(invertAffine(forward(reg)), equals(reverse(reg),tolerance=0.0001,check.attributes=FALSE))
         
+        # Hopefully registration has improved the NMI!
+        expect_that(similarity(skewedHouse,house), is_less_than(similarity(reg$image,house)))
+        
         skip_on_cran()
         
         reg <- niftyreg(skewedHouse, house, scope="nonlinear", init=forward(reg))

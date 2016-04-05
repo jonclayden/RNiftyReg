@@ -423,3 +423,34 @@ reverse.niftyreg <- function (object, i = 1, ...)
         return (result)
     }
 }
+
+
+#' Similarity measures between images
+#' 
+#' This function calculates a similarity measure between two images, after
+#' resampling one into the space of the other. The only supported measure is
+#' currently normalised mutual information, which is also used as a cost
+#' function by the registration algorithms.
+#' 
+#' @param source The source image, in any acceptable form.
+#' @param target The target image. Must have the same dimensionality as the
+#'   source image.
+#' @param targetMask An optional mask image in target space, whose nonzero
+#'   region will be the area over which the measure is calculated.
+#' @param interpolation A single integer specifying the type of interpolation
+#'   to be applied to the source image when resampling it into the space of the
+#'   target image. May be 0 (nearest neighbour), 1 (trilinear) or 3 (cubic
+#'   spline). No other values are valid.
+#' @return A single numeric value representing the similarity between the
+#'   images.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{niftyreg}}
+#' @export
+similarity <- function (source, target, targetMask = NULL, interpolation = 3L)
+{
+    if (!(interpolation %in% c(0,1,3)))
+        stop("Final interpolation specifier must be 0, 1 or 3")
+    
+    return (.Call("calculateMeasure", source, target, targetMask, interpolation, PACKAGE="RNiftyReg"))
+}
