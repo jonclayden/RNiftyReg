@@ -236,6 +236,14 @@ void copyIfPresent (const List &list, const std::set<std::string> names, const s
         target = as<TargetType>(list[name]);
 }
 
+// Special case for char, because Rcpp tries to be too clever and convert it to a string
+template <>
+void copyIfPresent (const List &list, const std::set<std::string> names, const std::string &name, char &target)
+{
+    if (names.count(name) == 1)
+        target = static_cast<char>(as<int>(list[name]));
+}
+
 void NiftiImage::initFromList (const RObject &object)
 {
     List list(object);
