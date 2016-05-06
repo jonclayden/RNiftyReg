@@ -2,6 +2,22 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.3.0
+
+- The new similarity() function can be used to calculate a metric of similarity
+  between two images (currently only normalised mutual information). This should
+  not decrease after registration!
+- The composeTransforms() function now accepts more than two arguments, and
+  handles NULL arguments (corresponding to no transform).
+- The package can now work with "MriImage" objects (from package "tractor.base").
+- It is now possible to interrupt the main registration functions.
+- The pixdim() and pixunits() functions are now (S3) generic.
+- The C++ code underlying the updateNifti() function could sometimes produce
+  spurious errors about missing strings, when passed a list. This has been
+  corrected. (Reported by Tim Tierney.)
+
+=================================================================================
+
 VERSION 2.2.0
 
 - The new asAffine() function can be used to coerce a numeric matrix to the
