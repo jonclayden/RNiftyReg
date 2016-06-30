@@ -205,8 +205,6 @@ void NiftiImage::initFromMriImage (const RObject &object, const bool copyData)
     const std::vector<std::string> pixunitsVector = mriImage.field("voxelDimUnits");
     setPixunits(pixunitsVector);
     
-    nifti_update_dims_from_array(image);
-    
     if (xform.rows() != 4 || xform.cols() != 4)
         this->image->qform_code = this->image->sform_code = 0;
     else
@@ -407,7 +405,10 @@ NiftiImage::NiftiImage (const SEXP object, const bool readData)
         throw std::runtime_error("Cannot convert object of class \"" + as<std::string>(imageObject.attr("class")) + "\" to a nifti_image");
     
     if (this->image != NULL)
+    {
+        nifti_update_dims_from_array(this->image);
         reg_checkAndCorrectDimension(this->image);
+    }
     
 #ifndef NDEBUG
     Rprintf("Creating NiftiImage with pointer %p\n", this->image);
