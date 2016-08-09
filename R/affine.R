@@ -52,9 +52,9 @@ asAffine <- function (object, source = NULL, target = NULL)
     
     object <- structure(object, source=source, target=target, class="affine")
     if (!is.null(source) && !("niftiImage" %in% class(source)))
-        attr(object,"source") <- .Call("retrieveImage", attr(object,"source"), PACKAGE="RNifti")
+        attr(object,"source") <- retrieveNifti(attr(object,"source"))
     if (!is.null(target) && !("niftiImage" %in% class(target)))
-        attr(object,"target") <- .Call("retrieveImage", attr(object,"target"), PACKAGE="RNifti")
+        attr(object,"target") <- retrieveNifti(attr(object,"target"))
     
     return (object)
 }
@@ -283,7 +283,7 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
 {
     if (is.null(source))
         stop("Source image must be specified")
-    source <- .Call("retrieveImage", source, PACKAGE="RNifti")
+    source <- retrieveNifti(source)
     
     if (is.list(translation))
         x <- translation
@@ -311,7 +311,7 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
         }
     }
     else
-        target <- .Call("retrieveImage", target, PACKAGE="RNifti")
+        target <- retrieveNifti(target)
     
     if (ndim(source) != ndim(target))
         stop("Source and target images must be of the same dimensionality")
