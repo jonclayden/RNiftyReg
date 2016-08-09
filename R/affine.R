@@ -306,7 +306,7 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
             target <- source
         else
         {
-            target <- .Call("rescaleImage", source, abs(x$scales[1:ndim(source)]), PACKAGE="RNifti")
+            target <- RNifti:::rescaleNifti(source, abs(x$scales[1:ndim(source)]))
             x$scales <- sign(x$scales)
         }
     }
