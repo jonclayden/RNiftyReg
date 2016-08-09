@@ -2,14 +2,10 @@ PKG_CFLAGS = $(SHLIB_OPENMP_CFLAGS)
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
 PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS)
 
-PKG_CPPFLAGS = -DNDEBUG -DRNIFTYREG -DHAVE_ZLIB -I. -Ireg-lib -Ireg-lib/cpu -Izlib -Iznzlib -Iniftilib
+PKG_CPPFLAGS = -DNDEBUG -DRNIFTYREG -DHAVE_ZLIB -I. -Ireg-lib -Ireg-lib/cpu
 
 OBJECTS_LIB_CPU = reg-lib/cpu/_reg_blockMatching.o reg-lib/cpu/_reg_dti.o reg-lib/cpu/_reg_femTrans.o reg-lib/cpu/_reg_globalTrans.o reg-lib/cpu/_reg_KLdivergence.o reg-lib/cpu/_reg_lncc.o reg-lib/cpu/_reg_localTrans.o reg-lib/cpu/_reg_maths.o reg-lib/cpu/_reg_nmi.o reg-lib/cpu/_reg_optimiser.o reg-lib/cpu/_reg_polyAffine.o reg-lib/cpu/_reg_resampling.o reg-lib/cpu/_reg_ssd.o reg-lib/cpu/_reg_thinPlateSpline.o reg-lib/cpu/_reg_tools.o reg-lib/cpu/CPUAffineDeformationFieldKernel.o reg-lib/cpu/CPUBlockMatchingKernel.o reg-lib/cpu/CPUConvolutionKernel.o reg-lib/cpu/CPUKernelFactory.o reg-lib/cpu/CPUOptimiseKernel.o reg-lib/cpu/CPUResampleImageKernel.o
 
 OBJECTS_LIB = reg-lib/_reg_aladin.o reg-lib/_reg_aladin_sym.o reg-lib/_reg_base.o reg-lib/_reg_f3d.o reg-lib/_reg_f3d2.o reg-lib/_reg_f3d_sym.o reg-lib/_reg_polyAffine.o reg-lib/Content.o reg-lib/Platform.o
 
-OBJECTS_ZLIB = zlib/adler32.o zlib/compress.o zlib/crc32.o zlib/deflate.o zlib/gzclose.o zlib/gzlib.o zlib/gzread.o zlib/gzwrite.o zlib/infback.o zlib/inffast.o zlib/inflate.o zlib/inftrees.o zlib/trees.o zlib/uncompr.o zlib/zutil.o
-
-OBJECTS_NIFTI = znzlib/znzlib.o niftilib/nifti1_io.o
-
-OBJECTS = main.o AffineMatrix.o NiftiImage.o DeformationField.o aladin.o f3d.o $(OBJECTS_LIB) $(OBJECTS_LIB_CPU) $(OBJECTS_ZLIB) $(OBJECTS_NIFTI)
+OBJECTS = main.o RNifti.o AffineMatrix.o DeformationField.o aladin.o f3d.o $(OBJECTS_LIB) $(OBJECTS_LIB_CPU)

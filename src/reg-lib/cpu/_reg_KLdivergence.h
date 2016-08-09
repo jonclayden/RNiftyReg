@@ -12,7 +12,11 @@
 #ifndef _REG_KLDIV_H
 #define _REG_KLDIV_H
 
+#ifdef RNIFTYREG
+#include "RNifti.h"
+#else
 #include "nifti1_io.h"
+#endif
 #include "_reg_maths.h"
 #include <limits>
 

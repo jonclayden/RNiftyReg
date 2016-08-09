@@ -14,7 +14,11 @@
 #ifndef _REG_AFFINETRANS_H
 #define _REG_AFFINETRANS_H
 
+#ifdef RNIFTYREG
+#include "RNifti.h"
+#else
 #include "nifti1_io.h"
+#endif
 #include <fstream>
 #include <limits>
 #include "_reg_tools.h"

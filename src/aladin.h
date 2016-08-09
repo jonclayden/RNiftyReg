@@ -1,7 +1,7 @@
 #ifndef _ALADIN_H_
 #define _ALADIN_H_
 
-#include "NiftiImage.h"
+#include "RNifti.h"
 #include "AffineMatrix.h"
 
 enum LinearTransformScope { RigidScope, AffineScope };

@@ -26,7 +26,11 @@
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
+#ifdef RNIFTYREG
+#include "RNifti.h"
+#else
 #include "nifti1_io.h"
+#endif
 
 #if defined (_OPENMP)
 #include <omp.h>

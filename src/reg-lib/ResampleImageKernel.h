@@ -2,7 +2,11 @@
 #define RESAMPLEIMAGEKERNEL_H
 
 #include "Kernel.h"
+#ifdef RNIFTYREG
+#include "RNifti.h"
+#else
 #include "nifti1_io.h"
+#endif
 
 class ResampleImageKernel : public Kernel {
 public:

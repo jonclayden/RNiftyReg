@@ -1,9 +1,8 @@
 #ifndef _F3D_H_
 #define _F3D_H_
 
-#include "nifti1_io.h"
+#include "RNifti.h"
 #include "AffineMatrix.h"
-#include "NiftiImage.h"
 
 struct F3dResult
 {

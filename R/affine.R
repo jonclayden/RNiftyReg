@@ -52,9 +52,9 @@ asAffine <- function (object, source = NULL, target = NULL)
     
     object <- structure(object, source=source, target=target, class="affine")
     if (!is.null(source) && !("niftiImage" %in% class(source)))
-        attr(object,"source") <- .Call("retrieveImage", attr(object,"source"), PACKAGE="RNiftyReg")
+        attr(object,"source") <- .Call("retrieveImage", attr(object,"source"), PACKAGE="RNifti")
     if (!is.null(target) && !("niftiImage" %in% class(target)))
-        attr(object,"target") <- .Call("retrieveImage", attr(object,"target"), PACKAGE="RNiftyReg")
+        attr(object,"target") <- .Call("retrieveImage", attr(object,"target"), PACKAGE="RNifti")
     
     return (object)
 }
@@ -283,7 +283,7 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
 {
     if (is.null(source))
         stop("Source image must be specified")
-    source <- .Call("retrieveImage", source, PACKAGE="RNiftyReg")
+    source <- .Call("retrieveImage", source, PACKAGE="RNifti")
     
     if (is.list(translation))
         x <- translation
@@ -306,12 +306,12 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
             target <- source
         else
         {
-            target <- .Call("rescaleImage", source, abs(x$scales[1:ndim(source)]), PACKAGE="RNiftyReg")
+            target <- .Call("rescaleImage", source, abs(x$scales[1:ndim(source)]), PACKAGE="RNifti")
             x$scales <- sign(x$scales)
         }
     }
     else
-        target <- .Call("retrieveImage", target, PACKAGE="RNiftyReg")
+        target <- .Call("retrieveImage", target, PACKAGE="RNifti")
     
     if (ndim(source) != ndim(target))
         stop("Source and target images must be of the same dimensionality")

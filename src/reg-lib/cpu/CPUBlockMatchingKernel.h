@@ -3,7 +3,11 @@
 
 #include "BlockMatchingKernel.h"
 #include "_reg_blockMatching.h"
+#ifdef RNIFTYREG
+#include "RNifti.h"
+#else
 #include "nifti1_io.h"
+#endif
 #include "Content.h"
 
 class CPUBlockMatchingKernel : public BlockMatchingKernel {

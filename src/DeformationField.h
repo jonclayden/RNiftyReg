@@ -3,12 +3,11 @@
 
 #include <RcppEigen.h>
 
+#include "RNifti.h"
 #include "config.h"
-#include "nifti1_io.h"
 #include "_reg_localTrans.h"
 #include "_reg_globalTrans.h"
 #include "_reg_resampling.h"
-#include "NiftiImage.h"
 #include "AffineMatrix.h"
 
 class DeformationField

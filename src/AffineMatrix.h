@@ -1,7 +1,7 @@
 #ifndef _AFFINE_MATRIX_H_
 #define _AFFINE_MATRIX_H_
 
-#include "nifti1_io.h"
+#include "RNifti.h"
 #include "_reg_maths.h"
 
 class AffineMatrix : public Rcpp::NumericMatrix

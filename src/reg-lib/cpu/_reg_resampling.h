@@ -13,7 +13,11 @@
 #ifndef _REG_RESAMPLING_H
 #define _REG_RESAMPLING_H
 
+#ifdef RNIFTYREG
+#include "RNifti.h"
+#else
 #include "nifti1_io.h"
+#endif
 #include "_reg_tools.h"
 
 /** @brief This function resample a source image into the space of a target/result image.
