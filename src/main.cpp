@@ -116,6 +116,10 @@ BEGIN_RCPP
     const bool estimateOnly = as<bool>(_estimateOnly);
     const bool sequentialInit = as<bool>(_sequentialInit);
     
+    const int internal = as<int>(_internal);
+    const bool internalOutput = (internal == TRUE);
+    const bool internalInput = (internal != FALSE);
+    
     List init(_init);
     List returnValue;
     
@@ -129,15 +133,15 @@ BEGIN_RCPP
     
         AladinResult result = regAladin(sourceImage, targetImage, scope, symmetric, as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, initAffine, as<bool>(_verbose), estimateOnly);
         
-        returnValue["image"] = result.image.toArrayOrPointer(as<bool>(_internal), "Result image");
+        returnValue["image"] = result.image.toArrayOrPointer(internalOutput, "Result image");
         returnValue["forwardTransforms"] = List::create(result.forwardTransform);
         if (symmetric)
             returnValue["reverseTransforms"] = List::create(result.reverseTransform);
         else
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = List::create(result.iterations);
-        returnValue["source"] = List::create(sourceImage.toPointer("Source image"));
-        returnValue["target"] = targetImage.toPointer("Target image");
+        returnValue["source"] = List::create(sourceImage.toArrayOrPointer(internalInput, "Source image"));
+        returnValue["target"] = targetImage.toArrayOrPointer(internalInput, "Target image");
         
         return returnValue;
     }
@@ -154,7 +158,7 @@ BEGIN_RCPP
                 currentSource = sourceImage.slice(i);
             else
                 currentSource = sourceImage.volume(i);
-            sourceImages[i] = currentSource.toPointer("Source image");
+            sourceImages[i] = currentSource.toArrayOrPointer(internalInput, "Source image");
             
             AffineMatrix initAffine;
             if (!Rf_isNull(init[i]))
@@ -177,7 +181,7 @@ BEGIN_RCPP
             iterations[i] = result.iterations;
         }
         
-        returnValue["image"] = finalImage.toArrayOrPointer(as<bool>(_internal), "Result image");
+        returnValue["image"] = finalImage.toArrayOrPointer(internalOutput, "Result image");
         returnValue["forwardTransforms"] = forwardTransforms;
         if (symmetric)
             returnValue["reverseTransforms"] = reverseTransforms;
@@ -185,7 +189,7 @@ BEGIN_RCPP
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = iterations;
         returnValue["source"] = sourceImages;
-        returnValue["target"] = targetImage.toPointer("Target image");
+        returnValue["target"] = targetImage.toArrayOrPointer(internalInput, "Target image");
         
         return returnValue;
     }
@@ -215,6 +219,10 @@ BEGIN_RCPP
     const bool estimateOnly = as<bool>(_estimateOnly);
     const bool sequentialInit = as<bool>(_sequentialInit);
     
+    const int internal = as<int>(_internal);
+    const bool internalOutput = (internal == TRUE);
+    const bool internalInput = (internal != FALSE);
+    
     List init(_init);
     List returnValue;
     
@@ -236,15 +244,15 @@ BEGIN_RCPP
     
         F3dResult result = regF3d(sourceImage, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_linearEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
         
-        returnValue["image"] = result.image.toArrayOrPointer(as<bool>(_internal), "Result image");
-        returnValue["forwardTransforms"] = List::create(result.forwardTransform.toPointer("F3D control points"));
+        returnValue["image"] = result.image.toArrayOrPointer(internalOutput, "Result image");
+        returnValue["forwardTransforms"] = List::create(result.forwardTransform.toArrayOrPointer(internalInput, "F3D control points"));
         if (symmetric)
-            returnValue["reverseTransforms"] = List::create(result.reverseTransform.toPointer("F3D control points"));
+            returnValue["reverseTransforms"] = List::create(result.reverseTransform.toArrayOrPointer(internalInput, "F3D control points"));
         else
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = List::create(result.iterations);
-        returnValue["source"] = List::create(sourceImage.toPointer("Source image"));
-        returnValue["target"] = targetImage.toPointer("Target image");
+        returnValue["source"] = List::create(sourceImage.toArrayOrPointer(internalInput, "Source image"));
+        returnValue["target"] = targetImage.toArrayOrPointer(internalInput, "Target image");
         
         return returnValue;
     }
@@ -261,7 +269,7 @@ BEGIN_RCPP
                 currentSource = sourceImage.slice(i);
             else
                 currentSource = sourceImage.volume(i);
-            sourceImages[i] = currentSource.toPointer("Source image");
+            sourceImages[i] = currentSource.toArrayOrPointer(internalInput, "Source image");
             
             AffineMatrix initAffine;
             NiftiImage initControl;
@@ -286,13 +294,13 @@ BEGIN_RCPP
             else
                 finalImage.volume(i) = result.image;
             
-            forwardTransforms[i] = result.forwardTransform.toPointer("F3D control points");
+            forwardTransforms[i] = result.forwardTransform.toArrayOrPointer(internalInput, "F3D control points");
             if (symmetric)
-                reverseTransforms[i] = result.reverseTransform.toPointer("F3D control points");
+                reverseTransforms[i] = result.reverseTransform.toArrayOrPointer(internalInput, "F3D control points");
             iterations[i] = result.iterations;
         }
         
-        returnValue["image"] = finalImage.toArrayOrPointer(as<bool>(_internal), "Result image");
+        returnValue["image"] = finalImage.toArrayOrPointer(internalOutput, "Result image");
         returnValue["forwardTransforms"] = forwardTransforms;
         if (symmetric)
             returnValue["reverseTransforms"] = reverseTransforms;
@@ -300,7 +308,7 @@ BEGIN_RCPP
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = iterations;
         returnValue["source"] = sourceImages;
-        returnValue["target"] = targetImage.toPointer("Target image");
+        returnValue["target"] = targetImage.toArrayOrPointer(internalInput, "Target image");
         
         return returnValue;
     }
