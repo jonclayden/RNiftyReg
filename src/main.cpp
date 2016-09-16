@@ -16,6 +16,13 @@ using namespace Rcpp;
 
 typedef std::vector<float> float_vector;
 
+RcppExport SEXP initialise ()
+{
+BEGIN_RCPP
+    niftilib_register_all();
+END_RCPP
+}
+
 void checkImages (const NiftiImage &sourceImage, const NiftiImage &targetImage)
 {
     if (sourceImage.isNull())

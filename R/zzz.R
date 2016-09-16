@@ -4,4 +4,7 @@
 #' @importFrom stats lm na.omit predict
 #' @importFrom utils object.size read.table
 #' @useDynLib RNiftyReg
-NULL
+.onLoad <- function (libname, pkgname)
+{
+    .Call("initialise", PACKAGE="RNiftyReg")
+}
