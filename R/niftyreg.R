@@ -37,11 +37,15 @@
 #'   dimensionality than \code{target}, transformations which are not
 #'   explicitly initialised will begin from the result of the previous
 #'   registration.
-#' @param internal If \code{FALSE}, the default, the returned image will be
-#'   returned as a standard R array. If \code{TRUE}, it will instead be an
-#'   object of class \code{"internalImage"}, containing only basic metadata and
-#'   a C-level pointer to the full image. (See also \code{\link{readNifti}}.)
-#'   This can occasionally be useful to save memory.
+#' @param internal If \code{NA}, the default, the final resampled image will be
+#'   returned as a standard R array, but control point maps will be objects of
+#'   class \code{"internalImage"}, containing only basic metadata and a C-level
+#'   pointer to the full image. (See also \code{\link{readNifti}}.) If
+#'   \code{TRUE}, all image-type objects in the result will be internal images;
+#'   if \code{FALSE}, they will all be R arrays. The default is fine for most
+#'   purposes, but using \code{TRUE} may save memory, while using \code{FALSE}
+#'   can be necessary if there is a chance that external pointers will be
+#'   invalidated, for example when returning from worker threads.
 #' @param ... Further arguments to \code{\link{niftyreg.linear}} or
 #'   \code{\link{niftyreg.nonlinear}}.
 #' @param x A \code{"niftyreg"} object.
