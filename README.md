@@ -2,7 +2,7 @@
 
 The `RNiftyReg` package is an R-native interface to the [NiftyReg image registration library](http://sourceforge.net/projects/niftyreg/) developed within the Translational Imaging Group at University College London. The package incorporates the library, so it does not need to be installed separately, and it replaces the NiftyReg command-line front-end with a direct, in-memory bridge to R, based on [Rcpp](http://www.rcpp.org).
 
-This `README` file primarily covers version 2.0.0 of the package and later. The interface was substantially reworked in that version to make it more natural and less verbose, and earlier versions are incompatible. Information on moving from prior versions of `RNiftyReg` to 2.x is included at the end of this file.
+This `README` file primarily covers version 2.0.0 of the package and later. The interface was substantially reworked in that version to make it more natural and less verbose, and earlier versions are incompatible. Information on [moving from prior versions of `RNiftyReg` to 2.x](#upgrading-to-rniftyreg-2x) is included at the end of this file.
 
 The package can be installed from CRAN, or the latest development version obtained directly from GitHub:
 
@@ -18,36 +18,18 @@ The [`mmand` package](https://github.com/jonclayden/mmand) for image processing 
 - [Reading and writing images](#reading-and-writing-images)
 - [Image registration](#image-registration)
 - [Applying transformations](#applying-transformations)
-- [RNiftyReg internals](#rniftyreg-internals)
 - [Upgrading to RNiftyReg 2.x](#upgrading-to-rniftyreg-2x)
 
 ## Reading and writing images
 
-`RNiftyReg` may be used to register and manipulate two and three dimensional images of any sort, although its origins are in medical imaging. Medical images in the standard [NIfTI-1 format](http://nifti.nimh.nih.gov/nifti-1) may be read into R using the `readNifti` function.
+`RNiftyReg` may be used to register and manipulate two and three dimensional images of any sort, although its origins are in medical imaging. Medical images in the standard [NIfTI-1 format](http://nifti.nimh.nih.gov/nifti-1) may be read into R using the `readNifti` function, which is based on the first-party [`RNifti` package](https://github.com/jonclayden/RNifti).
 
 ```r
 library(RNiftyReg)
 image <- readNifti(system.file("extdata", "epi_t2.nii.gz", package="RNiftyReg"))
 ```
 
-This image is an R array with some additional attributes containing information such as its dimensions and the size of its pixels (or voxels, in this case, since it is a 3D image). There are auxiliary functions for extracting this information: the standard `dim()`, plus `pixdim()` and `pixunits()`.
-
-```r
-dim(image)
-# [1] 96 96 60
-
-pixdim(image)
-# [1] 2.5 2.5 2.5
-
-pixunits(image)
-# [1] "mm" "s"
-```
-
-So this image is of size 96 x 96 x 60 voxels, with each voxel representing 2.5 x 2.5 x 2.5 mm in real space. (The temporal unit, seconds here, only applies to the fourth dimension, if it is present.) An image can be written back to NIfTI-1 format using the complementary `writeNifti` function.
-
-```r
-writeNifti(image, "file.nii.gz")
-```
+This image is an R array with some additional attributes containing information such as its dimensions and the size of its pixels (or voxels, in this case, since it is a 3D image).
 
 As mentioned above, however, images do not have to be in NIfTI-1 format. Any numeric matrix or array can be used, and standard image formats such as JPEG and PNG can be read in using additional packages. For example,
 
@@ -57,24 +39,7 @@ library(jpeg)
 image <- readJPEG(system.file("extdata", "house_colour_large.jpg", package="RNiftyReg"))
 ```
 
-The utility functions mentioned above can still be applied, but defaults are returned where necessary.
-
-```r
-dim(image)
-# [1] 363 523   3
-
-pixdim(image)
-# [1] 1 1 1
-
-pixunits(image)
-# [1] "Unknown"
-```
-
-The pixel dimensions can be set manually if required.
-
-```r
-pixdim(image) <- c(2, 2)
-```
+Complementary `writeNifti` and `writeJPEG` functions are provided by the `RNifti` and `jpeg` packages, respectively.
 
 ## Image registration
 
@@ -204,16 +169,6 @@ This results in half of the skew effect being applied. Finally, the `composeTran
 all.equal(forward(result), composeTransforms(half_xfm,half_xfm), check.attributes=FALSE)
 # TRUE
 ```
-
-## RNiftyReg internals
-
-**NB**: This section is technical and will not be of interest to a lot of users. Please feel free to skip it!
-
-NiftyReg has its origins in medical imaging, and as such it natively uses a data structure specific to the [NIfTI-1 file format](http://nifti.nimh.nih.gov/nifti-1). `RNiftyReg` uses the standard NIfTI-1 library to read, write and manipulate these data structures, which is fast and well-tested.
-
-Importantly, the package does not fully duplicate the NIfTI-1 structure's contents in R-visible objects. Instead, it passes key metadata back to R, such as the image dimensions and pixel dimensions, and it also passes back the pixel values where they are needed. It also creates an [external pointer](http://r-manuals.flakery.org/R-exts.html#External-pointers-and-weak-references) to the native data structure, which is stored in an attribute. This pointer is dereferenced whenever the object is passed back to the C++ code, thereby avoiding unnecessary duplication and ensuring that all metadata remains intact. The full NIfTI-1 header can be obtained using the `dumpNifti` R function, if it is needed.
-
-This arrangement is efficient and generally works well, but many R operations strip attributes—in which case the external pointer will be removed. The internal structure will be built again when necessary, but using default metadata. In these cases, if it is important to keep the original metadata, the `updateNifti` function should be called explicitly, with a template object. This reconstructs the NIfTI-1 data structure, using the template as a starting point.
 
 ## Upgrading to RNiftyReg 2.x
 
