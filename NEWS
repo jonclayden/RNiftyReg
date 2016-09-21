@@ -2,6 +2,18 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.4.0
+
+- The package's functions for working with NIfTI-1 files and associated image
+  data structures have been moved into the new "RNifti" package, since they are
+  useful more broadly. RNiftyReg is therefore more focussed on registration.
+- The "internal" argument to niftyreg(), and its linear and nonlinear variants,
+  can now be set to avoid creating any internal images in the result. This should
+  only be necessary in exceptional circumstances, and the default behaviour
+  remains as before.
+
+=================================================================================
+
 VERSION 2.3.0
 
 - The new similarity() function can be used to calculate a metric of similarity
