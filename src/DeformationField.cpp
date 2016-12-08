@@ -7,7 +7,7 @@
 #include "config.h"
 #include "DeformationField.h"
 
-void DeformationField::initImages (const NiftiImage &targetImage)
+void DeformationField::initImages (const RNifti::NiftiImage &targetImage)
 {
     this->targetImage = targetImage;
     
@@ -37,17 +37,17 @@ void DeformationField::initImages (const NiftiImage &targetImage)
     reg_getDeformationFromDisplacement(deformationField);
     deformationField->intent_p1 = DEF_FIELD;
     
-    this->deformationFieldImage = NiftiImage(deformationField);
+    this->deformationFieldImage = RNifti::NiftiImage(deformationField);
 }
 
-DeformationField::DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine, const bool compose)
+DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, const AffineMatrix &affine, const bool compose)
 {
     initImages(targetImage);
     mat44 affineMatrix = affine;
     reg_affine_getDeformationField(&affineMatrix, deformationFieldImage, compose, NULL);
 }
 
-DeformationField::DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage, const bool compose)
+DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, const RNifti::NiftiImage &transformationImage, const bool compose)
 {
     initImages(targetImage);
     reg_checkAndCorrectDimension(transformationImage);
@@ -83,7 +83,7 @@ DeformationField::DeformationField (const NiftiImage &targetImage, const NiftiIm
     }
 }
 
-NiftiImage DeformationField::getJacobian () const
+RNifti::NiftiImage DeformationField::getJacobian () const
 {
     // Allocate Jacobian determinant image
     nifti_image *jacobianImage = nifti_copy_nim_info(targetImage);
@@ -98,10 +98,10 @@ NiftiImage DeformationField::getJacobian () const
     // Calculate Jacobian determinant map
     reg_defField_getJacobianMap(deformationFieldImage, jacobianImage);
     
-    return NiftiImage(jacobianImage);
+    return RNifti::NiftiImage(jacobianImage);
 }
 
-NiftiImage DeformationField::resampleImage (const NiftiImage &sourceImage, const int interpolation) const
+RNifti::NiftiImage DeformationField::resampleImage (const RNifti::NiftiImage &sourceImage, const int interpolation) const
 {
     // Allocate result image
     nifti_image *resultImage = nifti_copy_nim_info(targetImage);
@@ -119,11 +119,11 @@ NiftiImage DeformationField::resampleImage (const NiftiImage &sourceImage, const
     // Resample source image to target space
     reg_resampleImage(sourceImage, resultImage, deformationFieldImage, NULL, interpolation, 0);
 
-    return NiftiImage(resultImage);
+    return RNifti::NiftiImage(resultImage);
 }
 
 template <int Dim>
-Rcpp::NumericVector DeformationField::findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const
+Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const
 {
     typedef Eigen::Matrix<double,Dim,1> Point;
     Point closestLoc = Point::Zero();
@@ -218,7 +218,7 @@ void DeformationField::compose (const DeformationField &otherField)
 }
 
 template
-Rcpp::NumericVector DeformationField::findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
+Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
 
 template
-Rcpp::NumericVector DeformationField::findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;
+Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;

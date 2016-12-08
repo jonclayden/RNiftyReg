@@ -2,6 +2,12 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.4.1
+
+- The package has been updated for compatibility with "RNifti" version 0.3.0.
+
+=================================================================================
+
 VERSION 2.4.0
 
 - The package's functions for working with NIfTI-1 files and associated image

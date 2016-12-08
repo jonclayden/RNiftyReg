@@ -1,11 +1,11 @@
 Package: RNiftyReg
-Version: 2.4.0
-Date: 2016-09-21
+Version: 2.4.1
+Date: 2016-12-08
 Title: Image Registration Using the NiftyReg Library
 Author: Jon Clayden, based on original code by Marc Modat, Pankaj Daga and
     others
 Maintainer: Jon Clayden <code@clayden.org>
-Imports: Rcpp (>= 0.11.0), RNifti (>= 0.2.0), ore
+Imports: Rcpp (>= 0.11.0), RNifti (>= 0.3.0), ore
 Suggests: jpeg, png, mmand, testthat (>= 0.11.0)
 LinkingTo: Rcpp, RcppEigen, RNifti
 Description: Provides an R interface to the NiftyReg image registration tools

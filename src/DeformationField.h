@@ -13,24 +13,24 @@
 class DeformationField
 {
 protected:
-    NiftiImage deformationFieldImage;
-    NiftiImage targetImage;
+    RNifti::NiftiImage deformationFieldImage;
+    RNifti::NiftiImage targetImage;
     
-    void initImages (const NiftiImage &targetImage);
+    void initImages (const RNifti::NiftiImage &targetImage);
     
 public:
     DeformationField () {}
-    DeformationField (const NiftiImage &targetImage, const AffineMatrix &affine, const bool compose = false);
-    DeformationField (const NiftiImage &targetImage, const NiftiImage &transformationImage, const bool compose = false);
+    DeformationField (const RNifti::NiftiImage &targetImage, const AffineMatrix &affine, const bool compose = false);
+    DeformationField (const RNifti::NiftiImage &targetImage, const RNifti::NiftiImage &transformationImage, const bool compose = false);
     
-    NiftiImage getFieldImage () const { return deformationFieldImage; }
+    RNifti::NiftiImage getFieldImage () const { return deformationFieldImage; }
     
-    NiftiImage getJacobian () const;
+    RNifti::NiftiImage getJacobian () const;
     
-    NiftiImage resampleImage (const NiftiImage &sourceImage, const int interpolation) const;
+    RNifti::NiftiImage resampleImage (const RNifti::NiftiImage &sourceImage, const int interpolation) const;
     
     template <int Dim>
-    Rcpp::NumericVector findPoint (const NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const;
+    Rcpp::NumericVector findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const;
     
     void compose (const DeformationField &otherField);
 };

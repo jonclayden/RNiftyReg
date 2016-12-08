@@ -13,6 +13,7 @@
 #define TYPE_AFFINE 1
 
 using namespace Rcpp;
+using namespace RNifti;
 
 typedef std::vector<float> float_vector;
 

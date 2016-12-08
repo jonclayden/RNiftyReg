@@ -9,7 +9,7 @@
 #include "AffineMatrix.h"
 #include "DeformationField.h"
 
-F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, const int nLevels, const int maxIterations, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const NiftiImage &initControlPoints, const AffineMatrix &initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float linearEnergyWeight, const float jacobianWeight, const bool symmetric, const bool verbose, const bool estimateOnly)
+F3dResult regF3d (const RNifti::NiftiImage &sourceImage, const RNifti::NiftiImage &targetImage, const int nLevels, const int maxIterations, const int interpolation, const RNifti::NiftiImage &sourceMaskImage, const RNifti::NiftiImage &targetMaskImage, const RNifti::NiftiImage &initControlPoints, const AffineMatrix &initAffine, const int nBins, const std::vector<float> &spacing, const float bendingEnergyWeight, const float linearEnergyWeight, const float jacobianWeight, const bool symmetric, const bool verbose, const bool estimateOnly)
 {
     // Binarise the mask images
     if (!sourceMaskImage.isNull())
@@ -104,10 +104,10 @@ F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, 
         reg->Run();
         
         if (!estimateOnly)
-            result.image = NiftiImage(reg->GetWarpedImage()[0]);
-        result.forwardTransform = NiftiImage(reg->GetControlPointPositionImage());
+            result.image = RNifti::NiftiImage(reg->GetWarpedImage()[0]);
+        result.forwardTransform = RNifti::NiftiImage(reg->GetControlPointPositionImage());
         if (symmetric)
-            result.reverseTransform = NiftiImage(reg->GetBackwardControlPointPositionImage());
+            result.reverseTransform = RNifti::NiftiImage(reg->GetBackwardControlPointPositionImage());
         result.iterations = reg->GetCompletedIterations();
         
         // Erase the registration object

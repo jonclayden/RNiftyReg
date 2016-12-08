@@ -8,12 +8,12 @@ enum LinearTransformScope { RigidScope, AffineScope };
 
 struct AladinResult
 {
-    NiftiImage image;
+    RNifti::NiftiImage image;
     AffineMatrix forwardTransform;
     AffineMatrix reverseTransform;
     std::vector<int> iterations;
 };
 
-AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const AffineMatrix &initAffine, const bool verbose, const bool estimateOnly);
+AladinResult regAladin (const RNifti::NiftiImage &sourceImage, const RNifti::NiftiImage &targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, const RNifti::NiftiImage &sourceMaskImage, const RNifti::NiftiImage &targetMaskImage, const AffineMatrix &initAffine, const bool verbose, const bool estimateOnly);
 
 #endif
