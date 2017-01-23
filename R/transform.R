@@ -89,6 +89,10 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE, i
     target <- attr(transform, "target")
     nSourceDim <- ndim(source)
     
+    # We only ever return the image, so we don't need the full spectrum of "internal" options
+    if (!isTRUE(internal))
+        internal <- NA
+    
     if (isAffine(transform, strict=TRUE))
     {
         # The argument looks like a suitable image
