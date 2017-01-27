@@ -14,6 +14,7 @@
 
 #include "_reg_base.h"
 
+/// @brief Fast Free Form Deformation registration class
 template <class T>
 class reg_f3d : public reg_base<T>
 {
@@ -67,6 +68,16 @@ protected:
 
    virtual void CorrectTransformation();
 
+#ifdef BUILD_DEV
+   T pairwiseEnergyWeight;
+   double bestWPE;
+   double currentWPE;
+   bool linearSpline;
+   virtual double ComputePairwiseEnergyPenaltyTerm();
+   virtual void GetPairwiseEnergyGradient();
+   virtual void DiscreteInitialisation();
+#endif
+
    void (*funcProgressCallback)(float pcntProgress, void *params);
    void *paramsProgressCallback;
 
@@ -88,6 +99,12 @@ public:
    {
       this->gridRefinement=false;
    }
+
+#ifdef BUILD_DEV
+   void UseLinearSpline();
+   void DoNotLinearSpline();
+   void SetPairwiseEnergyWeight(T);
+#endif
 
    // F3D2 specific options
    virtual void SetCompositionStepNumber(int)
@@ -146,7 +163,5 @@ public:
       this->controlPointGrid=cpp;
    }
 };
-
-//#include "_reg_f3d.cpp"
 
 #endif

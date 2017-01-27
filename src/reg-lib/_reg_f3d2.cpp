@@ -133,7 +133,7 @@ void reg_f3d2<T>::GetInverseConsistencyErrorField(bool forceAll)
       reg_print_fct_error("reg_f3d2<T>::GetInverseConsistencyErrorField()");
       reg_print_msg_error("Option not supported in F3D2");
    }
-   reg_exit(1);
+   reg_exit();
 }
 /* *************************************************************** */
 /* *************************************************************** */
@@ -144,7 +144,7 @@ void reg_f3d2<T>::GetInverseConsistencyGradient()
 
    reg_print_fct_error("reg_f3d2<T>::GetInverseConsistencyGradient()");
    reg_print_msg_error("Option not supported in F3D2");
-   reg_exit(1);
+   reg_exit();
 
    return;
 }
@@ -195,22 +195,23 @@ void reg_f3d2<T>::ExponentiateGradient()
    }
 
    /* Allocate a temporary gradient image to store the backward gradient */
-   nifti_image *tempGrad=nifti_copy_nim_info(this->voxelBasedMeasureGradientImage);
+   nifti_image *tempGrad=nifti_copy_nim_info(this->voxelBasedMeasureGradient);
 
    tempGrad->data=(void *)malloc(tempGrad->nvox*tempGrad->nbyper);
    for(int i=0; i<(int)fabsf(this->backwardControlPointGrid->intent_p2); ++i)
    {
-      reg_tools_substractImageToImage(tempDef[i],
-                                      affine_disp,
-                                      tempDef[i]);
-      reg_resampleGradient(this->voxelBasedMeasureGradientImage, // floating
+      if(affine_disp!=NULL)
+         reg_tools_substractImageToImage(tempDef[i],
+                                         affine_disp,
+                                         tempDef[i]);
+      reg_resampleGradient(this->voxelBasedMeasureGradient, // floating
                            tempGrad, // warped - out
                            tempDef[i], // deformation field
                            1, // interpolation type - linear
                            0.f); // padding value
       reg_tools_addImageToImage(tempGrad, // in1
-                                this->voxelBasedMeasureGradientImage, // in2
-                                this->voxelBasedMeasureGradientImage); // out
+                                this->voxelBasedMeasureGradient, // in2
+                                this->voxelBasedMeasureGradient); // out
    }
 
    // Free the temporary deformation fields
@@ -229,8 +230,8 @@ void reg_f3d2<T>::ExponentiateGradient()
       nifti_image_free(affine_disp);
    affine_disp=NULL;
    // Normalise the forward gradient
-   reg_tools_divideValueToImage(this->voxelBasedMeasureGradientImage, // in
-                                this->voxelBasedMeasureGradientImage, // out
+   reg_tools_divideValueToImage(this->voxelBasedMeasureGradient, // in
+                                this->voxelBasedMeasureGradient, // out
                                 powf(2.f,fabsf(this->backwardControlPointGrid->intent_p2))); // value
 
    /* /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\ */
@@ -263,9 +264,10 @@ void reg_f3d2<T>::ExponentiateGradient()
 
    for(int i=0; i<(int)fabsf(this->controlPointGrid->intent_p2); ++i)
    {
-      reg_tools_substractImageToImage(tempDef[i],
-                                      affine_disp,
-                                      tempDef[i]);
+      if(affine_disp!=NULL)
+         reg_tools_substractImageToImage(tempDef[i],
+                                         affine_disp,
+                                         tempDef[i]);
       reg_resampleGradient(this->backwardVoxelBasedMeasureGradientImage, // floating
                            tempGrad, // warped - out
                            tempDef[i], // deformation field
@@ -433,7 +435,7 @@ nifti_image **reg_f3d2<T>::GetWarpedImage()
    {
       reg_print_fct_error("reg_f3d2<T>::GetWarpedImage()");
       reg_print_msg_error("The reference, floating and control point grid images have to be defined");
-      reg_exit(1);
+      reg_exit();
    }
 
    // Set the input images
@@ -455,32 +457,31 @@ nifti_image **reg_f3d2<T>::GetWarpedImage()
    reg_f3d2<T>::ClearDeformationField();
 
    // Allocate and save the forward transformation warped image
-   nifti_image **resultImage=(nifti_image **)malloc(2*sizeof(nifti_image *));
-   resultImage[0] = nifti_copy_nim_info(this->warped);
-   resultImage[0]->cal_min=this->inputFloating->cal_min;
-   resultImage[0]->cal_max=this->inputFloating->cal_max;
-   resultImage[0]->scl_slope=this->inputFloating->scl_slope;
-   resultImage[0]->scl_inter=this->inputFloating->scl_inter;
-   resultImage[0]->data=(void *)malloc(resultImage[0]->nvox*resultImage[0]->nbyper);
-   memcpy(resultImage[0]->data, this->warped->data, resultImage[0]->nvox*resultImage[0]->nbyper);
+   nifti_image **warpedImage=(nifti_image **)malloc(2*sizeof(nifti_image *));
+   warpedImage[0] = nifti_copy_nim_info(this->warped);
+   warpedImage[0]->cal_min=this->inputFloating->cal_min;
+   warpedImage[0]->cal_max=this->inputFloating->cal_max;
+   warpedImage[0]->scl_slope=this->inputFloating->scl_slope;
+   warpedImage[0]->scl_inter=this->inputFloating->scl_inter;
+   warpedImage[0]->data=(void *)malloc(warpedImage[0]->nvox*warpedImage[0]->nbyper);
+   memcpy(warpedImage[0]->data, this->warped->data, warpedImage[0]->nvox*warpedImage[0]->nbyper);
 
    // Allocate and save the backward transformation warped image
-   resultImage[1] = nifti_copy_nim_info(this->backwardWarped);
-   resultImage[1]->cal_min=this->inputReference->cal_min;
-   resultImage[1]->cal_max=this->inputReference->cal_max;
-   resultImage[1]->scl_slope=this->inputReference->scl_slope;
-   resultImage[1]->scl_inter=this->inputReference->scl_inter;
-   resultImage[1]->data=(void *)malloc(resultImage[1]->nvox*resultImage[1]->nbyper);
-   memcpy(resultImage[1]->data, this->backwardWarped->data, resultImage[1]->nvox*resultImage[1]->nbyper);
+   warpedImage[1] = nifti_copy_nim_info(this->backwardWarped);
+   warpedImage[1]->cal_min=this->inputReference->cal_min;
+   warpedImage[1]->cal_max=this->inputReference->cal_max;
+   warpedImage[1]->scl_slope=this->inputReference->scl_slope;
+   warpedImage[1]->scl_inter=this->inputReference->scl_inter;
+   warpedImage[1]->data=(void *)malloc(warpedImage[1]->nvox*warpedImage[1]->nbyper);
+   memcpy(warpedImage[1]->data, this->backwardWarped->data, warpedImage[1]->nvox*warpedImage[1]->nbyper);
 
    // Clear the warped images
    reg_f3d2<T>::ClearWarped();
 
    // Return the two final warped images
-   return resultImage;
+   return warpedImage;
 }
 /* *************************************************************** */
 /* *************************************************************** */
 template class reg_f3d2<float>;
-template class reg_f3d2<double>;
 #endif

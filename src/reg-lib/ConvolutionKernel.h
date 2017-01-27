@@ -2,11 +2,7 @@
 #define CONVOLUTIONKERNEL_H
 
 #include "Kernel.h"
-#ifdef RNIFTYREG
-#include "RNifti.h"
-#else
 #include "nifti1_io.h"
-#endif
 
 class ConvolutionKernel : public Kernel {
 public:

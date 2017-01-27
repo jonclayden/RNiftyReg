@@ -37,7 +37,7 @@ public:
    /// @brief Returns the lncc value
    double GetSimilarityMeasureValue();
    /// @brief Compute the voxel based lncc gradient
-   void GetVoxelBasedSimilarityMeasureGradient();
+   void GetVoxelBasedSimilarityMeasureGradient(int current_timepoint);
    /// @brief Stuff
    void SetKernelStandardDeviation(int t, float stddev)
    {
@@ -56,26 +56,33 @@ protected:
    nifti_image *referenceSdevImage;
    nifti_image *warpedFloatingMeanImage;
    nifti_image *warpedFloatingSdevImage;
+   int *forwardMask;
 
    nifti_image *backwardCorrelationImage;
    nifti_image *floatingMeanImage;
    nifti_image *floatingSdevImage;
    nifti_image *warpedReferenceMeanImage;
    nifti_image *warpedReferenceSdevImage;
+   int *backwardMask;
 
    int kernelType;
 
    template <class DTYPE>
-   void UpdateLocalStatImages(nifti_image *imag,
-                              nifti_image *mean,
-                              nifti_image *sdev,
-                              int *mask);
+   void UpdateLocalStatImages(nifti_image *refImage,
+                              nifti_image *warImage,
+                              nifti_image *meanRefImage,
+                              nifti_image *meanWarImage,
+                              nifti_image *stdDevRefImage,
+                              nifti_image *stdDevWarImage,
+                              int *refMask,
+                              int *mask,
+                              int current_timepoint);
 };
 /* *************************************************************** */
 /* *************************************************************** */
 /** @brief Copmutes and returns the LNCC between two input image
- * @param targetImage First input image to use to compute the metric
- * @param resultImage Second input image to use to compute the metric
+ * @param referenceImage First input image to use to compute the metric
+ * @param warpedImage Second input image to use to compute the metric
  * @param gaussianStandardDeviation Standard deviation of the Gaussian kernel
  * to use.
  * @param mask Array that contains a mask to specify which voxel
@@ -86,20 +93,19 @@ extern "C++" template<class DTYPE>
 double reg_getLNCCValue(nifti_image *referenceImage,
                         nifti_image *referenceMeanImage,
                         nifti_image *referenceStdDevImage,
-                        int *mask,
                         nifti_image *warpedImage,
                         nifti_image *warpedMeanImage,
                         nifti_image *warpedStdDevImage,
+                        int *combinedMask,
                         float *kernelStdDev,
-                        bool *activeTimePoint,
                         nifti_image *correlationImage,
                         int kernelType);
 
 /* *************************************************************** */
 /** @brief Compute a voxel based gradient of the LNCC.
- *  @param targetImage First input image to use to compute the metric
- *  @param resultImage Second input image to use to compute the metric
- *  @param resultImageGradient Spatial gradient of the input result image
+ *  @param referenceImage First input image to use to compute the metric
+ *  @param warpedImage Second input image to use to compute the metric
+ *  @param warpedImageGradient Spatial gradient of the input warped image
  *  @param lnccGradientImage Output image that will be updated with the
  *  value of the LNCC gradient
  *  @param gaussianStandardDeviation Standard deviation of the Gaussian kernel
@@ -111,15 +117,15 @@ extern "C++" template <class DTYPE>
 void reg_getVoxelBasedLNCCGradient(nifti_image *referenceImage,
                                    nifti_image *referenceMeanImage,
                                    nifti_image *referenceStdDevImage,
-                                   int *refMask,
                                    nifti_image *warpedImage,
                                    nifti_image *warpedMeanImage,
                                    nifti_image *warpedStdDevImage,
+                                   int *combinedMask,
                                    float *kernelStdDev,
-                                   bool *activeTimePoint,
                                    nifti_image *correlationImage,
-                                   nifti_image *warpedGradientImage,
+                                   nifti_image *warImgGradient,
                                    nifti_image *lnccGradientImage,
-                                   int kernelType);
+                                   int kernelType,
+                                   int current_timepoint);
 #endif
 

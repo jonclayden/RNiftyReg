@@ -51,7 +51,7 @@ void reg_dti::InitialiseMeasure(nifti_image *refImgPtr,
    {
       reg_print_fct_error("reg_dti::InitialiseMeasure");
       reg_print_msg_error("This number of time point should be the same for both input images");
-      reg_exit(1);
+      reg_exit();
    }
 
    int j=0;
@@ -72,7 +72,7 @@ void reg_dti::InitialiseMeasure(nifti_image *refImgPtr,
    {
       reg_print_fct_error("reg_dti::InitialiseMeasure");
       reg_print_msg_error("Unexpected number of DTI components");
-      reg_exit(1);
+      reg_exit();
    }
 }
 /* *************************************************************** */
@@ -83,7 +83,7 @@ double reg_getDTIMeasureValue(nifti_image *referenceImage,
                               unsigned int * dtIndicies
                              )
 {
-#if defined(_WIN32) && !defined(__GNUC__)
+#ifdef _WIN32
    long voxel;
    long voxelNumber = (long)referenceImage->nx*
                         referenceImage->ny*referenceImage->nz;
@@ -158,7 +158,7 @@ double reg_dti::GetSimilarityMeasureValue()
    {
       reg_print_fct_error("reg_dti::GetSimilarityMeasureValue");
       reg_print_msg_error("Both input images are exepected to have the same type");
-      reg_exit(1);
+      reg_exit();
    }
    double DTIMeasureValue;
    switch(this->referenceImagePointer->datatype)
@@ -182,7 +182,7 @@ double reg_dti::GetSimilarityMeasureValue()
    default:
       reg_print_fct_error("reg_dti::GetSimilarityMeasureValue");
       reg_print_msg_error("Result pixel type unsupported in the DTI computation function");
-      reg_exit(1);
+      reg_exit();
    }
 
    // Backward computation
@@ -193,7 +193,7 @@ double reg_dti::GetSimilarityMeasureValue()
       {
          reg_print_fct_error("reg_dti::GetSimilarityMeasureValue");
          reg_print_msg_error("Both input images are exepected to have the same type");
-         reg_exit(1);
+         reg_exit();
       }
       switch(this->floatingImagePointer->datatype)
       {
@@ -216,7 +216,7 @@ double reg_dti::GetSimilarityMeasureValue()
       default:
          reg_print_fct_error("reg_dti::GetSimilarityMeasureValue");
          reg_print_msg_error("Warped pixel type unsupported in the DTI computation function");
-         reg_exit(1);
+         reg_exit();
       }
    }
    return DTIMeasureValue;
@@ -226,13 +226,13 @@ double reg_dti::GetSimilarityMeasureValue()
 template <class DTYPE>
 void reg_getVoxelBasedDTIMeasureGradient(nifti_image *referenceImage,
       nifti_image *warpedImage,
-      nifti_image *warpedImageGradient,
+      nifti_image *warImgGradient,
       nifti_image *dtiMeasureGradientImage,
       int *mask,
       unsigned int * dtIndicies)
 {
    // Create pointers to the reference and warped images
-#if defined(_WIN32) && !defined(__GNUC__)
+#ifdef _WIN32
    long voxel;
    long voxelNumber = (long)referenceImage->nx*referenceImage->ny*referenceImage->nz;
 #else
@@ -258,8 +258,11 @@ void reg_getVoxelBasedDTIMeasureGradient(nifti_image *referenceImage,
    DTYPE *referenceIntensityYZ = &firstRefVox[voxelNumber*dtIndicies[4]];
    DTYPE *referenceIntensityZZ = &firstRefVox[voxelNumber*dtIndicies[5]];
 
-   unsigned int gradientVoxels = warpedImageGradient->nu*voxelNumber;
-   DTYPE *firstGradVox = static_cast<DTYPE *>(warpedImageGradient->data);
+   // THE FOLLOWING IS WRONG
+   reg_print_msg_error("ERROR IN THE DTI GRADIENT COMPUTATION - TO FIX");
+   reg_exit();
+   unsigned int gradientVoxels = warImgGradient->nu*voxelNumber;
+   DTYPE *firstGradVox = static_cast<DTYPE *>(warImgGradient->data);
    DTYPE *spatialGradXX = &firstGradVox[gradientVoxels*dtIndicies[0]];
    DTYPE *spatialGradXY = &firstGradVox[gradientVoxels*dtIndicies[1]];
    DTYPE *spatialGradYY = &firstGradVox[gradientVoxels*dtIndicies[2]];
@@ -270,9 +273,7 @@ void reg_getVoxelBasedDTIMeasureGradient(nifti_image *referenceImage,
    // Create an array to store the computed gradient per time point
    DTYPE *dtiMeasureGradPtrX=static_cast<DTYPE *>(dtiMeasureGradientImage->data);
    DTYPE *dtiMeasureGradPtrY = &dtiMeasureGradPtrX[voxelNumber];
-   DTYPE *dtiMeasureGradPtrZ = NULL;
-   if(referenceImage->nz>1)
-      dtiMeasureGradPtrZ = &dtiMeasureGradPtrY[voxelNumber];
+   DTYPE *dtiMeasureGradPtrZ = &dtiMeasureGradPtrY[voxelNumber];
 
    const double twoThirds = 2.0/3.0;
    const double fourThirds = 4.0/3.0;
@@ -327,8 +328,13 @@ template void reg_getVoxelBasedDTIMeasureGradient<float>
 template void reg_getVoxelBasedDTIMeasureGradient<double>
 (nifti_image *,nifti_image *,nifti_image *,nifti_image *, int *, unsigned int *);
 /* *************************************************************** */
-void reg_dti::GetVoxelBasedSimilarityMeasureGradient()
+void reg_dti::GetVoxelBasedSimilarityMeasureGradient(int current_timepoint)
 {
+   // Check if the specified time point exists and is active
+   reg_measure::GetVoxelBasedSimilarityMeasureGradient(current_timepoint);
+   if(this->activeTimePoint[current_timepoint]==false)
+      return;
+
    // Check if all required input images are of the same data type
    int dtype = this->referenceImagePointer->datatype;
    if(this->warpedFloatingImagePointer->datatype != dtype ||
@@ -338,7 +344,7 @@ void reg_dti::GetVoxelBasedSimilarityMeasureGradient()
    {
       reg_print_fct_error("reg_dti::GetVoxelBasedSimilarityMeasureGradient");
       reg_print_msg_error("Input images are exepected to be of the same type");
-      reg_exit(1);
+      reg_exit();
    }
    // Compute the gradient of the ssd for the forward transformation
    switch(dtype)
@@ -366,7 +372,7 @@ void reg_dti::GetVoxelBasedSimilarityMeasureGradient()
    default:
       reg_print_fct_error("reg_dti::GetVoxelBasedSimilarityMeasureGradient");
       reg_print_msg_error("The input image data type is not supported");
-      reg_exit(1);
+      reg_exit();
    }
    // Compute the gradient of the ssd for the backward transformation
    if(this->isSymmetric)
@@ -379,7 +385,7 @@ void reg_dti::GetVoxelBasedSimilarityMeasureGradient()
       {
          reg_print_fct_error("reg_dti::GetVoxelBasedSimilarityMeasureGradient");
          reg_print_msg_error("Input images are exepected to be of the same type");
-         reg_exit(1);
+         reg_exit();
       }
       // Compute the gradient of the nmi for the backward transformation
       switch(dtype)
@@ -407,7 +413,7 @@ void reg_dti::GetVoxelBasedSimilarityMeasureGradient()
       default:
          reg_print_fct_error("reg_dti::GetVoxelBasedSimilarityMeasureGradient");
          reg_print_msg_error("The input image data type is not supported");
-         reg_exit(1);
+         reg_exit();
       }
    }
 }

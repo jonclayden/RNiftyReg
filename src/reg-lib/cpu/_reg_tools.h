@@ -15,10 +15,16 @@
 #define _REG_TOOLS_H
 
 #include <fstream>
-#include <limits>
 #include <map>
 #include "_reg_maths.h"
 
+typedef enum
+{
+   MEAN_KERNEL,
+   LINEAR_KERNEL,
+   GAUSSIAN_KERNEL,
+   CUBIC_SPLINE_KERNEL
+} NREG_CONV_KERNEL_TYPE;
 
 /* *************************************************************** */
 /** @brief This function check some header parameters and correct them in
@@ -265,7 +271,7 @@ void reg_tools_binaryImage2int(nifti_image *img,
  * two vector images
  * @param imgA Input vector image
  * @param imgB Input vector image
- * @return Mean rsoot mean squared error valueis returned
+ * @return Mean rsoot mean squared error values returned
  */
 extern "C++"
 double reg_tools_getMeanRMS(nifti_image *imgA,
@@ -283,19 +289,44 @@ int reg_tools_nanMask_image(nifti_image *img,
                             nifti_image *mask,
                             nifti_image *res);
 /* *************************************************************** */
+/** @brief Set all the voxel with NaN value in the input image to
+ * background in the input mask
+ * @param img Input image
+ * @param mask Input mask which is updated in place
+ */
+extern "C++"
+int reg_tools_removeNanFromMask(nifti_image *image,
+                                int *mask);
+/* *************************************************************** */
 /** @brief Get the minimal value of an image
  * @param img Input image
+ * @param timepoint active time point. All time points are used if set to -1
  * @return min value
  */
 extern "C++"
-float reg_tools_getMinValue(nifti_image *img);
+float reg_tools_getMinValue(nifti_image *img, int timepoint);
 /* *************************************************************** */
 /** @brief Get the maximal value of an image
  * @param img Input image
+ * @param timepoint active time point. All time points are used if set to -1
  * @return max value
  */
 extern "C++"
-float reg_tools_getMaxValue(nifti_image *img);
+float reg_tools_getMaxValue(nifti_image *img, int timepoint);
+/* *************************************************************** */
+/** @brief Get the mean value of an image
+ * @param img Input image
+ * @return mean value
+ */
+extern "C++"
+float reg_tools_getMeanValue(nifti_image *img);
+/* *************************************************************** */
+/** @brief Get the std value of an image
+ * @param img Input image
+ * @return std value
+ */
+extern "C++"
+float reg_tools_getSTDValue(nifti_image *img);
 /* *************************************************************** */
 /** @brief Generate a pyramid from an input image.
  * @param input Input image to be downsampled to create the pyramid
@@ -382,7 +413,7 @@ int reg_getDeformationFromDisplacement(nifti_image *image);
  * If A or B are zeros then the (A-B) value is returned.
  */
 extern "C++" template<class DTYPE>
-float reg_test_compare_arrays(DTYPE *ptrA,
+double reg_test_compare_arrays(DTYPE *ptrA,
                               DTYPE *ptrB,
                               size_t nvox);
 /* *************************************************************** */
@@ -391,7 +422,7 @@ float reg_test_compare_arrays(DTYPE *ptrA,
  * If A or B are zeros then the (A-B) value is returned.
  */
 extern "C++"
-float reg_test_compare_images(nifti_image *imgA,
+double reg_test_compare_images(nifti_image *imgA,
                               nifti_image *imgB);
 /* *************************************************************** */
 /** @brief The absolute operator is applied to the input image
@@ -399,11 +430,24 @@ float reg_test_compare_images(nifti_image *imgA,
 extern "C++"
 void reg_tools_abs_image(nifti_image *img);
 /* *************************************************************** */
-//t_dev
 extern "C++"
 void mat44ToCptr(mat44 mat, float* cMat);
+/* *************************************************************** */
 extern "C++"
 void cPtrToMat44(mat44 *mat, float* cMat);
+/* *************************************************************** */
 extern "C++"
 void mat33ToCptr(mat33* mat, float* cMat, const unsigned int numMats);
+/* *************************************************************** */
+extern "C++"
+void cPtrToMat33(mat33 *mat, float* cMat);
+/* *************************************************************** */
+extern "C++" template<typename T>
+void matmnToCptr(T** mat, T* cMat, unsigned int m, unsigned int n);
+/* *************************************************************** */
+extern "C++" template<typename T>
+void cPtrToMatmn(T** mat, T* cMat, unsigned int m, unsigned int n);
+/* *************************************************************** */
+void coordinateFromLinearIndex(int index, int maxValue_x, int maxValue_y, int &x, int &y, int &z);
+/* *************************************************************** */
 #endif

@@ -35,20 +35,30 @@ public:
                           nifti_image *warRefImgPtr = NULL,
                           nifti_image *warRefGraPtr = NULL,
                           nifti_image *bckVoxBasedGraPtr = NULL);
+
+   void SetNormalizeTimepoint(int timepoint, bool normalize);
    /// @brief Returns the ssd value
    virtual double GetSimilarityMeasureValue();
    /// @brief Compute the voxel based ssd gradient
-   virtual void GetVoxelBasedSimilarityMeasureGradient();
-   /// @brief Measure class desstructor
+   virtual void GetVoxelBasedSimilarityMeasureGradient(int current_timepoint);
+   /// @brief Here
+   virtual void GetDiscretisedValue(nifti_image *controlPointGridImage,
+                                    float *discretisedValue,
+                                    int discretise_radius,
+                                    int discretise_step);
+   /// @brief reg_ssd class desstructor
    ~reg_ssd() {}
 protected:
    float currentValue[255];
+
+private:
+   bool normalizeTimePoint[255];
 };
 /* *************************************************************** */
 
-/** @brief Copmutes and returns the SSD between two input image
- * @param targetImage First input image to use to compute the metric
- * @param resultImage Second input image to use to compute the metric
+/** @brief Copmutes and returns the SSD between two input images
+ * @param referenceImage First input image to use to compute the metric
+ * @param warpedImage Second input image to use to compute the metric
  * @param activeTimePoint Specified which time point volumes have to be considered
  * @param jacobianDeterminantImage Image that contains the Jacobian
  * determinant of a transformation at every voxel position. This
@@ -59,8 +69,8 @@ protected:
  * @return Returns the computed sum squared difference
  */
 extern "C++" template <class DTYPE>
-double reg_getSSDValue(nifti_image *targetImage,
-                       nifti_image *resultImage,
+double reg_getSSDValue(nifti_image *referenceImage,
+                       nifti_image *warpedImage,
                        bool *activeTimePoint,
                        nifti_image *jacobianDeterminantImage,
                        int *mask,
@@ -68,28 +78,26 @@ double reg_getSSDValue(nifti_image *targetImage,
                       );
 
 /** @brief Compute a voxel based gradient of the sum squared difference.
- * @param targetImage First input image to use to compute the metric
- * @param resultImage Second input image to use to compute the metric
+ * @param referenceImage First input image to use to compute the metric
+ * @param warpedImage Second input image to use to compute the metric
  * @param activeTimePoint Specified which time point volumes have to be considered
- * @param resultImageGradient Spatial gradient of the input result image
+ * @param warpedImageGradient Spatial gradient of the input warped image
  * @param ssdGradientImage Output image htat will be updated with the
  * value of the SSD gradient
  * @param jacobianDeterminantImage Image that contains the Jacobian
  * determinant of a transformation at every voxel position. This
  * image is used to modulate the SSD. The argument is ignored if the
  * pointer is set to NULL
- * @param maxSD Input scalar that contain the difference value between
- * the highest and the lowest intensity.
  * @param mask Array that contains a mask to specify which voxel
  * should be considered. If set to NULL, all voxels are considered
  */
 extern "C++" template <class DTYPE>
-void reg_getVoxelBasedSSDGradient(nifti_image *targetImage,
-                                  nifti_image *resultImage,
-                                  bool *activeTimePoint,
-                                  nifti_image *resultImageGradient,
+void reg_getVoxelBasedSSDGradient(nifti_image *referenceImage,
+                                  nifti_image *warpedImage,
+                                  nifti_image *warpedImageGradient,
                                   nifti_image *ssdGradientImage,
                                   nifti_image *jacobianDeterminantImage,
-                                  int *mask
+                                  int *mask,
+                                  int current_timepoint
                                  );
 #endif
