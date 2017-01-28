@@ -1,7 +1,9 @@
 #ifndef _REG_ALADIN_CPP
 #define _REG_ALADIN_CPP
 
+#ifndef RNIFTYREG
 #include "_reg_ReadWriteMatrix.h"
+#endif
 #include "_reg_aladin.h"
 #include "Platform.h"
 #include "AffineDeformationFieldKernel.h"
@@ -323,6 +325,7 @@ void reg_aladin<T>::InitialiseRegistration()
   // Initialise the transformation
   if (this->InputTransformName != NULL)
   {
+#ifndef RNIFTYREG
     if (FILE *aff = fopen(this->InputTransformName, "r")) {
       fclose(aff);
     }
@@ -335,6 +338,7 @@ void reg_aladin<T>::InitialiseRegistration()
       reg_exit();
     }
     reg_tool_ReadAffineFile(this->TransformationMatrix, this->InputTransformName);
+#endif
   }
   else  // No input affine transformation
   {

@@ -5,9 +5,13 @@
 #include "nifti1_io.h"
 
 // Eigen headers are in there because of the nvcc preprocessing step
+#ifdef RNIFTYREG
+#include <RcppEigen.h>
+#else
 #include "Eigen/Core"
 #include "Eigen/SVD"
 #include "Eigen/unsupported/MatrixFunctions"
+#endif
 
 //_reg_maths_eigen.cpp
 /* *************************************************************** */

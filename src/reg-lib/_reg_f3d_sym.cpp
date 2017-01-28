@@ -1778,4 +1778,5 @@ void reg_f3d_sym<T>::DiscreteInitialisation()
 /* *************************************************************** */
 /* *************************************************************** */
 template class reg_f3d_sym<float>;
+template class reg_f3d_sym<double>;
 #endif

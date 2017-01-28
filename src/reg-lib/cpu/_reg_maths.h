@@ -52,7 +52,7 @@ typedef enum
 /* *************************************************************** */
 #ifdef RNIFTYREG
 #include <R.h>  // This may have to change to Rcpp.h or RcppEigen.h later
-#define reg_exit(){error("[NiftyReg] Fatal error");}
+#define reg_exit(...){Rf_error("[NiftyReg] Fatal error");}
 #define reg_print_info(executable,text){Rprintf("[%s] %s\n", executable, text);}
 #define reg_print_fct_debug(text){Rprintf("[NiftyReg DEBUG] Function: %s called\n", text);}
 #define reg_print_msg_debug(text){Rprintf("[NiftyReg DEBUG] %s\n", text);}

@@ -425,7 +425,7 @@ BEGIN_RCPP
         NiftiImage transformationImage(_transform);
         switch (reg_round(transformationImage->intent_p1))
         {
-            case SPLINE_GRID:
+            case CUB_SPLINE_GRID:
             reg_getDisplacementFromDeformation(transformationImage);
             reg_tools_multiplyValueToImage(transformationImage,transformationImage,0.5f);
             reg_getDeformationFromDisplacement(transformationImage);

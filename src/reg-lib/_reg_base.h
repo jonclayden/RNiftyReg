@@ -115,6 +115,10 @@ protected:
    bool discrete_init;
 #endif
 
+#ifdef RNIFTYREG
+   std::vector<int> completedIterations;
+#endif
+
    virtual void AllocateWarped();
    virtual void ClearWarped();
    virtual void AllocateDeformationField();
@@ -280,6 +284,13 @@ public:
 #ifdef BUILD_DEV
    void UseDiscreteInit();
    void DoNotUseDiscreteInit();
+#endif
+
+#ifdef RNIFTYREG
+   std::vector<int> GetCompletedIterations()
+   {
+      return this->completedIterations;
+   }
 #endif
 
    virtual void CheckParameters();

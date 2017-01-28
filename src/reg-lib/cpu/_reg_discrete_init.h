@@ -18,7 +18,9 @@
 #include "_reg_optimiser.h"
 #include "_reg_localTrans_regul.h"
 #include "_reg_localTrans.h"
+#ifndef RNIFTYREG
 #include "_reg_ReadWriteImage.h"
+#endif
 #include <cmath>
 #include <queue>
 #include <algorithm>

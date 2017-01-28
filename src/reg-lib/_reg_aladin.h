@@ -70,6 +70,10 @@ class reg_aladin
         char *InputTransformName;
         mat44 *TransformationMatrix;
 
+#ifdef RNIFTYREG
+        std::vector<int> completedIterations;
+#endif
+
         bool Verbose;
 
         unsigned int MaxIterations;
@@ -171,6 +175,19 @@ class reg_aladin
         {
             return this->InputTransform;
         }
+
+#ifdef RNIFTYREG
+        std::vector<int> GetCompletedIterations()
+        {
+            return this->completedIterations;
+        }
+        void SetTransformationMatrix (mat44 *matrix)
+        {
+            delete this->TransformationMatrix;
+            this->TransformationMatrix = new mat44;
+            memcpy(this->TransformationMatrix, matrix, sizeof(mat44));
+        }
+#endif
 
         mat44 *GetTransformationMatrix()
         {

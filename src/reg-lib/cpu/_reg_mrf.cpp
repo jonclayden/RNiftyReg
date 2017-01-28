@@ -3,7 +3,9 @@
 //DEBUG
 #include <iostream>
 #include <fstream>
+#ifndef RNIFTYREG
 #include "_reg_ReadWriteBinary.h"
+#endif
 //DEBUG
 /*****************************************************/
 reg_mrf::reg_mrf(int _discrete_radius,
