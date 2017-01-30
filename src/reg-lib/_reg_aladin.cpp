@@ -508,6 +508,10 @@ template<class T>
 void reg_aladin<T>::Run()
 {
   this->InitialiseRegistration();
+  
+#ifdef RNIFTYREG
+  this->completedIterations.resize(this->LevelsToPerform, 0);
+#endif
 
   //Main loop over the levels:
   for (this->CurrentLevel = 0; this->CurrentLevel < this->LevelsToPerform; this->CurrentLevel++)

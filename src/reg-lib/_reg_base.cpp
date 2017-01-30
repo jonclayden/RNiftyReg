@@ -1281,6 +1281,10 @@ void reg_base<T>::Run()
    }
 #endif
 
+#ifdef RNIFTYREG
+   this->completedIterations.resize(this->levelToPerform, 0);
+#endif
+
    // Update the maximal number of iteration to perform per level
    this->maxiterationNumber = this->maxiterationNumber * pow(2, this->levelToPerform-1);
 
