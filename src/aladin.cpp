@@ -9,7 +9,7 @@
 #include "DeformationField.h"
 
 // Run the "aladin" registration algorithm
-AladinResult regAladin (const RNifti::NiftiImage &sourceImage, const RNifti::NiftiImage &targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, const RNifti::NiftiImage &sourceMaskImage, const RNifti::NiftiImage &targetMaskImage, const AffineMatrix &initAffine, const bool verbose, const bool estimateOnly)
+AladinResult regAladin (RNifti::NiftiImage &sourceImage, RNifti::NiftiImage &targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, RNifti::NiftiImage &sourceMaskImage, RNifti::NiftiImage &targetMaskImage, const AffineMatrix &initAffine, const bool verbose, const bool estimateOnly)
 {
     // Binarise the mask images
     if (!sourceMaskImage.isNull())
