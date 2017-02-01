@@ -24,6 +24,36 @@ BEGIN_RCPP
 END_RCPP
 }
 
+bool isMultichannel (const NiftiImage &image)
+{
+    // Assume 2D RGB or RGBA image
+    return (image.nDims() == 3 && (image->nz == 3 || image->nz == 4));
+}
+
+void collapseChannels (NiftiImage &image)
+{
+    if (isMultichannel(image))
+    {
+        std::vector<double> red = image.volume(0).getData<double>();
+        const std::vector<double> green = image.volume(1).getData<double>();
+        const std::vector<double> blue = image.volume(2).getData<double>();
+        
+        for (size_t i=0; i<red.size(); i++)
+            red[i] = (red[i] + green[i] + blue[i]) / 3.0;
+        
+        nifti_image *result = nifti_copy_nim_info(image);
+        result->dim[0] = image->dim[0] - 1;
+        result->dim[image->dim[0]] = 1;
+        result->pixdim[image->dim[0]] = 1.0;
+        nifti_update_dims_from_array(image);
+        
+        result->datatype = DT_FLOAT64;
+        nifti_datatype_sizes(result->datatype, &result->nbyper, &result->swapsize);
+        
+        image = NiftiImage(result);
+    }
+}
+
 void checkImages (NiftiImage &sourceImage, NiftiImage &targetImage)
 {
     if (sourceImage.isNull())
