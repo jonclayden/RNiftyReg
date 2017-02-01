@@ -24,7 +24,7 @@ BEGIN_RCPP
 END_RCPP
 }
 
-void checkImages (const NiftiImage &sourceImage, const NiftiImage &targetImage)
+void checkImages (NiftiImage &sourceImage, NiftiImage &targetImage)
 {
     if (sourceImage.isNull())
         throw std::runtime_error("Cannot read or retrieve source image");

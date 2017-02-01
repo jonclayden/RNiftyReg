@@ -21,13 +21,13 @@ protected:
 public:
     DeformationField () {}
     DeformationField (const RNifti::NiftiImage &targetImage, const AffineMatrix &affine, const bool compose = false);
-    DeformationField (const RNifti::NiftiImage &targetImage, const RNifti::NiftiImage &transformationImage, const bool compose = false);
+    DeformationField (const RNifti::NiftiImage &targetImage, RNifti::NiftiImage &transformationImage, const bool compose = false);
     
     RNifti::NiftiImage getFieldImage () const { return deformationFieldImage; }
     
-    RNifti::NiftiImage getJacobian () const;
+    RNifti::NiftiImage getJacobian ();
     
-    RNifti::NiftiImage resampleImage (const RNifti::NiftiImage &sourceImage, const int interpolation) const;
+    RNifti::NiftiImage resampleImage (RNifti::NiftiImage &sourceImage, const int interpolation);
     
     template <int Dim>
     Rcpp::NumericVector findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const;

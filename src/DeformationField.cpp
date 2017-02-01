@@ -47,7 +47,7 @@ DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, const
     reg_affine_getDeformationField(&affineMatrix, deformationFieldImage, compose, NULL);
 }
 
-DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, const RNifti::NiftiImage &transformationImage, const bool compose)
+DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, RNifti::NiftiImage &transformationImage, const bool compose)
 {
     initImages(targetImage);
     reg_checkAndCorrectDimension(transformationImage);
@@ -83,7 +83,7 @@ DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, const
     }
 }
 
-RNifti::NiftiImage DeformationField::getJacobian () const
+RNifti::NiftiImage DeformationField::getJacobian ()
 {
     // Allocate Jacobian determinant image
     nifti_image *jacobianImage = nifti_copy_nim_info(targetImage);
@@ -101,7 +101,7 @@ RNifti::NiftiImage DeformationField::getJacobian () const
     return RNifti::NiftiImage(jacobianImage);
 }
 
-RNifti::NiftiImage DeformationField::resampleImage (const RNifti::NiftiImage &sourceImage, const int interpolation) const
+RNifti::NiftiImage DeformationField::resampleImage (RNifti::NiftiImage &sourceImage, const int interpolation)
 {
     // Allocate result image
     nifti_image *resultImage = nifti_copy_nim_info(targetImage);
