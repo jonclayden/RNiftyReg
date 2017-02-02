@@ -17,7 +17,6 @@ test_that("Affine operations work", {
     expect_that(buildAffine(angles=c(0,0,pi/4),source=source)[,4], equals(c(0,0,0,1)))
     expect_that(round(buildAffine(angles=c(0,0,pi/4),source=source,anchor="centre")[,4]), equals(c(18,5,0,1)))
     
-    origin <- function(image) worldToVoxel(c(0,0,0), image)
     xfm <- buildAffine(scales=c(2,2,2), source=source)
     expect_that(origin(attr(xfm,"target")), equals((origin(attr(xfm,"source"))-1)*2+1))
 })
