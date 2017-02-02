@@ -399,25 +399,16 @@ decomposeAffine <- function (affine)
     affine <- solve(affine)
     
     # Full matrix is rotationX %*% rotationY %*% rotationZ %*% skew %*% scale
+    # The Cholesky decomposition strategy is due to Tim Tierney
     submatrix <- affine[1:3,1:3]
-    sm <- list(x=submatrix[,1], y=submatrix[,2], z=submatrix[,3])
-    xLength <- sqrt(sum(sm$x^2))
-    yLength <- sqrt((sm$y %*% sm$y) - (sm$x %*% sm$y)^2 / xLength^2)
-    xyProj <- (sm$x %*% sm$y) / (xLength * yLength)
-    xNorm <- sm$x / xLength
-    yNorm <- (sm$y / yLength) - (xyProj * xNorm)
-    zLength <- sqrt((sm$z %*% sm$z) - (xNorm %*% sm$z)^2 - (yNorm %*% sm$z)^2)
-    xzProj <- (xNorm %*% sm$z) / zLength
-    yzProj <- (yNorm %*% sm$z) / zLength
-    
-    scales <- c(xLength, yLength, zLength)
+    decomposition <- chol(crossprod(submatrix))
+    scales <- diag(decomposition)
     scaleMatrix <- diag(scales)
-    skews <- c(xyProj, xzProj, yzProj)
-    skewMatrix <- diag(3)
-    skewMatrix[c(4,7,8)] <- skews
+    skewMatrix <- decomposition %*% solve(scaleMatrix)
+    skews <- skewMatrix[c(4,7,8)]
+    rotationMatrix <- submatrix %*% solve(scaleMatrix) %*% solve(skewMatrix)
     translation <- affine[1:3,4]
     
-    rotationMatrix <- submatrix %*% solve(scaleMatrix) %*% solve(skewMatrix)
     pitchAngle <- asin(-rotationMatrix[1,3])
     if (cos(pitchAngle) < 1e-4)
     {
