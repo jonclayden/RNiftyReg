@@ -30,7 +30,7 @@ bool isMultichannel (const NiftiImage &image)
     return (image.nDims() == 3 && (image->nz == 3 || image->nz == 4));
 }
 
-NiftiImage collapseChannels (NiftiImage &image)
+NiftiImage collapseChannels (const NiftiImage &image)
 {
     if (isMultichannel(image))
     {
@@ -45,7 +45,7 @@ NiftiImage collapseChannels (NiftiImage &image)
         result->dim[0] = image->dim[0] - 1;
         result->dim[image->dim[0]] = 1;
         result->pixdim[image->dim[0]] = 1.0;
-        nifti_update_dims_from_array(image);
+        nifti_update_dims_from_array(result);
         
         result->datatype = DT_FLOAT64;
         nifti_datatype_sizes(result->datatype, &result->nbyper, &result->swapsize);
@@ -169,7 +169,7 @@ BEGIN_RCPP
     
     // Collapse the target image if necessary
     if (isMultichannel(targetImage))
-        collapseChannels(targetImage);
+        targetImage = collapseChannels(targetImage);
     
     const LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
     const int interpolation = as<int>(_interpolation);
