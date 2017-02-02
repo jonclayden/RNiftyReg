@@ -3,22 +3,13 @@
 
 #include "BlockMatchingKernel.h"
 #include "_reg_blockMatching.h"
-#ifdef RNIFTYREG
-#include "RNifti.h"
-#else
 #include "nifti1_io.h"
-#endif
-#include "Content.h"
+#include "AladinContent.h"
 
 class CPUBlockMatchingKernel : public BlockMatchingKernel {
 public:
 
-    CPUBlockMatchingKernel(Content *con, std::string name) : BlockMatchingKernel(name) {
-        reference = con->getCurrentReference();
-        warped = con->getCurrentWarped();
-        params = con->getBlockMatchingParams();
-        mask = con->getCurrentReferenceMask();
-    }
+    CPUBlockMatchingKernel(AladinContent *con, std::string name);
 
     void calculate();
 

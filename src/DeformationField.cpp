@@ -1,6 +1,7 @@
 #include <RcppEigen.h>
 
 #include "_reg_localTrans.h"
+#include "_reg_localTrans_jac.h"
 #include "_reg_globalTrans.h"
 #include "_reg_resampling.h"
 
@@ -54,7 +55,7 @@ DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, RNift
     
     switch (reg_round(transformationImage->intent_p1))
     {
-        case SPLINE_GRID:
+        case CUB_SPLINE_GRID:
         reg_spline_getDeformationField(transformationImage, deformationFieldImage, NULL, compose, true);
         break;
         

@@ -36,13 +36,18 @@ public:
       this->warpedFloatingImagePointer=warFloImgPtr;
       this->warpedFloatingGradientImagePointer=warFloGraPtr;
       this->forwardVoxelBasedGradientImagePointer=forVoxBasedGraPtr;
-      if(warRefImgPtr!=NULL && warRefGraPtr!=NULL && bckVoxBasedGraPtr!=NULL)
-      {
+      if(maskFloPtr != NULL && warRefImgPtr!=NULL && warRefGraPtr!=NULL && bckVoxBasedGraPtr!=NULL) {
          this->isSymmetric=true;
          this->floatingMaskPointer=maskFloPtr;
          this->warpedReferenceImagePointer=warRefImgPtr;
          this->warpedReferenceGradientImagePointer=warRefGraPtr;
          this->backwardVoxelBasedGradientImagePointer=bckVoxBasedGraPtr;
+      }
+      else {
+          this->floatingMaskPointer=NULL;
+          this->warpedReferenceImagePointer=NULL;
+          this->warpedReferenceGradientImagePointer=NULL;
+          this->backwardVoxelBasedGradientImagePointer=NULL;
       }
 #ifndef NDEBUG
       printf("[NiftyReg DEBUG] reg_measure::InitialiseMeasure()\n");
@@ -51,7 +56,15 @@ public:
    /// @brief Returns the registration measure of similarity value
    virtual double GetSimilarityMeasureValue() = 0;
    /// @brief Compute the voxel based measure of similarity gradient
-   virtual void GetVoxelBasedSimilarityMeasureGradient() = 0;
+   virtual void GetVoxelBasedSimilarityMeasureGradient(int current_timepoint){
+      if(current_timepoint<0 || current_timepoint>=this->referenceImagePointer->nt){
+         reg_print_fct_error("reg_measure::GetVoxelBasedSimilarityMeasureGradient");
+         reg_print_msg_error("The specified active timepoint is not defined in the ref/war images");
+         reg_exit();
+      }
+   }
+   /// @brief Here
+   virtual void GetDiscretisedValue(nifti_image *, float *, int , int) {}
    void SetActiveTimepoint(int timepoint)
    {
       this->activeTimePoint[timepoint]=true;
@@ -60,6 +73,16 @@ public:
    {
       return this->activeTimePoint;
    }
+/************************************************************************/
+   nifti_image* GetReferenceImage(void)
+   {
+      return this->referenceImagePointer;
+   }
+   int* GetReferenceMask(void)
+   {
+      return this->referenceMaskPointer;
+   }
+/************************************************************************/
 protected:
    nifti_image *referenceImagePointer;
    int *referenceMaskPointer;
@@ -89,29 +112,4 @@ protected:
 };
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
 /* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-class reg_kld : public reg_measure
-{
-public:
-   /// @brief reg_kld class constructor
-   reg_kld()
-   {
-      reg_print_msg_error("KLD OBJECT - TODO\n");
-      reg_exit(1);
-   }
-   /// @brief Returns the kld value
-   double GetSimilarityMeasureValue()
-   {
-      return 0.;
-   }
-   /// @brief Compute the voxel based kld gradient
-   void GetVoxelBasedSimilarityMeasureGradient()
-   {
-      ;
-   }
-   /// @brief reg_kld class destructor
-   ~reg_kld() {}
-};
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-/* \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/ */
-
 #endif // _REG_MEASURE_H

@@ -149,7 +149,7 @@ void reg_fem_getDeformationField(float *nodePositions,
                                  float *femInterpolationWeight
                                 )
 {
-#if defined(_WIN32) && !defined(__GNUC__)
+#ifdef _WIN32
    long voxel;
    long voxelNumber=(long)deformationFieldImage->nx*
       deformationFieldImage->ny*deformationFieldImage->nz;

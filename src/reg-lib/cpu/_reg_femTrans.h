@@ -15,13 +15,8 @@
 #ifndef _REG_FEMTRANS_H
 #define _REG_FEMTRANS_H
 
-#ifdef RNIFTYREG
-#include "RNifti.h"
-#else
 #include "nifti1_io.h"
-#endif
 #include <fstream>
-#include <limits>
 #include "_reg_maths.h"
 
 /** @brief Initialise multiples arrays to populate a dense deformation

@@ -14,6 +14,7 @@
 
 #include "_reg_f3d.h"
 
+/// @brief Symmetric Fast Free Form Deformation registration class
 template <class T>
 class reg_f3d_sym : public reg_f3d<T>
 {
@@ -84,6 +85,10 @@ protected:
    virtual void UpdateParameters(float);
    virtual void InitialiseSimilarity();
 
+#ifdef BUILD_DEV
+   virtual void DiscreteInitialisation();
+#endif
+
 public:
    virtual void SetFloatingMask(nifti_image *);
    virtual void SetInverseConsistencyWeight(T);
@@ -99,7 +104,5 @@ public:
       return true;
    }
 };
-
-//#include "_reg_f3d_sym.cpp"
 
 #endif

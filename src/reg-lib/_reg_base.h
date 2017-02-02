@@ -15,10 +15,13 @@
 #include "_reg_resampling.h"
 #include "_reg_globalTrans.h"
 #include "_reg_localTrans.h"
+#include "_reg_localTrans_jac.h"
+#include "_reg_localTrans_regul.h"
 #include "_reg_nmi.h"
 #include "_reg_dti.h"
 #include "_reg_ssd.h"
-#include "_reg_KLdivergence.h"
+#include "_reg_mind.h"
+#include "_reg_kld.h"
 #include "_reg_lncc.h"
 #include "_reg_tools.h"
 #ifndef RNIFTYREG
@@ -26,12 +29,22 @@
 #endif
 #include "_reg_optimiser.h"
 #include "float.h"
-#include <limits>
-
+//#include "Platform.h"
+#ifdef BUILD_DEV
+#include "_reg_discrete_init.h"
+#include "_reg_mrf.h"
+#endif
+ 
+/// @brief Base registration class
 template <class T>
 class reg_base : public InterfaceOptimiser
 {
 protected:
+   // Platform !!!
+//   Platform *platform;
+//   int platformCode;
+//   unsigned gpuIdx;
+
    // Optimiser related variables
    reg_optimiser<T> *optimiser;
    size_t maxiterationNumber;
@@ -49,7 +62,8 @@ protected:
    reg_dti *measure_dti;
    reg_lncc *measure_lncc;
    reg_nmi *measure_nmi;
-   reg_multichannel_nmi *measure_multichannel_nmi;
+   reg_mind *measure_mind;
+   reg_mindssc *measure_mindssc;
 
    char *executableName;
    int referenceTimePoint;
@@ -88,17 +102,21 @@ protected:
    int *currentMask;
    nifti_image *warped;
    nifti_image *deformationFieldImage;
-   nifti_image *warpedGradientImage;
-   nifti_image *voxelBasedMeasureGradientImage;
+   nifti_image *warImgGradient;
+   nifti_image *voxelBasedMeasureGradient;
    unsigned int currentLevel;
 
    mat33 *forwardJacobianMatrix;
 
    double bestWMeasure;
    double currentWMeasure;
-   
+
+#ifdef BUILD_DEV
+   bool discrete_init;
+#endif
+
 #ifdef RNIFTYREG
-    std::vector<int> completedIterations;
+   std::vector<int> completedIterations;
 #endif
 
    virtual void AllocateWarped();
@@ -185,6 +203,12 @@ protected:
    {
       return;  // Need to be filled
    }
+#ifdef BUILD_DEV
+   virtual void DiscreteInitialisation()
+   {
+      return;  // Need to be filled
+   }
+#endif
 
    void (*funcProgressCallback)(float pcntProgress, void *params);
    void *paramsProgressCallback;
@@ -192,6 +216,12 @@ protected:
 public:
    reg_base(int refTimePoint,int floTimePoint);
    virtual ~reg_base();
+
+   //PLATFORM
+//   void setPlaform(Platform* inputPlatform);
+//   Platform* getPlaform();
+//   void setPlatformCode(int inputPlatformCode);
+//   void setGpuIdx(unsigned inputGPUIdx);
 
    // Optimisation related functions
    void SetMaximalIterationNumber(unsigned int);
@@ -220,8 +250,9 @@ public:
 //    void DoNotApproximateParzenWindow();
    virtual void UseNMISetReferenceBinNumber(int,int);
    virtual void UseNMISetFloatingBinNumber(int,int);
-   virtual void UseMultiChannelNMI(int timepointNumber);
-   virtual void UseSSD(int timepoint);
+   virtual void UseSSD(int timepoint, bool normalize);
+   virtual void UseMIND(int timepoint, int offset);
+   virtual void UseMINDSSC(int timepoint, int offset);
    virtual void UseKLDivergence(int timepoint);
    virtual void UseDTI(bool *timepoint);
    virtual void UseLNCC(int timepoint, float stdDevKernel);
@@ -249,11 +280,16 @@ public:
    void UseNeareatNeighborInterpolation();
    void UseLinearInterpolation();
    void UseCubicSplineInterpolation();
-   
+
+#ifdef BUILD_DEV
+   void UseDiscreteInit();
+   void DoNotUseDiscreteInit();
+#endif
+
 #ifdef RNIFTYREG
    std::vector<int> GetCompletedIterations()
    {
-       return this->completedIterations;
+      return this->completedIterations;
    }
 #endif
 
@@ -288,7 +324,5 @@ public:
       this->optimiser=opt;
    }
 };
-
-//#include "_reg_base.cpp"
 
 #endif // _REG_BASE_H

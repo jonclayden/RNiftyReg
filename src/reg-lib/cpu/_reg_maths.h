@@ -13,24 +13,12 @@
 #ifndef _REG_MATHS_H
 #define _REG_MATHS_H
 
-#ifdef RNIFTYREG
-// NIfTI-1 library defines this but it can interfere with dirent.h on some systems
-#ifdef DT_UNKNOWN
-#undef DT_UNKNOWN
-#endif
-
-#define R_NO_REMAP
-#include <RcppEigen.h>
-#endif // RNIFTYREG
-
+#include <limits>
 #include <stdio.h>
 #include <math.h>
 #include <iostream>
-#ifdef RNIFTYREG
-#include "RNifti.h"
-#else
+#include <vector>
 #include "nifti1_io.h"
-#endif
 
 #if defined (_OPENMP)
 #include <omp.h>
@@ -40,31 +28,20 @@ typedef enum
 {
    DEF_FIELD,
    DISP_FIELD,
-   SPLINE_GRID,
+   CUB_SPLINE_GRID,
    DEF_VEL_FIELD,
    DISP_VEL_FIELD,
-   SPLINE_VEL_GRID
+   SPLINE_VEL_GRID,
+   LIN_SPLINE_GRID
 } NREG_TRANS_TYPE;
 
 /* *************************************************************** */
-#ifdef RNIFTYREG
-// Rmath.h redefines "pythag", but the R function it points to is defunct
-#include <Rmath.h>
-#undef pythag
-#define reg_pow2(a)     R_pow_di(a,2)
-#define reg_ceil(a)     ceil(a)
-#define reg_round(a)    int(round(a))
-#define reg_floor(a)    int(floor(a))
-#define SIGN(a,b)       fsign(a,b)
-#define FMAX(a,b)       fmax2(a,b)
-#define IMIN(a,b)       imin2(a,b)
-#define SQR(a)          R_pow_di(a,2)
-#else
 #define reg_pow2(a) ((a)*(a))
 #define reg_ceil(a) (ceil(a))
 #define reg_round(a) ((a)>0.0 ?(int)((a)+0.5):(int)((a)-0.5))
 #ifdef _WIN32
 #define reg_floor(a) ((a)>0?(int)(a):(int)((a)-1))
+#define reg_floor_size_t(a) ((a)>0?(long)(a):(long)((a)-1))
 #else
 #define reg_floor(a) ((a)>=0?(int)(a):floor(a))
 #endif
@@ -72,21 +49,21 @@ typedef enum
 #define FMAX(a,b) (a > b ? a : b)
 #define IMIN(a,b) (a < b ? a : b)
 #define SQR(a) (a==0.0 ? 0.0 : a*a)
-#endif
 /* *************************************************************** */
 #ifdef RNIFTYREG
-#define reg_exit(val)                   Rf_error("[NiftyReg] Fatal error with code %d", val)
-#define reg_print_info(executable,text) Rprintf("[%s] %s\n", executable, text)
-#define reg_print_fct_debug(text)       Rprintf("[NiftyReg DEBUG] Function: %s called\n", text)
-#define reg_print_msg_debug(text)       Rprintf("[NiftyReg DEBUG] %s\n", text)
-#define reg_print_fct_warn(text)        REprintf("[NiftyReg WARNING] Function: %s\n", text)
-#define reg_print_msg_warn(text)        REprintf("[NiftyReg WARNING] %s\n", text)
-#define reg_print_fct_error(text)       REprintf("[NiftyReg ERROR] Function: %s\n", text)
-#define reg_print_msg_error(text)       REprintf("[NiftyReg ERROR] %s\n", text)
+#include <R.h>  // This may have to change to Rcpp.h or RcppEigen.h later
+#define reg_exit(...){Rf_error("[NiftyReg] Fatal error");}
+#define reg_print_info(executable,text){Rprintf("[%s] %s\n", executable, text);}
+#define reg_print_fct_debug(text){Rprintf("[NiftyReg DEBUG] Function: %s called\n", text);}
+#define reg_print_msg_debug(text){Rprintf("[NiftyReg DEBUG] %s\n", text);}
+#define reg_print_fct_warn(text){REprintf("[NiftyReg WARNING] Function: %s\n", text);}
+#define reg_print_msg_warn(text){REprintf("[NiftyReg WARNING] %s\n", text);}
+#define reg_print_fct_error(text){REprintf("[NiftyReg ERROR] Function: %s\n", text);}
+#define reg_print_msg_error(text){REprintf("[NiftyReg ERROR] %s\n", text);}
 #else
-#define reg_exit(val){ \
+#define reg_exit(){ \
     fprintf(stderr,"[NiftyReg] Exit here. File: %s:%i\n",__FILE__, __LINE__); \
-    exit(val); \
+    exit(1); \
 }
 #define reg_print_info(executable,text){printf("[%s] %s\n", executable, text);}
 #define reg_print_fct_debug(text){printf("[NiftyReg DEBUG] Function: %s called\n", text);}
@@ -98,7 +75,6 @@ typedef enum
 #endif
 /* *************************************************************** */
 #if defined(_WIN32) && !defined(__CYGWIN__)
-#include <limits>
 #include <float.h>
 #include <time.h>
 #ifndef M_PI
@@ -125,20 +101,6 @@ inline int fabs(int _x)
    return (int)fabs((float)(_x));
 }
 #endif // If on windows...
-
-/* *************************************************************** */
-/* Functions calling the Eigen library                             */
-/* See http://eigen.tuxfamily.org/index.php?title=Main_Page        */
-/* *************************************************************** */
-extern "C++"
-void reg_logarithm_tensor(mat33 *in_tensor);
-/* *************************************************************** */
-extern "C++"
-void reg_exponentiate_logged_tensor(mat33 *in_tensor);
-/* *************************************************************** */
-extern "C++" template <class T>
-void svd(T **in, size_t m, size_t n, T * w, T **v);
-/* *************************************************************** */
 /* *************************************************************** */
 extern "C++" template <class T>
 void reg_LUdecomposition(T *inputMatrix,
@@ -148,8 +110,8 @@ void reg_LUdecomposition(T *inputMatrix,
 extern "C++" template <class T>
 void reg_matrixMultiply(T *mat1,
                         T *mat2,
-                        int *dim1,
-                        int *dim2,
+                        size_t *dim1,
+                        size_t *dim2,
                         T * &res);
 /* *************************************************************** */
 extern "C++" template <class T>
@@ -158,6 +120,87 @@ void reg_matrixInvertMultiply(T *mat,
                               size_t *index,
                               T *vec);
 /* *************************************************************** */
+/* *************************************************************** */
+/* *************************************************************** */
+/* *************************************************************** */
+extern "C++" template<class T>
+T* reg_matrix1DAllocate(size_t arraySize);
+/* *************************************************************** */
+extern "C++" template<class T>
+T* reg_matrix1DAllocateAndInitToZero(size_t arraySize);
+/* *************************************************************** */
+extern "C++" template<class T>
+void reg_matrix1DDeallocate(T* mat);
+/* *************************************************************** */
+extern "C++" template<class T>
+T** reg_matrix2DAllocate(size_t arraySizeX, size_t arraySizeY);
+/* *************************************************************** */
+extern "C++" template<class T>
+T** reg_matrix2DAllocateAndInitToZero(size_t arraySizeX, size_t arraySizeY);
+/* *************************************************************** */
+extern "C++" template<class T>
+void reg_matrix2DDeallocate(size_t arraySizeX, T** mat);
+/* *************************************************************** */
+extern "C++" template<class T>
+T** reg_matrix2DTranspose(T** mat, size_t arraySizeX, size_t arraySizeY);
+/* *************************************************************** */
+extern "C++" template<class T>
+T** reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t mat2X, size_t mat2Y, bool transposeMat2);
+extern "C++" template<class T>
+void reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t mat2X, size_t mat2Y, T** res, bool transposeMat2);
+/* *************************************************************** */
+extern "C++" template<class T>
+T* reg_matrix2DVectorMultiply(T** mat, size_t m, size_t n, T* vect);
+extern "C++" template<class T>
+void reg_matrix2DVectorMultiply(T** mat, size_t m, size_t n, T* vect, T* res);
+/* *************************************************************** */
+/* *************************************************************** */
+/* *************************************************************** */
+/* *************************************************************** */
+/** @brief Add two 3-by-3 matrices
+*/
+mat33 reg_mat33_add(mat33 const* A, mat33 const* B);
+mat33 operator+(mat33 A, mat33 B);
+/* *************************************************************** */
+/** @brief Multipy two 3-by-3 matrices
+*/
+mat33 reg_mat33_mul(mat33 const* A,
+    mat33 const* B);
+mat33 operator*(mat33 A,
+    mat33 B);
+/* *************************************************************** */
+//The mat33 represent a 3x3 matrix
+void reg_mat33_mul(mat44 const* mat, float const* in, float *out);
+void reg_mat33_mul(mat33 const* mat, float const* in, float *out);
+/* *************************************************************** */
+/** @brief Substract two 3-by-3 matrices
+*/
+mat33 reg_mat33_minus(mat33 const* A, mat33 const* B);
+mat33 operator-(mat33 A, mat33 B);
+/* *************************************************************** */
+/** @brief Transpose a 3-by-3 matrix
+*/
+mat33 reg_mat33_trans(mat33 A);
+/* *************************************************************** */
+/** @brief Diagonalize a 3-by-3 matrix
+*/
+void reg_mat33_diagonalize(mat33 const* A, mat33 * Q, mat33 * D);
+/* *************************************************************** */
+/** @brief Set up a 3-by-3 matrix with an identity
+*/
+void reg_mat33_eye(mat33 *mat);
+/* *************************************************************** */
+/** @brief Compute the determinant of a 3-by-3 matrix
+*/
+template<class T> T reg_mat33_det(mat33 const* A);
+/* *************************************************************** */
+/** @brief Compute the determinant of a 3-by-3 matrix
+*/
+void reg_mat33_to_nan(mat33 *A);
+/* *************************************************************** */
+/** @brief Transform a mat44 to a mat33 matrix
+*/
+mat33 reg_mat44_to_mat33(mat44 const* A);
 extern "C++"
 void reg_heapSort(float *array_tmp, int *index_tmp, int blockNum);
 /* *************************************************************** */
@@ -169,19 +212,12 @@ bool operator==(mat44 A,mat44 B);
 /* *************************************************************** */
 bool operator!=(mat44 A,mat44 B);
 /* *************************************************************** */
-/** @brief here
- */
-mat33 reg_mat44_to_mat33(mat44 const* A);
-/* *************************************************************** */
 /** @brief Multipy two 4-by-4 matrices
  */
 mat44 reg_mat44_mul(mat44 const* A,
                     mat44 const* B);
 mat44 operator*(mat44 A,
                 mat44 B);
-
-mat33 operator*(mat33 A,
-                mat33 B);
 /* *************************************************************** */
 /** @brief Multipy a vector with a 4-by-4 matrix
  */
@@ -198,31 +234,15 @@ void reg_mat44_mul(mat44 const* mat,
 mat44 reg_mat44_mul(mat44 const* mat,
                     double scalar);
 /* *************************************************************** */
-/** @brief Add two 3-by-3 matrices
- */
-mat33 reg_mat33_add(mat33 const* A, mat33 const* B);
-mat33 operator+(mat33 A,mat33 B);
-mat33 reg_mat33_trans(mat33 A);
-void reg_mat33_diagonalize(mat33 const* A, mat33 * Q, mat33 * D);
-/* *************************************************************** */
 /** @brief Add two 4-by-4 matrices
  */
 mat44 reg_mat44_add(mat44 const* A, mat44 const* B);
 mat44 operator+(mat44 A,mat44 B);
 /* *************************************************************** */
-/** @brief Substract two 3-by-3 matrices
- */
-mat33 reg_mat33_minus(mat33 const* A, mat33 const* B);
-mat33 operator-(mat33 A,mat33 B);
-/* *************************************************************** */
 /** @brief Substract two 4-by-4 matrices
  */
 mat44 reg_mat44_minus(mat44 const* A, mat44 const* B);
 mat44 operator-(mat44 A,mat44 B);
-/* *************************************************************** */
-/** @brief Set up a 3-by-3 matrix with an identity
- */
-void reg_mat33_eye (mat33 *mat);
 /* *************************************************************** */
 /** @brief Set up a 4-by-4 matrix with an identity
  */
@@ -230,30 +250,9 @@ void reg_mat44_eye(mat44 *mat);
 /* *************************************************************** */
 /** @brief Compute the determinant of a 4-by-4 matrix
  */
-float reg_mat44_det(mat44 const* A);
-/* *************************************************************** */
-/** @brief Compute the inverse of a 4-by-4 matrix
- */
-mat44 reg_mat44_inv(mat44 const* A);
+template<class T> T reg_mat44_det(mat44 const* A);
 /* *************************************************************** */
 float reg_mat44_norm_inf(mat44 const* mat);
-/* *************************************************************** */
-/** @brief Compute the square root of a 4-by-4 matrix
- */
-mat44 reg_mat44_sqrt(mat44 const* mat);
-/* *************************************************************** */
-/** @brief Compute the exp of a 4-by-4 matrix
- */
-mat44 reg_mat44_expm(mat44 const* mat);
-/* *************************************************************** */
-/** @brief Compute the log of a 4-by-4 matrix
- */
-mat44 reg_mat44_logm(mat44 const* mat);
-/* *************************************************************** */
-/** @brief Compute the average of two matrices using a log-euclidean
- * framework
- */
-mat44 reg_mat44_avg2(mat44 const* A, mat44 const* b);
 /* *************************************************************** */
 /** @brief Display a mat44 matrix
  */
@@ -264,5 +263,9 @@ void reg_mat44_disp(mat44 *mat,
  */
 void reg_mat33_disp(mat33 *mat,
                     char * title);
+/* *************************************************************** */
+double get_square_distance3D(float * first_point3D, float * second_point3D);
+/* *************************************************************** */
+double get_square_distance2D(float * first_point2D, float * second_point2D);
 /* *************************************************************** */
 #endif // _REG_MATHS_H

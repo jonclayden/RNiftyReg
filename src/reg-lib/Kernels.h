@@ -6,11 +6,7 @@
 #include <vector>
 
 #include "Kernel.h"
-#ifdef RNIFTYREG
-#include "RNifti.h"
-#else
 #include "nifti1_io.h"
-#endif
 
 
 class AffineDeformationFieldKernel : public Kernel {
