@@ -316,6 +316,10 @@ BEGIN_RCPP
     
     checkImages(sourceImage.drop(), targetImage.drop());
     
+    // Collapse the target image if necessary
+    if (isMultichannel(targetImage))
+        targetImage = collapseChannels(targetImage);
+    
     const int interpolation = as<int>(_interpolation);
     const bool symmetric = as<bool>(_symmetric);
     const bool estimateOnly = as<bool>(_estimateOnly);
@@ -354,6 +358,55 @@ BEGIN_RCPP
             returnValue["reverseTransforms"] = R_NilValue;
         returnValue["iterations"] = List::create(result.iterations);
         returnValue["source"] = List::create(sourceImage.toArrayOrPointer(internalInput, "Source image"));
+        returnValue["target"] = targetImage.toArrayOrPointer(internalInput, "Target image");
+        
+        return returnValue;
+    }
+    else if (isMultichannel(sourceImage))
+    {
+        NiftiImage finalImage = allocateMultiregResult(sourceImage, targetImage, interpolation != 0);
+        NiftiImage collapsedSource = collapseChannels(sourceImage);
+        AffineMatrix initAffine;
+        NiftiImage initControl;
+        if (!Rf_isNull(init[0]))
+        {
+            // NB: R code must set the class of an affine appropriately
+            RObject initObject(init[0]);
+            if (initObject.inherits("affine"))
+                initAffine = AffineMatrix(SEXP(initObject));
+            else
+                initControl = NiftiImage(SEXP(init[0]));
+        }
+        else
+            initAffine = AffineMatrix(collapsedSource, targetImage);
+        
+        F3dResult mainResult = regF3d(collapsedSource, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_linearEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
+        
+        const int nReps = (estimateOnly ? 0 : sourceImage->dim[sourceImage.nDims()]);
+        for (int i=0; i<nReps; i++)
+        {
+            NiftiImage currentSource;
+            if (sourceImage.nDims() == 3)
+                currentSource = sourceImage.slice(i);
+            else
+                currentSource = sourceImage.volume(i);
+            
+            F3dResult result = regF3d(currentSource, targetImage, 0, as<int>(_maxIterations), interpolation, sourceMask, targetMask, mainResult.forwardTransform, AffineMatrix(), as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_linearEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
+            
+            if (sourceImage.nDims() == 3)
+                finalImage.slice(i) = result.image;
+            else
+                finalImage.volume(i) = result.image;
+        }
+        
+        returnValue["image"] = finalImage.toArrayOrPointer(internalOutput, "Result image");
+        returnValue["forwardTransforms"] = List::create(mainResult.forwardTransform.toArrayOrPointer(internalInput, "F3D control points"));
+        if (symmetric)
+            returnValue["reverseTransforms"] = List::create(mainResult.reverseTransform.toArrayOrPointer(internalInput, "F3D control points"));
+        else
+            returnValue["reverseTransforms"] = R_NilValue;
+        returnValue["iterations"] = List::create(mainResult.iterations);
+        returnValue["source"] = List::create(collapsedSource.toArrayOrPointer(internalInput, "Source image"));
         returnValue["target"] = targetImage.toArrayOrPointer(internalInput, "Target image");
         
         return returnValue;
