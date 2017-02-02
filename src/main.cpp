@@ -218,21 +218,14 @@ BEGIN_RCPP
         
         AladinResult mainResult = regAladin(collapsedSource, targetImage, scope, symmetric, as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, initAffine, as<bool>(_verbose), estimateOnly);
         
-        const int nReps = (estimateOnly ? 0 : sourceImage->dim[sourceImage.nDims()]);
+        const int nReps = (estimateOnly ? 0 : sourceImage.nBlocks());
         for (int i=0; i<nReps; i++)
         {
-            NiftiImage currentSource;
-            if (sourceImage.nDims() == 3)
-                currentSource = sourceImage.slice(i);
-            else
-                currentSource = sourceImage.volume(i);
+            NiftiImage currentSource = sourceImage.block(i);
             
             AladinResult result = regAladin(currentSource, targetImage, scope, symmetric, 0, as<int>(_maxIterations), as<int>(_useBlockPercentage), as<int>(_interpolation), sourceMask, targetMask, mainResult.forwardTransform, as<bool>(_verbose), estimateOnly);
             
-            if (sourceImage.nDims() == 3)
-                finalImage.slice(i) = result.image;
-            else
-                finalImage.volume(i) = result.image;
+            finalImage.block(i) = result.image;
         }
         
         returnValue["image"] = finalImage.toArrayOrPointer(internalOutput, "Result image");
@@ -249,17 +242,13 @@ BEGIN_RCPP
     }
     else if (sourceImage.nDims() - targetImage.nDims() == 1)
     {
-        const int nReps = sourceImage->dim[sourceImage.nDims()];
+        const int nReps = sourceImage.nBlocks();
         List forwardTransforms(nReps), reverseTransforms(nReps), iterations(nReps), sourceImages(nReps);
         NiftiImage finalImage = allocateMultiregResult(sourceImage, targetImage, interpolation != 0);
         AladinResult result;
         for (int i=0; i<nReps; i++)
         {
-            NiftiImage currentSource;
-            if (sourceImage.nDims() == 3)
-                currentSource = sourceImage.slice(i);
-            else
-                currentSource = sourceImage.volume(i);
+            NiftiImage currentSource = sourceImage.block(i);
             sourceImages[i] = currentSource.toArrayOrPointer(internalInput, "Source image");
             
             AffineMatrix initAffine;
@@ -272,10 +261,7 @@ BEGIN_RCPP
             
             result = regAladin(currentSource, targetImage, scope, symmetric, as<int>(_nLevels), as<int>(_maxIterations), as<int>(_useBlockPercentage), interpolation, sourceMask, targetMask, initAffine, as<bool>(_verbose), estimateOnly);
             
-            if (sourceImage.nDims() == 3)
-                finalImage.slice(i) = result.image;
-            else
-                finalImage.volume(i) = result.image;
+            finalImage.block(i) = result.image;
             
             forwardTransforms[i] = result.forwardTransform;
             if (symmetric)
@@ -382,21 +368,14 @@ BEGIN_RCPP
         
         F3dResult mainResult = regF3d(collapsedSource, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_linearEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
         
-        const int nReps = (estimateOnly ? 0 : sourceImage->dim[sourceImage.nDims()]);
+        const int nReps = (estimateOnly ? 0 : sourceImage.nBlocks());
         for (int i=0; i<nReps; i++)
         {
-            NiftiImage currentSource;
-            if (sourceImage.nDims() == 3)
-                currentSource = sourceImage.slice(i);
-            else
-                currentSource = sourceImage.volume(i);
+            NiftiImage currentSource = sourceImage.block(i);
             
             F3dResult result = regF3d(currentSource, targetImage, 0, as<int>(_maxIterations), interpolation, sourceMask, targetMask, mainResult.forwardTransform, AffineMatrix(), as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_linearEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
             
-            if (sourceImage.nDims() == 3)
-                finalImage.slice(i) = result.image;
-            else
-                finalImage.volume(i) = result.image;
+            finalImage.block(i) = result.image;
         }
         
         returnValue["image"] = finalImage.toArrayOrPointer(internalOutput, "Result image");
@@ -413,17 +392,13 @@ BEGIN_RCPP
     }
     else if (sourceImage.nDims() - targetImage.nDims() == 1)
     {
-        const int nReps = sourceImage->dim[sourceImage.nDims()];
+        const int nReps = sourceImage.nBlocks();
         List forwardTransforms(nReps), reverseTransforms(nReps), iterations(nReps), sourceImages(nReps);
         NiftiImage finalImage = allocateMultiregResult(sourceImage, targetImage, interpolation != 0);
         F3dResult result;
         for (int i=0; i<nReps; i++)
         {
-            NiftiImage currentSource;
-            if (sourceImage.nDims() == 3)
-                currentSource = sourceImage.slice(i);
-            else
-                currentSource = sourceImage.volume(i);
+            NiftiImage currentSource = sourceImage.block(i);
             sourceImages[i] = currentSource.toArrayOrPointer(internalInput, "Source image");
             
             AffineMatrix initAffine;
@@ -444,10 +419,7 @@ BEGIN_RCPP
             
             result = regF3d(currentSource, targetImage, as<int>(_nLevels), as<int>(_maxIterations), interpolation, sourceMask, targetMask, initControl, initAffine, as<int>(_nBins), as<float_vector>(_spacing), as<float>(_bendingEnergyWeight), as<float>(_linearEnergyWeight), as<float>(_jacobianWeight), symmetric, as<bool>(_verbose), estimateOnly);
             
-            if (sourceImage.nDims() == 3)
-                finalImage.slice(i) = result.image;
-            else
-                finalImage.volume(i) = result.image;
+            finalImage.block(i) = result.image;
             
             forwardTransforms[i] = result.forwardTransform.toArrayOrPointer(internalInput, "F3D control points");
             if (symmetric)
