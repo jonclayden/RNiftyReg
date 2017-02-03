@@ -411,6 +411,7 @@ void reg_f3d<T>::Initialise()
               this->spacing[0], this->spacing[1], this->spacing[2]);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "");
+#ifndef RNIFTYREG
       if(this->measure_ssd!=NULL)
          reg_print_info(this->executableName, "The SSD is used as a similarity measure.");
       if(this->measure_kld!=NULL)
@@ -427,6 +428,7 @@ void reg_f3d<T>::Initialise()
                                      this->measure_lncc==NULL &&  this->measure_nmi==NULL &&
                                      this->measure_ssd==NULL && this->measure_mind==NULL  &&
                                      this->measure_mindssc==NULL) )
+#endif
          reg_print_info(this->executableName, "The NMI is used as a similarity measure.");
       sprintf(text, "Similarity measure term weight: %g", this->similarityWeight);
       reg_print_info(this->executableName, text);

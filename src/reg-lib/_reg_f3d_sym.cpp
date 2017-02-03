@@ -269,12 +269,14 @@ void reg_f3d_sym<T>::AllocateDeformationField()
    this->backwardDeformationFieldImage->scl_slope=1.f;
    this->backwardDeformationFieldImage->scl_inter=0.f;
 
+#ifndef RNIFTYREG
    if(this->measure_dti!=NULL)
       this->backwardJacobianMatrix=(mat33 *)malloc(
             this->backwardDeformationFieldImage->nx *
             this->backwardDeformationFieldImage->ny *
             this->backwardDeformationFieldImage->nz *
             sizeof(mat33));
+#endif
 
 #ifndef NDEBUG
    reg_print_fct_debug("reg_f3d_sym<T>::AllocateDeformationField");
@@ -606,7 +608,9 @@ void reg_f3d_sym<T>::WarpFloatingImage(int inter)
    this->GetDeformationField();
 
    // Resample the floating image
+#ifndef RNIFTYREG
    if(this->measure_dti==NULL)
+#endif
    {
       reg_resampleImage(this->currentFloating,
                         this->warped,
@@ -615,6 +619,7 @@ void reg_f3d_sym<T>::WarpFloatingImage(int inter)
                         inter,
                         this->warpedPaddingValue);
    }
+#ifndef RNIFTYREG
    else
    {
       reg_defField_getJacobianMatrix(this->deformationFieldImage,
@@ -628,9 +633,12 @@ void reg_f3d_sym<T>::WarpFloatingImage(int inter)
                         this->measure_dti->GetActiveTimepoints(),
                         this->forwardJacobianMatrix);
    }
+#endif
 
    // Resample the reference image
+#ifndef RNIFTYREG
    if(this->measure_dti==NULL)
+#endif
    {
       reg_resampleImage(this->currentReference, // input image
                         this->backwardWarped, // warped input image
@@ -639,6 +647,7 @@ void reg_f3d_sym<T>::WarpFloatingImage(int inter)
                         inter, // interpolation type
                         this->warpedPaddingValue); // padding value
    }
+#ifndef RNIFTYREG
    else
    {
       reg_defField_getJacobianMatrix(this->backwardDeformationFieldImage,
@@ -652,6 +661,7 @@ void reg_f3d_sym<T>::WarpFloatingImage(int inter)
                         this->measure_dti->GetActiveTimepoints(),
                         this->backwardJacobianMatrix);
    }
+#endif
 #ifndef NDEBUG
    reg_print_fct_debug("reg_f3d_sym<T>::WarpFloatingImage");
 #endif
@@ -825,6 +835,7 @@ void reg_f3d_sym<T>::GetVoxelBasedGradient()
       if(this->measure_nmi!=NULL)
          this->measure_nmi->GetVoxelBasedSimilarityMeasureGradient(t);
 
+#ifndef RNIFTYREG
       if(this->measure_ssd!=NULL)
          this->measure_ssd->GetVoxelBasedSimilarityMeasureGradient(t);
 
@@ -839,6 +850,7 @@ void reg_f3d_sym<T>::GetVoxelBasedGradient()
 
       if(this->measure_mindssc!=NULL)
          this->measure_mindssc->GetVoxelBasedSimilarityMeasureGradient(t);
+#endif
    } // timepoint
 
 #ifndef NDEBUG
@@ -1588,6 +1600,9 @@ template<class T>
 void reg_f3d_sym<T>::InitialiseSimilarity()
 {
    // SET THE DEFAULT MEASURE OF SIMILARITY IF NONE HAS BEEN SET
+#ifdef RNIFTYREG
+   if(this->measure_nmi==NULL)
+#else
    if(this->measure_nmi==NULL &&
          this->measure_ssd==NULL &&
          this->measure_dti==NULL &&
@@ -1595,6 +1610,7 @@ void reg_f3d_sym<T>::InitialiseSimilarity()
          this->measure_kld==NULL &&
          this->measure_mind==NULL &&
          this->measure_mindssc==NULL)
+#endif
    {
       this->measure_nmi=new reg_nmi;
       for(int i=0; i<this->inputReference->nt; ++i)
@@ -1613,6 +1629,7 @@ void reg_f3d_sym<T>::InitialiseSimilarity()
                                            this->backwardVoxelBasedMeasureGradientImage
                                            );
 
+#ifndef RNIFTYREG
    if(this->measure_ssd!=NULL)
       this->measure_ssd->InitialiseMeasure(this->currentReference,
                                            this->currentFloating,
@@ -1690,6 +1707,7 @@ void reg_f3d_sym<T>::InitialiseSimilarity()
                                                this->backwardWarpedGradientImage,
                                                this->backwardVoxelBasedMeasureGradientImage
                                                );
+#endif
 #ifndef NDEBUG
    reg_print_fct_debug("reg_f3d_sym<T>::InitialiseSimilarity");
 #endif

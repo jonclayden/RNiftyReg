@@ -18,11 +18,13 @@
 #include "_reg_localTrans_jac.h"
 #include "_reg_localTrans_regul.h"
 #include "_reg_nmi.h"
+#ifndef RNIFTYREG
 #include "_reg_dti.h"
 #include "_reg_ssd.h"
 #include "_reg_mind.h"
 #include "_reg_kld.h"
 #include "_reg_lncc.h"
+#endif
 #include "_reg_tools.h"
 #ifndef RNIFTYREG
 #include "_reg_ReadWriteImage.h"
@@ -57,13 +59,17 @@ protected:
    virtual void SetOptimiser();
 
    // Measure related variables
+#ifndef RNIFTYREG
    reg_ssd *measure_ssd;
    reg_kld *measure_kld;
    reg_dti *measure_dti;
    reg_lncc *measure_lncc;
+#endif
    reg_nmi *measure_nmi;
+#ifndef RNIFTYREG
    reg_mind *measure_mind;
    reg_mindssc *measure_mindssc;
+#endif
 
    char *executableName;
    int referenceTimePoint;
@@ -250,6 +256,7 @@ public:
 //    void DoNotApproximateParzenWindow();
    virtual void UseNMISetReferenceBinNumber(int,int);
    virtual void UseNMISetFloatingBinNumber(int,int);
+#ifndef RNIFTYREG
    virtual void UseSSD(int timepoint, bool normalize);
    virtual void UseMIND(int timepoint, int offset);
    virtual void UseMINDSSC(int timepoint, int offset);
@@ -257,6 +264,7 @@ public:
    virtual void UseDTI(bool *timepoint);
    virtual void UseLNCC(int timepoint, float stdDevKernel);
    virtual void SetLNCCKernelType(int type);
+#endif
 
    void SetReferenceImage(nifti_image *);
    void SetFloatingImage(nifti_image *);

@@ -33,13 +33,17 @@ reg_base<T>::reg_base(int refTimePoint,int floTimePoint)
    this->useConjGradient=true;
    this->useApproxGradient=false;
 
+#ifndef RNIFTYREG
    this->measure_ssd=NULL;
    this->measure_kld=NULL;
    this->measure_dti=NULL;
    this->measure_lncc=NULL;
+#endif
    this->measure_nmi=NULL;
+#ifndef RNIFTYREG
    this->measure_mind=NULL;
    this->measure_mindssc=NULL;
+#endif
 
    this->similarityWeight=0.; // is automatically set depending of the penalty term weights
 
@@ -219,6 +223,7 @@ reg_base<T>::~reg_base()
 
    if(this->measure_nmi!=NULL)
       delete this->measure_nmi;
+#ifndef RNIFTYREG
    if(this->measure_ssd!=NULL)
       delete this->measure_ssd;
    if(this->measure_kld!=NULL)
@@ -231,6 +236,7 @@ reg_base<T>::~reg_base()
       delete this->measure_mind;
    if(this->measure_mindssc!=NULL)
       delete this->measure_mindssc;
+#endif
 
    //Platform
 //   delete this->platform;
@@ -620,12 +626,14 @@ void reg_base<T>::AllocateDeformationField()
    this->deformationFieldImage->scl_slope=1.f;
    this->deformationFieldImage->scl_inter=0.f;
 
+#ifndef RNIFTYREG
    if(this->measure_dti!=NULL)
       this->forwardJacobianMatrix=(mat33 *)malloc(
                                      this->deformationFieldImage->nx *
                                      this->deformationFieldImage->ny *
                                      this->deformationFieldImage->nz *
                                      sizeof(mat33));
+#endif
 #ifndef NDEBUG
    reg_print_fct_debug("reg_base<T>::AllocateDeformationField");
 #endif
@@ -757,6 +765,9 @@ template<class T>
 void reg_base<T>::InitialiseSimilarity()
 {
    // SET THE DEFAULT MEASURE OF SIMILARITY IF NONE HAS BEEN SET
+#ifdef RNIFTYREG
+   if(this->measure_nmi==NULL)
+#else
    if(this->measure_nmi==NULL &&
          this->measure_ssd==NULL &&
          this->measure_dti==NULL &&
@@ -765,6 +776,7 @@ void reg_base<T>::InitialiseSimilarity()
          this->measure_kld==NULL &&
          this->measure_mind==NULL &&
          this->measure_mindssc==NULL)
+#endif
    {
       this->measure_nmi=new reg_nmi;
       for(int i=0; i<this->inputReference->nt; ++i)
@@ -779,6 +791,7 @@ void reg_base<T>::InitialiseSimilarity()
                                            this->voxelBasedMeasureGradient
                                           );
 
+#ifndef RNIFTYREG
    if(this->measure_ssd!=NULL)
       this->measure_ssd->InitialiseMeasure(this->currentReference,
                                            this->currentFloating,
@@ -832,6 +845,7 @@ void reg_base<T>::InitialiseSimilarity()
                                                this->warImgGradient,
                                                this->voxelBasedMeasureGradient
                                                );
+#endif
 
 #ifndef NDEBUG
    reg_print_fct_debug("reg_base<T>::InitialiseSimilarity");
@@ -996,6 +1010,7 @@ double reg_base<T>::ComputeSimilarityMeasure()
    if(this->measure_nmi!=NULL)
       measure += this->measure_nmi->GetSimilarityMeasureValue();
 
+#ifndef RNIFTYREG
    if(this->measure_ssd!=NULL)
       measure += this->measure_ssd->GetSimilarityMeasureValue();
 
@@ -1013,6 +1028,7 @@ double reg_base<T>::ComputeSimilarityMeasure()
 
    if(this->measure_mindssc!=NULL)
       measure += this->measure_mindssc->GetSimilarityMeasureValue();
+#endif
 
 #ifndef NDEBUG
    reg_print_fct_debug("reg_base<T>::ComputeSimilarityMeasure");
@@ -1065,6 +1081,7 @@ void reg_base<T>::GetVoxelBasedGradient()
       if(this->measure_nmi!=NULL)
          this->measure_nmi->GetVoxelBasedSimilarityMeasureGradient(t);
 
+#ifndef RNIFTYREG
       if(this->measure_ssd!=NULL)
          this->measure_ssd->GetVoxelBasedSimilarityMeasureGradient(t);
 
@@ -1079,6 +1096,7 @@ void reg_base<T>::GetVoxelBasedGradient()
 
       if(this->measure_mindssc!=NULL)
          this->measure_mindssc->GetVoxelBasedSimilarityMeasureGradient(t);
+#endif
    }
 
 #ifndef NDEBUG
@@ -1133,6 +1151,7 @@ void reg_base<T>::UseNMISetFloatingBinNumber(int timepoint, int floBinNumber)
    reg_print_fct_debug("reg_base<T>::UseNMISetFloatingBinNumber");
 #endif
 }
+#ifndef RNIFTYREG
 /* *************************************************************** */
 template<class T>
 void reg_base<T>::UseSSD(int timepoint, bool normalize)
@@ -1225,6 +1244,7 @@ void reg_base<T>::UseDTI(bool *timepoint)
    reg_print_fct_debug("reg_base<T>::UseDTI");
 #endif
 }
+#endif // RNIFTYREG not defined
 /* *************************************************************** */
 /* *************************************************************** */
 template <class T>
@@ -1233,7 +1253,9 @@ void reg_base<T>::WarpFloatingImage(int inter)
    // Compute the deformation field
    this->GetDeformationField();
 
+#ifndef RNIFTYREG
    if(this->measure_dti==NULL)
+#endif
    {
       // Resample the floating image
       reg_resampleImage(this->currentFloating,
@@ -1243,6 +1265,7 @@ void reg_base<T>::WarpFloatingImage(int inter)
                         inter,
                         this->warpedPaddingValue);
    }
+#ifndef RNIFTYREG
    else
    {
       reg_defField_getJacobianMatrix(this->deformationFieldImage,
@@ -1256,6 +1279,7 @@ void reg_base<T>::WarpFloatingImage(int inter)
                         this->measure_dti->GetActiveTimepoints(),
                         this->forwardJacobianMatrix);
    }
+#endif
 #ifndef NDEBUG
    reg_print_fct_debug("reg_base<T>::WarpFloatingImage");
 #endif

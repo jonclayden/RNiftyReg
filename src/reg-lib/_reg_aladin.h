@@ -19,7 +19,9 @@
 #include "_reg_blockMatching.h"
 #include "_reg_globalTrans.h"
 #include "_reg_nmi.h"
+#ifndef RNIFTYREG
 #include "_reg_ssd.h"
+#endif
 #include "_reg_tools.h"
 #include "float.h"
 #include <limits>
