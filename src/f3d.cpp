@@ -90,6 +90,12 @@ F3dResult regF3d (RNifti::NiftiImage &sourceImage, RNifti::NiftiImage &targetIma
         for (int i = 0; i < 3; i++)
             reg->SetSpacing(unsigned(i), PRECISION_TYPE(spacing[i]));
         
+        for (int i = 0; i < targetImage->nt; i++)
+        {
+            reg->UseNMISetReferenceBinNumber(i, nBins);
+            reg->UseNMISetFloatingBinNumber(i, nBins);
+        }
+        
         reg->SetLevelNumber(nLevels);
         reg->SetLevelToPerform(nLevels);
 
