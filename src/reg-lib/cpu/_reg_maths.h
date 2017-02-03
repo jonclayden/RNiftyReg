@@ -13,6 +13,16 @@
 #ifndef _REG_MATHS_H
 #define _REG_MATHS_H
 
+#ifdef HAVE_R
+// NIfTI-1 library defines this but it can interfere with dirent.h on some systems
+#ifdef DT_UNKNOWN
+#undef DT_UNKNOWN
+#endif
+
+#define R_NO_REMAP
+#include <RcppEigen.h>
+#endif // HAVE_R
+
 #include <limits>
 #include <stdio.h>
 #include <math.h>
@@ -36,6 +46,19 @@ typedef enum
 } NREG_TRANS_TYPE;
 
 /* *************************************************************** */
+#ifdef HAVE_R
+// Rmath.h redefines "pythag", but the R function it points to is defunct
+#include <Rmath.h>
+#undef pythag
+#define reg_pow2(a)     R_pow_di(a,2)
+#define reg_ceil(a)     ceil(a)
+#define reg_round(a)    int(round(a))
+#define reg_floor(a)    int(floor(a))
+#define SIGN(a,b)       fsign(a,b)
+#define FMAX(a,b)       fmax2(a,b)
+#define IMIN(a,b)       imin2(a,b)
+#define SQR(a)          R_pow_di(a,2)
+#else
 #define reg_pow2(a) ((a)*(a))
 #define reg_ceil(a) (ceil(a))
 #define reg_round(a) ((a)>0.0 ?(int)((a)+0.5):(int)((a)-0.5))
@@ -49,17 +72,17 @@ typedef enum
 #define FMAX(a,b) (a > b ? a : b)
 #define IMIN(a,b) (a < b ? a : b)
 #define SQR(a) (a==0.0 ? 0.0 : a*a)
+#endif
 /* *************************************************************** */
 #ifdef HAVE_R
-#include <R.h>  // This may have to change to Rcpp.h or RcppEigen.h later
-#define reg_exit(...){Rf_error("[NiftyReg] Fatal error");}
-#define reg_print_info(executable,text){Rprintf("[%s] %s\n", executable, text);}
-#define reg_print_fct_debug(text){Rprintf("[NiftyReg DEBUG] Function: %s called\n", text);}
-#define reg_print_msg_debug(text){Rprintf("[NiftyReg DEBUG] %s\n", text);}
-#define reg_print_fct_warn(text){REprintf("[NiftyReg WARNING] Function: %s\n", text);}
-#define reg_print_msg_warn(text){REprintf("[NiftyReg WARNING] %s\n", text);}
-#define reg_print_fct_error(text){REprintf("[NiftyReg ERROR] Function: %s\n", text);}
-#define reg_print_msg_error(text){REprintf("[NiftyReg ERROR] %s\n", text);}
+#define reg_exit(...)                   Rf_error("[NiftyReg] Fatal error")
+#define reg_print_info(executable,text) Rprintf("[%s] %s\n", executable, text)
+#define reg_print_fct_debug(text)       Rprintf("[NiftyReg DEBUG] Function: %s called\n", text)
+#define reg_print_msg_debug(text)       Rprintf("[NiftyReg DEBUG] %s\n", text)
+#define reg_print_fct_warn(text)        REprintf("[NiftyReg WARNING] Function: %s\n", text)
+#define reg_print_msg_warn(text)        REprintf("[NiftyReg WARNING] %s\n", text)
+#define reg_print_fct_error(text)       REprintf("[NiftyReg ERROR] Function: %s\n", text)
+#define reg_print_msg_error(text)       REprintf("[NiftyReg ERROR] %s\n", text)
 #else
 #define reg_exit(){ \
     fprintf(stderr,"[NiftyReg] Exit here. File: %s:%i\n",__FILE__, __LINE__); \
