@@ -522,7 +522,7 @@ void ResampleImage3D(nifti_image *floatingImage,
          case NIFTI_TYPE_UINT32:
             if(intensity!=intensity)
                intensity=0;
-            intensity=(intensity<=4294967295?reg_round(intensity):4294967295); // 4294967295=2^32-1
+            intensity=(intensity<=4294967295U?reg_round(intensity):4294967295U); // 4294967295=2^32-1
             warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
             break;
          default:
@@ -680,7 +680,7 @@ void ResampleImage2D(nifti_image *floatingImage,
                warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
                break;
             case NIFTI_TYPE_UINT32:
-               intensity=(intensity<=4294967295?reg_round(intensity):4294967295); // 4294967295=2^32-1
+               intensity=(intensity<=4294967295U?reg_round(intensity):4294967295U); // 4294967295=2^32-1
                warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
                break;
             default:
@@ -900,7 +900,7 @@ void reg_resampleImage(nifti_image *floatingImage,
                                           jacMat);
          break;
       default:
-         printf("floating pixel type unsupported.");
+         reg_print_msg_error("floating pixel type unsupported.");
          break;
       }
       break;
@@ -988,12 +988,12 @@ void reg_resampleImage(nifti_image *floatingImage,
                                            jacMat);
          break;
       default:
-         printf("floating pixel type unsupported.");
+         reg_print_msg_error("floating pixel type unsupported.");
          break;
       }
       break;
    default:
-      printf("Deformation field pixel type unsupported.");
+      reg_print_msg_error("Deformation field pixel type unsupported.");
       break;
    }
    if(MrPropreRules==true)
@@ -1283,7 +1283,7 @@ void ResampleImage3D_PSF_Sinc(nifti_image *floatingImage,
          case NIFTI_TYPE_UINT32:
             if(intensity!=intensity)
                intensity=0;
-            intensity=(intensity<=4294967295?reg_round(intensity):4294967295); // 4294967295=2^32-1
+            intensity=(intensity<=4294967295U?reg_round(intensity):4294967295U); // 4294967295=2^32-1
             warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
             break;
          default:
@@ -1730,7 +1730,7 @@ void ResampleImage3D_PSF(nifti_image *floatingImage,
          case NIFTI_TYPE_UINT32:
             if(intensity!=intensity)
                intensity=0;
-            intensity=(intensity<=4294967295?reg_round(intensity):4294967295); // 4294967295=2^32-1
+            intensity=(intensity<=4294967295U?reg_round(intensity):4294967295U); // 4294967295=2^32-1
             warpedIntensity[index]=static_cast<FloatingTYPE>(intensity>0?reg_round(intensity):0);
             break;
          case NIFTI_TYPE_INT16:
@@ -1925,7 +1925,7 @@ void reg_resampleImage_PSF(nifti_image *floatingImage,
                                               algorithm);
          break;
       default:
-         printf("floating pixel type unsupported.");
+         reg_print_msg_error("floating pixel type unsupported.");
          break;
       }
       break;
@@ -2013,12 +2013,12 @@ void reg_resampleImage_PSF(nifti_image *floatingImage,
                                                algorithm);
          break;
       default:
-         printf("floating pixel type unsupported.");
+         reg_print_msg_error("floating pixel type unsupported.");
          break;
       }
       break;
    default:
-      printf("Deformation field pixel type unsupported.");
+      reg_print_msg_error("Deformation field pixel type unsupported.");
       break;
    }
    if(MrPropreRules==true)

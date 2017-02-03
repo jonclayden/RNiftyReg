@@ -132,24 +132,39 @@ template <class T>
 void reg_optimiser<T>::Perturbation(float length)
 {
    // initialise the randomiser
+#ifdef HAVE_R
+   GetRNGstate();
+#else
    srand(time(NULL));
+#endif
    // Reset the number of iteration
    this->currentIterationNumber=0;
    // Create some perturbation for degree of freedom
    for(size_t i=0; i<this->dofNumber; ++i)
    {
+#ifdef HAVE_R
+      this->currentDOF[i]=this->bestDOF[i] + length * static_cast<float>(unif_rand() * 2.0 - 1.0);
+#else
       this->currentDOF[i]=this->bestDOF[i] + length * (float)(rand() - RAND_MAX/2) / ((float)RAND_MAX/2.0f);
+#endif
    }
    if(this->backward==true)
    {
       for(size_t i=0; i<this->dofNumber_b; ++i)
       {
+#ifdef HAVE_R
+         this->currentDOF_b[i]=this->bestDOF_b[i] + length * static_cast<float>(unif_rand() * 2.0 - 1.0);
+#else
          this->currentDOF_b[i]=this->bestDOF_b[i] + length * (float)(rand() % 2001 - 1000) / 1000.f;
+#endif
       }
    }
    this->StoreCurrentDOF();
    this->currentObjFunctionValue=this->bestObjFunctionValue=
                                     this->objFunc->GetObjectiveFunctionValue();
+#ifdef HAVE_R
+   PutRNGstate();
+#endif
 }
 /* *************************************************************** */
 /* *************************************************************** */

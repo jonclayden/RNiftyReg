@@ -190,7 +190,7 @@ template void svd<double>(double **in, size_t size_m, size_t size_n, double ***U
 template<class T>
 T reg_matrix2DDet(T** mat, size_t m, size_t n) {
    if (m != n) {
-      char text[255]; sprintf(text, "The matrix have to be square: [%zu %zu]",
+      char text[255]; sprintf(text, "The matrix have to be square: [%lu %lu]",
                               m, n);
       reg_print_fct_error("reg_matrix2DDeterminant");
       reg_print_msg_error(text);
