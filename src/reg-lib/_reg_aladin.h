@@ -19,7 +19,7 @@
 #include "_reg_blockMatching.h"
 #include "_reg_globalTrans.h"
 #include "_reg_nmi.h"
-#ifndef RNIFTYREG
+#ifndef HAVE_R
 #include "_reg_ssd.h"
 #endif
 #include "_reg_tools.h"
@@ -72,7 +72,7 @@ class reg_aladin
         char *InputTransformName;
         mat44 *TransformationMatrix;
 
-#ifdef RNIFTYREG
+#ifdef HAVE_R
         std::vector<int> completedIterations;
 #endif
 
@@ -178,7 +178,7 @@ class reg_aladin
             return this->InputTransform;
         }
 
-#ifdef RNIFTYREG
+#ifdef HAVE_R
         std::vector<int> GetCompletedIterations()
         {
             return this->completedIterations;

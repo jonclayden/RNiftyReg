@@ -411,7 +411,7 @@ void reg_f3d<T>::Initialise()
               this->spacing[0], this->spacing[1], this->spacing[2]);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "");
-#ifndef RNIFTYREG
+#ifndef HAVE_R
       if(this->measure_ssd!=NULL)
          reg_print_info(this->executableName, "The SSD is used as a similarity measure.");
       if(this->measure_kld!=NULL)

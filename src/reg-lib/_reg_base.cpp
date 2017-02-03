@@ -33,14 +33,14 @@ reg_base<T>::reg_base(int refTimePoint,int floTimePoint)
    this->useConjGradient=true;
    this->useApproxGradient=false;
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    this->measure_ssd=NULL;
    this->measure_kld=NULL;
    this->measure_dti=NULL;
    this->measure_lncc=NULL;
 #endif
    this->measure_nmi=NULL;
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    this->measure_mind=NULL;
    this->measure_mindssc=NULL;
 #endif
@@ -223,7 +223,7 @@ reg_base<T>::~reg_base()
 
    if(this->measure_nmi!=NULL)
       delete this->measure_nmi;
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    if(this->measure_ssd!=NULL)
       delete this->measure_ssd;
    if(this->measure_kld!=NULL)
@@ -626,7 +626,7 @@ void reg_base<T>::AllocateDeformationField()
    this->deformationFieldImage->scl_slope=1.f;
    this->deformationFieldImage->scl_inter=0.f;
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    if(this->measure_dti!=NULL)
       this->forwardJacobianMatrix=(mat33 *)malloc(
                                      this->deformationFieldImage->nx *
@@ -765,7 +765,7 @@ template<class T>
 void reg_base<T>::InitialiseSimilarity()
 {
    // SET THE DEFAULT MEASURE OF SIMILARITY IF NONE HAS BEEN SET
-#ifdef RNIFTYREG
+#ifdef HAVE_R
    if(this->measure_nmi==NULL)
 #else
    if(this->measure_nmi==NULL &&
@@ -791,7 +791,7 @@ void reg_base<T>::InitialiseSimilarity()
                                            this->voxelBasedMeasureGradient
                                           );
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    if(this->measure_ssd!=NULL)
       this->measure_ssd->InitialiseMeasure(this->currentReference,
                                            this->currentFloating,
@@ -1010,7 +1010,7 @@ double reg_base<T>::ComputeSimilarityMeasure()
    if(this->measure_nmi!=NULL)
       measure += this->measure_nmi->GetSimilarityMeasureValue();
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    if(this->measure_ssd!=NULL)
       measure += this->measure_ssd->GetSimilarityMeasureValue();
 
@@ -1081,7 +1081,7 @@ void reg_base<T>::GetVoxelBasedGradient()
       if(this->measure_nmi!=NULL)
          this->measure_nmi->GetVoxelBasedSimilarityMeasureGradient(t);
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
       if(this->measure_ssd!=NULL)
          this->measure_ssd->GetVoxelBasedSimilarityMeasureGradient(t);
 
@@ -1151,7 +1151,7 @@ void reg_base<T>::UseNMISetFloatingBinNumber(int timepoint, int floBinNumber)
    reg_print_fct_debug("reg_base<T>::UseNMISetFloatingBinNumber");
 #endif
 }
-#ifndef RNIFTYREG
+#ifndef HAVE_R
 /* *************************************************************** */
 template<class T>
 void reg_base<T>::UseSSD(int timepoint, bool normalize)
@@ -1244,7 +1244,7 @@ void reg_base<T>::UseDTI(bool *timepoint)
    reg_print_fct_debug("reg_base<T>::UseDTI");
 #endif
 }
-#endif // RNIFTYREG not defined
+#endif // HAVE_R not defined
 /* *************************************************************** */
 /* *************************************************************** */
 template <class T>
@@ -1253,7 +1253,7 @@ void reg_base<T>::WarpFloatingImage(int inter)
    // Compute the deformation field
    this->GetDeformationField();
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    if(this->measure_dti==NULL)
 #endif
    {
@@ -1265,7 +1265,7 @@ void reg_base<T>::WarpFloatingImage(int inter)
                         inter,
                         this->warpedPaddingValue);
    }
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    else
    {
       reg_defField_getJacobianMatrix(this->deformationFieldImage,
@@ -1305,7 +1305,7 @@ void reg_base<T>::Run()
    }
 #endif
 
-#ifdef RNIFTYREG
+#ifdef HAVE_R
    this->completedIterations.resize(this->levelToPerform, 0);
 #endif
 
@@ -1397,12 +1397,12 @@ void reg_base<T>::Run()
             // Update the obecjtive function variables and print some information
             this->PrintCurrentObjFunctionValue(currentSize);
             
-#ifdef RNIFTYREG
+#ifdef HAVE_R
             Rcpp::checkUserInterrupt();
 #endif
          } // while
          
-#ifdef RNIFTYREG
+#ifdef HAVE_R
          completedIterations[this->currentLevel] = this->optimiser->GetCurrentIterationNumber();
 #endif
          

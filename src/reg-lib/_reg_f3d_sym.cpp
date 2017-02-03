@@ -269,7 +269,7 @@ void reg_f3d_sym<T>::AllocateDeformationField()
    this->backwardDeformationFieldImage->scl_slope=1.f;
    this->backwardDeformationFieldImage->scl_inter=0.f;
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    if(this->measure_dti!=NULL)
       this->backwardJacobianMatrix=(mat33 *)malloc(
             this->backwardDeformationFieldImage->nx *
@@ -608,7 +608,7 @@ void reg_f3d_sym<T>::WarpFloatingImage(int inter)
    this->GetDeformationField();
 
    // Resample the floating image
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    if(this->measure_dti==NULL)
 #endif
    {
@@ -619,7 +619,7 @@ void reg_f3d_sym<T>::WarpFloatingImage(int inter)
                         inter,
                         this->warpedPaddingValue);
    }
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    else
    {
       reg_defField_getJacobianMatrix(this->deformationFieldImage,
@@ -636,7 +636,7 @@ void reg_f3d_sym<T>::WarpFloatingImage(int inter)
 #endif
 
    // Resample the reference image
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    if(this->measure_dti==NULL)
 #endif
    {
@@ -647,7 +647,7 @@ void reg_f3d_sym<T>::WarpFloatingImage(int inter)
                         inter, // interpolation type
                         this->warpedPaddingValue); // padding value
    }
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    else
    {
       reg_defField_getJacobianMatrix(this->backwardDeformationFieldImage,
@@ -835,7 +835,7 @@ void reg_f3d_sym<T>::GetVoxelBasedGradient()
       if(this->measure_nmi!=NULL)
          this->measure_nmi->GetVoxelBasedSimilarityMeasureGradient(t);
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
       if(this->measure_ssd!=NULL)
          this->measure_ssd->GetVoxelBasedSimilarityMeasureGradient(t);
 
@@ -1600,7 +1600,7 @@ template<class T>
 void reg_f3d_sym<T>::InitialiseSimilarity()
 {
    // SET THE DEFAULT MEASURE OF SIMILARITY IF NONE HAS BEEN SET
-#ifdef RNIFTYREG
+#ifdef HAVE_R
    if(this->measure_nmi==NULL)
 #else
    if(this->measure_nmi==NULL &&
@@ -1629,7 +1629,7 @@ void reg_f3d_sym<T>::InitialiseSimilarity()
                                            this->backwardVoxelBasedMeasureGradientImage
                                            );
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
    if(this->measure_ssd!=NULL)
       this->measure_ssd->InitialiseMeasure(this->currentReference,
                                            this->currentFloating,

@@ -50,7 +50,7 @@ typedef enum
 #define IMIN(a,b) (a < b ? a : b)
 #define SQR(a) (a==0.0 ? 0.0 : a*a)
 /* *************************************************************** */
-#ifdef RNIFTYREG
+#ifdef HAVE_R
 #include <R.h>  // This may have to change to Rcpp.h or RcppEigen.h later
 #define reg_exit(...){Rf_error("[NiftyReg] Fatal error");}
 #define reg_print_info(executable,text){Rprintf("[%s] %s\n", executable, text);}

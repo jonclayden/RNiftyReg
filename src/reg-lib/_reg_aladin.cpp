@@ -1,7 +1,7 @@
 #ifndef _REG_ALADIN_CPP
 #define _REG_ALADIN_CPP
 
-#ifndef RNIFTYREG
+#ifndef HAVE_R
 #include "_reg_ReadWriteMatrix.h"
 #endif
 #include "_reg_aladin.h"
@@ -325,7 +325,7 @@ void reg_aladin<T>::InitialiseRegistration()
   // Initialise the transformation
   if (this->InputTransformName != NULL)
   {
-#ifndef RNIFTYREG
+#ifndef HAVE_R
     if (FILE *aff = fopen(this->InputTransformName, "r")) {
       fclose(aff);
     }
@@ -509,7 +509,7 @@ void reg_aladin<T>::Run()
 {
   this->InitialiseRegistration();
   
-#ifdef RNIFTYREG
+#ifdef HAVE_R
   this->completedIterations.resize(this->LevelsToPerform, 0);
 #endif
 
