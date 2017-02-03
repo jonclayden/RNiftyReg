@@ -4,8 +4,8 @@ PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS)
 
 PKG_CPPFLAGS = -DNDEBUG -DRNIFTYREG -DHAVE_R -DHAVE_ZLIB -I. -Ireg-lib -Ireg-lib/cpu
 
-OBJECTS_LIB_CPU = reg-lib/cpu/CPUAffineDeformationFieldKernel.o reg-lib/cpu/CPUBlockMatchingKernel.o reg-lib/cpu/CPUConvolutionKernel.o reg-lib/cpu/CPUKernelFactory.o reg-lib/cpu/CPUOptimiseKernel.o reg-lib/cpu/CPUResampleImageKernel.o reg-lib/cpu/_reg_KLdivergence.o reg-lib/cpu/_reg_blockMatching.o reg-lib/cpu/_reg_discrete_init.o reg-lib/cpu/_reg_dti.o reg-lib/cpu/_reg_femTrans.o reg-lib/cpu/_reg_globalTrans.o reg-lib/cpu/_reg_kld.o reg-lib/cpu/_reg_lncc.o reg-lib/cpu/_reg_localTrans.o reg-lib/cpu/_reg_localTrans_jac.o reg-lib/cpu/_reg_localTrans_regul.o reg-lib/cpu/_reg_maths.o reg-lib/cpu/_reg_maths_eigen.o reg-lib/cpu/_reg_mind.o reg-lib/cpu/_reg_mrf.o reg-lib/cpu/_reg_nmi.o reg-lib/cpu/_reg_optimiser.o reg-lib/cpu/_reg_polyAffine.o reg-lib/cpu/_reg_resampling.o reg-lib/cpu/_reg_splineBasis.o reg-lib/cpu/_reg_ssd.o reg-lib/cpu/_reg_thinPlateSpline.o reg-lib/cpu/_reg_tools.o
+OBJECTS_LIB_CPU = reg-lib/cpu/CPUAffineDeformationFieldKernel.o reg-lib/cpu/CPUBlockMatchingKernel.o reg-lib/cpu/CPUConvolutionKernel.o reg-lib/cpu/CPUKernelFactory.o reg-lib/cpu/CPUOptimiseKernel.o reg-lib/cpu/CPUResampleImageKernel.o reg-lib/cpu/_reg_blockMatching.o reg-lib/cpu/_reg_globalTrans.o reg-lib/cpu/_reg_localTrans.o reg-lib/cpu/_reg_localTrans_jac.o reg-lib/cpu/_reg_localTrans_regul.o reg-lib/cpu/_reg_maths.o reg-lib/cpu/_reg_maths_eigen.o reg-lib/cpu/_reg_nmi.o reg-lib/cpu/_reg_optimiser.o reg-lib/cpu/_reg_resampling.o reg-lib/cpu/_reg_splineBasis.o reg-lib/cpu/_reg_tools.o
 
-OBJECTS_LIB = reg-lib/AladinContent.o reg-lib/Content.o reg-lib/Platform.o reg-lib/_reg_aladin.o reg-lib/_reg_aladin_sym.o reg-lib/_reg_base.o reg-lib/_reg_f3d.o reg-lib/_reg_f3d2.o reg-lib/_reg_f3d_sym.o reg-lib/_reg_polyAffine.o
+OBJECTS_LIB = reg-lib/AladinContent.o reg-lib/Platform.o reg-lib/_reg_aladin.o reg-lib/_reg_aladin_sym.o reg-lib/_reg_base.o reg-lib/_reg_f3d.o reg-lib/_reg_f3d2.o reg-lib/_reg_f3d_sym.o
 
 OBJECTS = main.o RNifti.o AffineMatrix.o DeformationField.o aladin.o f3d.o $(OBJECTS_LIB) $(OBJECTS_LIB_CPU)
