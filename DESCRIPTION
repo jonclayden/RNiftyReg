@@ -1,7 +1,7 @@
 Package: RNiftyReg
 Version: 2.5.0
 Date: 2017-02-03
-Title: Image Registration Using the NiftyReg Library
+Title: Image Registration Using the 'NiftyReg' Library
 Authors@R: c(person("Jon","Clayden",role=c("cre","aut"),email="code@clayden.org"),
              person("Marc","Modat",role="aut"),
              person("Benoit","Presles",role="aut"),
@@ -11,7 +11,7 @@ Maintainer: Jon Clayden <code@clayden.org>
 Imports: Rcpp (>= 0.11.0), RNifti (>= 0.4.0), ore
 Suggests: jpeg, png, mmand, testthat (>= 0.11.0)
 LinkingTo: Rcpp, RcppEigen, RNifti
-Description: Provides an R interface to the NiftyReg image registration tools
+Description: Provides an 'R' interface to the 'NiftyReg' image registration tools
     <http://sourceforge.net/projects/niftyreg/>. Linear and nonlinear registration
     are supported, in two and three dimensions.
 License: GPL-2
