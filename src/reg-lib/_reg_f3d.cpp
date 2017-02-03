@@ -271,7 +271,7 @@ void reg_f3d<T>::Initialise()
       if(this->spacing[2]!=this->spacing[2]) this->spacing[2]=this->spacing[0];
 
       /* Convert the spacing from voxel to mm if necessary */
-      float spacingInMillimeter[3]= {this->spacing[0],this->spacing[1],this->spacing[2]};
+      float spacingInMillimeter[3]= { static_cast<float>(this->spacing[0]), static_cast<float>(this->spacing[1]), static_cast<float>(this->spacing[2]) };
       if(spacingInMillimeter[0]<0) spacingInMillimeter[0] *= -1.0f * this->inputReference->dx;
       if(spacingInMillimeter[1]<0) spacingInMillimeter[1] *= -1.0f * this->inputReference->dy;
       if(spacingInMillimeter[2]<0) spacingInMillimeter[2] *= -1.0f * this->inputReference->dz;

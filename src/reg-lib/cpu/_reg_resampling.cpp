@@ -256,7 +256,7 @@ void reg_dti_resampling_postprocessing(nifti_image *inputImage,
          DTYPE *inputIntensityZZ = &firstWarpVox[voxelNumber*(dtIndicies[5]+inputImage->nt*u)];
 
          // Step through each voxel in the warped image
-         double testSum=0;
+         double testSum;
          int col, row;
          int tid=0;
 #if defined (_OPENMP)
@@ -293,7 +293,7 @@ void reg_dti_resampling_postprocessing(nifti_image *inputImage,
                if(warpedImage==NULL)
                {
                   reg_mat33_expm(&inputTensor[tid]);
-                  testSum=0;
+                  testSum=0.0;
                }
                else
                {

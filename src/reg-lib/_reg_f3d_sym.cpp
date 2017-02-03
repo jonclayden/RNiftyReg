@@ -18,7 +18,7 @@
 /* *************************************************************** */
 template <class T>
 reg_f3d_sym<T>::reg_f3d_sym(int refTimePoint,int floTimePoint)
-   :reg_f3d<T>::reg_f3d(refTimePoint,floTimePoint)
+   :reg_f3d<T>(refTimePoint,floTimePoint)
 {
    this->executableName=(char *)"NiftyReg F3D SYM";
 
@@ -465,7 +465,7 @@ void reg_f3d_sym<T>::Initialise()
 
    if(this->inputControlPointGrid==NULL){
       // Define the spacing for the first level
-      float gridSpacing[3] = {this->spacing[0],this->spacing[1],this->spacing[2]};
+      float gridSpacing[3] = { static_cast<float>(this->spacing[0]), static_cast<float>(this->spacing[1]), static_cast<float>(this->spacing[2]) };
       if(this->spacing[0]<0)
          gridSpacing[0] *= -(this->inputReference->dx+this->inputFloating->dx)/2.f;
       if(this->spacing[1]<0)

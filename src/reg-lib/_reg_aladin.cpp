@@ -502,6 +502,10 @@ void reg_aladin<T>::resolveMatrix(unsigned int iterations, const unsigned int op
 
     iteration++;
   }
+  
+#ifdef HAVE_R
+  this->completedIterations[this->CurrentLevel] = iteration;
+#endif
 }
 /* *************************************************************** */
 template<class T>
