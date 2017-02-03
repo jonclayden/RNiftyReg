@@ -82,7 +82,7 @@ display(house)
 
 ![House photo](README-house.jpg)
 
-Clearly this is a colour image, with red, green and blue channels, but NiftyReg cannot work directly with it in this format, so we convert it to greyscale by simply averaging across channels:
+Clearly this is a colour image, with red, green and blue channels. `RNiftyReg` can work with it in this format, but internally the channels will be averaged before the registration starts. This step performs a colour-to-greyscale conversion equivalent to
 
 ```r
 house_bw <- apply(house, 1:2, mean)
@@ -94,7 +94,7 @@ display(house_bw)
 Now, instead of registering the image to another image, let's create a simple affine transformation that applies a skew to the image.
 
 ```r
-affine <- buildAffine(skews=0.1, source=house_bw)
+affine <- buildAffine(skews=0.1, source=house)
 print(affine)
 # NiftyReg affine matrix:
 #  1.0  -0.1   0.0   0.0
@@ -108,34 +108,25 @@ print(affine)
 So, this is a diagonal matrix with just a single off-diagonal element, which produces the skew effect. (The sign is negative because NiftyReg actually represents transforms from target to source space, not the more intuitive reverse.) Let's apply it to the image using the important `applyTransform` function, and see the effect.
 
 ```r
-house_skewed_bw <- applyTransform(affine, house_bw)
-display(house_skewed_bw)
-```
-
-![Skewed greyscale house photo](README-house-skewed-bw.jpg)
-
-Notice that we can also transform the colour image; in this case, `applyTransform` applies the transform to each channel individually to produce the final result:
-
-```r
 house_skewed <- applyTransform(affine, house)
 display(house_skewed)
 ```
 
-![Skewed colour house photo](README-house-skewed.jpg)
+![Skewed house photo](README-house-skewed.jpg)
 
 Moreover, we can transform a pixel coordinate into the space of the skewed image:
 
 ```r
-applyTransform(affine, c(182,262))
-# [1] 208.1 262.0
+applyTransform(affine, c(182,262,1))
+# [1] 208.1 262.0   1.0
 ```
 
-Notice that the skew changes the first coordinate (in the up-down direction), but not the second (in the left-right direction).
+Notice that the skew changes the first coordinate (in the up-down direction), but not the second (in the left-right direction) or third (the colour channel number).
 
 Finally, we can register the original image to the skewed one, to recover the transformation:
 
 ```r
-result <- niftyreg(house_bw, house_skewed_bw, scope="affine")
+result <- niftyreg(house, house_skewed, scope="affine")
 print(forward(result))
 # NiftyReg affine matrix:
 #  1.000845194  -0.099988878   0.000000000  -0.279240519
@@ -161,7 +152,7 @@ half_xfm <- halfTransform(forward(result))
 display(applyTransform(half_xfm, house))
 ```
 
-![Half-skewed colour house photo](README-house-halfskewed.jpg)
+![Half-skewed house photo](README-house-halfskewed.jpg)
 
 This results in half of the skew effect being applied. Finally, the `composeTransforms` function allows the effects of two transforms to be combined together. Combining a half-transform with itself will result in the original full transform.
 

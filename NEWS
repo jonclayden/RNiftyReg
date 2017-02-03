@@ -2,6 +2,22 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.5.0
+
+- RNiftyReg can now register 2D multichannel (RGB or RGBA) images. The red, green
+  and blue channels are averaged internally before applying the algorithm.
+  Previously such images would produce an error or segfault. (Reported by John
+  Muschelli, issue #4.)
+- The decomposeAffine() function now uses a Cholesky decomposition internally.
+  (Hat-tip to Tim Tierney.)
+- The "nBins" argument to niftyreg.nonlinear() was not previously passed to the
+  NiftyReg library. This has been corrected.
+- Applying a scale transform to a new image with applyTransform() should no
+  longer produce a warning. (Reported by Tim Tierney.)
+- The NiftyReg library has been updated.
+
+=================================================================================
+
 VERSION 2.4.1
 
 - The package has been updated for compatibility with "RNifti" version 0.3.0.
