@@ -21,6 +21,7 @@ test_that("Multiple registration works", {
         expect_that(forward(reg)[1,2], equals(0.1,tolerance=0.05))
         
         skip_on_cran()
+        skip_on_travis()
         
         reg <- niftyreg(skewedColourHouse, house, scope="nonlinear", init=forward(reg), symmetric=FALSE, maxIterations=300)
         expect_that(dim(forward(reg)), equals(c(40L,56L,1L,1L,2L)))

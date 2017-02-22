@@ -22,6 +22,7 @@ test_that("Core registration functions work", {
         expect_that(similarity(skewedHouse,house), is_less_than(similarity(reg$image,house)))
         
         skip_on_cran()
+        skip_on_travis()
         
         reg <- niftyreg(skewedHouse, house, scope="nonlinear", init=forward(reg))
         expect_that(dim(forward(reg)), equals(c(47L,59L,1L,1L,2L)))
