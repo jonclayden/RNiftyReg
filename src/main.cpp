@@ -9,10 +9,6 @@
 #include "f3d.h"
 #include "_reg_nmi.h"
 
-// Registration types (degrees of freedom)
-#define TYPE_RIGID  0
-#define TYPE_AFFINE 1
-
 using namespace Rcpp;
 using namespace RNifti;
 
@@ -84,7 +80,7 @@ BEGIN_RCPP
     const int nSourceDim = nonunitaryDims(sourceImage) - static_cast<int>(isMultichannel(sourceImage));
     const int nTargetDim = nonunitaryDims(targetImage) - static_cast<int>(isMultichannel(targetImage));
     
-    const LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
+    const LinearTransformScope scope = (as<std::string>(_type) == "affine" ? AffineScope : RigidScope);
     const int interpolation = as<int>(_interpolation);
     const bool symmetric = as<bool>(_symmetric);
     const bool estimateOnly = as<bool>(_estimateOnly);

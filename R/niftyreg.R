@@ -203,7 +203,7 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
             return (x)
     })
     
-    result <- .Call("regLinear", source, target, ifelse(scope=="affine",1L,0L), symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, internal, PACKAGE="RNiftyReg")
+    result <- .Call("regLinear", source, target, scope, symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, internal, PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)
