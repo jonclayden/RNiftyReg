@@ -80,7 +80,7 @@ house <- readJPEG(system.file("extdata", "house_colour_large.jpg", package="RNif
 display(house)
 ```
 
-![House photo](README-house.jpg)
+![House photo](tools/figures/house.jpg)
 
 Clearly this is a colour image, with red, green and blue channels. `RNiftyReg` can work with it in this format, but internally the channels will be averaged before the registration starts. This step performs a colour-to-greyscale conversion equivalent to
 
@@ -89,7 +89,7 @@ house_bw <- apply(house, 1:2, mean)
 display(house_bw)
 ```
 
-![Greyscale house photo](README-house-bw.jpg)
+![Greyscale house photo](tools/figures/house-bw.jpg)
 
 Now, instead of registering the image to another image, let's create a simple affine transformation that applies a skew to the image.
 
@@ -112,7 +112,7 @@ house_skewed <- applyTransform(affine, house)
 display(house_skewed)
 ```
 
-![Skewed house photo](README-house-skewed.jpg)
+![Skewed house photo](tools/figures/house-skewed.jpg)
 
 Moreover, we can transform a pixel coordinate into the space of the skewed image:
 
@@ -152,7 +152,7 @@ half_xfm <- halfTransform(forward(result))
 display(applyTransform(half_xfm, house))
 ```
 
-![Half-skewed house photo](README-house-halfskewed.jpg)
+![Half-skewed house photo](tools/figures/house-halfskewed.jpg)
 
 This results in half of the skew effect being applied. Finally, the `composeTransforms` function allows the effects of two transforms to be combined together. Combining a half-transform with itself will result in the original full transform.
 
