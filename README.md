@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/jonclayden/RNiftyReg.svg?branch=master)](https://travis-ci.org/jonclayden/RNiftyReg) [![Build status](https://ci.appveyor.com/api/projects/status/svcf7h0ehvmp2r9k?svg=true)](https://ci.appveyor.com/project/jonclayden/rniftyreg)
+
 # RNiftyReg: Nifty Registration in R
 
 The `RNiftyReg` package is an R-native interface to the [NiftyReg image registration library](http://sourceforge.net/projects/niftyreg/) developed within the Translational Imaging Group at University College London. The package incorporates the library, so it does not need to be installed separately, and it replaces the NiftyReg command-line front-end with a direct, in-memory bridge to R, based on [Rcpp](http://www.rcpp.org).
