@@ -13,13 +13,6 @@ using namespace RNifti;
 
 typedef std::vector<float> float_vector;
 
-RcppExport SEXP initialise ()
-{
-BEGIN_RCPP
-    niftilib_register_all();
-END_RCPP
-}
-
 RcppExport SEXP calculateMeasure (SEXP _source, SEXP _target, SEXP _targetMask, SEXP _interpolation)
 {
 BEGIN_RCPP
@@ -557,4 +550,24 @@ BEGIN_RCPP
     
     return result;
 END_RCPP
+}
+
+static R_CallMethodDef callMethods[] = {
+    { "calculateMeasure",       (DL_FUNC) &calculateMeasure,    4 },
+    { "regLinear",              (DL_FUNC) &regLinear,           16 },
+    { "regNonlinear",           (DL_FUNC) &regNonlinear,        19 },
+    { "getDeformationField",    (DL_FUNC) &getDeformationField, 2 },
+    { "transformPoints",        (DL_FUNC) &transformPoints,     3 },
+    { "halfTransform",          (DL_FUNC) &halfTransform,       1 },
+    { "composeTransforms",      (DL_FUNC) &composeTransforms,   2 },
+    { NULL, NULL, 0 }
+};
+
+extern "C" void R_init_RNiftyReg (DllInfo *info)
+{
+    R_registerRoutines(info, NULL, callMethods, NULL, NULL);
+    R_useDynamicSymbols(info, FALSE);
+    R_forceSymbols(info, TRUE);
+    
+    niftilib_register_all();
 }

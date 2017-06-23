@@ -22,7 +22,7 @@ deformationField <- function (transform, jacobian = TRUE)
     if (!isAffine(transform,strict=TRUE) && !isImage(transform,FALSE))
         stop("Specified transformation does not seem to be valid")
     
-    return (.Call("getDeformationField", transform, isTRUE(jacobian), PACKAGE="RNiftyReg"))
+    return (.Call(C_getDeformationField, transform, isTRUE(jacobian)))
 }
 
 
@@ -131,7 +131,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE, i
             if (nDims != ndim(source))
                 stop("Dimensionality of points should match the original source image")
             
-            result <- .Call("transformPoints", transform, points, isTRUE(nearest), PACKAGE="RNiftyReg")
+            result <- .Call(C_transformPoints, transform, points, isTRUE(nearest))
             
             newPoints <- sapply(seq_len(nrow(points)), function(i) {
                 if (length(result[[i]]) == nDims)
@@ -182,7 +182,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE, i
 #' @export
 halfTransform <- function (transform)
 {
-    invisible (.Call("halfTransform", transform, PACKAGE="RNiftyReg"))
+    invisible (.Call(C_halfTransform, transform))
 }
 
 
@@ -202,6 +202,6 @@ halfTransform <- function (transform)
 #' @export
 composeTransforms <- function (...)
 {
-    composePair <- function(t1,t2) .Call("composeTransforms", t1, t2, PACKAGE="RNiftyReg")
+    composePair <- function(t1,t2) .Call(C_composeTransforms, t1, t2)
     invisible (Reduce(composePair, list(...)))
 }

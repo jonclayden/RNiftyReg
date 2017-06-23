@@ -3,11 +3,8 @@
 #' @importFrom splines bs
 #' @importFrom stats lm na.omit predict
 #' @importFrom utils read.table
-#' @useDynLib RNiftyReg
-.onLoad <- function (libname, pkgname)
-{
-    .Call("initialise", PACKAGE="RNiftyReg")
-}
+#' @useDynLib RNiftyReg, .registration = TRUE, .fixes = "C_"
+NULL
 
 #' @export
 RNifti::`pixdim<-`
