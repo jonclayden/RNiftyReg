@@ -4,29 +4,38 @@
 #include "_reg_aladin_sym.h"
 
 #include "config.h"
+#include "helpers.h"
 #include "aladin.h"
 #include "AffineMatrix.h"
 #include "DeformationField.h"
 
+using namespace RNifti;
+
 // Run the "aladin" registration algorithm
-AladinResult regAladin (RNifti::NiftiImage &sourceImage, RNifti::NiftiImage &targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, RNifti::NiftiImage &sourceMaskImage, RNifti::NiftiImage &targetMaskImage, const AffineMatrix &initAffine, const bool verbose, const bool estimateOnly)
+AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetImage, const LinearTransformScope scope, const bool symmetric, const int nLevels, const int maxIterations, const int useBlockPercentage, const int interpolation, const NiftiImage &sourceMaskImage, const NiftiImage &targetMaskImage, const AffineMatrix &initAffine, const bool verbose, const bool estimateOnly)
 {
+    NiftiImage source, target;
+    source = normaliseImage(isMultichannel(sourceImage) ? collapseChannels(sourceImage) : sourceImage);
+    target = normaliseImage(isMultichannel(targetImage) ? collapseChannels(targetImage) : targetImage);
+    NiftiImage sourceMask(sourceMaskImage);
+    NiftiImage targetMask(targetMaskImage);
+    
     // Binarise the mask images
-    if (!sourceMaskImage.isNull())
-        reg_tools_binarise_image(sourceMaskImage);
-    if (!targetMaskImage.isNull())
-        reg_tools_binarise_image(targetMaskImage);
+    if (!sourceMask.isNull())
+        reg_tools_binarise_image(sourceMask);
+    if (!targetMask.isNull())
+        reg_tools_binarise_image(targetMask);
     
     // The source data type is changed for interpolation precision if necessary
     if (interpolation != 0)
-        reg_tools_changeDatatype<PRECISION_TYPE>(sourceImage);
+        reg_tools_changeDatatype<PRECISION_TYPE>(source);
     
     AladinResult result;
     
     if (nLevels == 0)
     {
-        DeformationField deformationField(targetImage, initAffine);
-        result.image = deformationField.resampleImage(sourceImage, interpolation);
+        DeformationField deformationField(target, initAffine);
+        result.image = deformationField.resampleImage(source, interpolation);
         result.forwardTransform = initAffine;
     }
     else
@@ -57,25 +66,25 @@ AladinResult regAladin (RNifti::NiftiImage &sourceImage, RNifti::NiftiImage &tar
         reg->SetFloatingUpperThreshold(std::numeric_limits<PRECISION_TYPE>::max());
         
         // Set the reference and floating images
-        reg->SetInputReference(targetImage);
-        reg->SetInputFloating(sourceImage);
+        reg->SetInputReference(target);
+        reg->SetInputFloating(source);
     
         // Set the initial affine transformation
         mat44 affineMatrix = initAffine;
         reg->SetTransformationMatrix(&affineMatrix);
     
         // Set the masks if defined
-        if (!sourceMaskImage.isNull())
-            reg->SetInputFloatingMask(sourceMaskImage);
-        if (!targetMaskImage.isNull())
-            reg->SetInputMask(targetMaskImage);
+        if (!sourceMask.isNull())
+            reg->SetInputFloatingMask(sourceMask);
+        if (!targetMask.isNull())
+            reg->SetInputMask(targetMask);
     
         // Run the registration
         reg->Run();
     
         // Store the results
         if (!estimateOnly)
-            result.image = RNifti::NiftiImage(reg->GetFinalWarpedImage());
+            result.image = NiftiImage(reg->GetFinalWarpedImage());
         result.forwardTransform = AffineMatrix(*reg->GetTransformationMatrix());
         result.iterations = reg->GetCompletedIterations();
     

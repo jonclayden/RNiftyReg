@@ -28,11 +28,11 @@ END_RCPP
 RcppExport SEXP calculateMeasure (SEXP _source, SEXP _target, SEXP _targetMask, SEXP _interpolation)
 {
 BEGIN_RCPP
-    NiftiImage sourceImage(_source);
-    NiftiImage targetImage(_target);
-    NiftiImage targetMask(_targetMask);
+    const NiftiImage sourceImage(_source);
+    const NiftiImage targetImage(_target);
+    const NiftiImage targetMask(_targetMask);
     
-    checkImages(sourceImage.drop(), targetImage.drop());
+    checkImages(sourceImage, targetImage);
     if (sourceImage.nDims() != targetImage.nDims())
         throw std::runtime_error("Images should have the same dimensionality");
     
@@ -46,21 +46,23 @@ BEGIN_RCPP
     }
     else
     {
-        reg_checkAndCorrectDimension(targetMask);
-        reg_createMaskPyramid<PRECISION_TYPE>(targetMask, &targetMaskData, 1, 1, &targetVoxelCount3D);
+        NiftiImage normalisedTargetMask = normaliseImage(targetMask);
+        reg_createMaskPyramid<PRECISION_TYPE>(normalisedTargetMask, &targetMaskData, 1, 1, &targetVoxelCount3D);
     }
     
-    reg_tools_changeDatatype<PRECISION_TYPE>(sourceImage);
-    reg_tools_changeDatatype<PRECISION_TYPE>(targetImage);
+    NiftiImage normalisedSourceImage = normaliseImage(sourceImage);
+    NiftiImage normalisedTargetImage = normaliseImage(targetImage);
+    reg_tools_changeDatatype<PRECISION_TYPE>(normalisedSourceImage);
+    reg_tools_changeDatatype<PRECISION_TYPE>(normalisedTargetImage);
     
-    AffineMatrix affine(sourceImage, targetImage);
-    DeformationField deformationField(targetImage, affine);
-    NiftiImage resampledSourceImage = deformationField.resampleImage(sourceImage, as<int>(_interpolation));
+    AffineMatrix affine(normalisedSourceImage, normalisedTargetImage);
+    DeformationField deformationField(normalisedTargetImage, affine);
+    NiftiImage resampledSourceImage = deformationField.resampleImage(normalisedSourceImage, as<int>(_interpolation));
     
     reg_nmi nmi;
-    for (int i=0; i<std::min(targetImage->nt,resampledSourceImage->nt); i++)
+    for (int i=0; i<std::min(normalisedTargetImage->nt,resampledSourceImage->nt); i++)
         nmi.SetActiveTimepoint(i);
-    nmi.InitialiseMeasure(targetImage, resampledSourceImage, targetMaskData, resampledSourceImage, NULL, NULL);
+    nmi.InitialiseMeasure(normalisedTargetImage, resampledSourceImage, targetMaskData, resampledSourceImage, NULL, NULL);
     double measure = nmi.GetSimilarityMeasureValue();
     
     free(targetMaskData);
@@ -72,16 +74,15 @@ END_RCPP
 RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit, SEXP _internal)
 {
 BEGIN_RCPP
-    NiftiImage sourceImage(_source);
-    NiftiImage targetImage(_target);
-    NiftiImage sourceMask(_sourceMask);
-    NiftiImage targetMask(_targetMask);
+    const NiftiImage sourceImage(_source);
+    const NiftiImage targetImage(_target);
+    const NiftiImage sourceMask(_sourceMask);
+    const NiftiImage targetMask(_targetMask);
     
-    checkImages(sourceImage.drop(), targetImage.drop());
+    checkImages(sourceImage, targetImage);
     
-    // Collapse the target image if necessary
-    if (isMultichannel(targetImage))
-        targetImage = collapseChannels(targetImage);
+    const int nSourceDim = nonunitaryDims(sourceImage) - static_cast<int>(isMultichannel(sourceImage));
+    const int nTargetDim = nonunitaryDims(targetImage) - static_cast<int>(isMultichannel(targetImage));
     
     const LinearTransformScope scope = (as<int>(_type) == TYPE_AFFINE ? AffineScope : RigidScope);
     const int interpolation = as<int>(_interpolation);
@@ -96,7 +97,7 @@ BEGIN_RCPP
     List init(_init);
     List returnValue;
     
-    if (sourceImage.nDims() == targetImage.nDims())
+    if (nSourceDim == nTargetDim && !isMultichannel(sourceImage))
     {
         AffineMatrix initAffine;
         if (!Rf_isNull(init[0]))
@@ -152,7 +153,7 @@ BEGIN_RCPP
         
         return returnValue;
     }
-    else if (sourceImage.nDims() - targetImage.nDims() == 1)
+    else if (nSourceDim - nTargetDim == 1)
     {
         const int nReps = sourceImage.nBlocks();
         List forwardTransforms(nReps), reverseTransforms(nReps), iterations(nReps), sourceImages(nReps);
@@ -196,7 +197,7 @@ BEGIN_RCPP
     else
     {
         std::ostringstream message;
-        message << "Cannot register a " << sourceImage.nDims() << "D source image to a " << targetImage.nDims() << "D target";
+        message << "Cannot register a " << nSourceDim << "D source image to a " << nTargetDim << "D target";
         throw std::runtime_error(message.str());
     }
     
@@ -207,16 +208,15 @@ END_RCPP
 RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _linearEnergyWeight, SEXP _jacobianWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit, SEXP _internal)
 {
 BEGIN_RCPP
-    NiftiImage sourceImage(_source);
-    NiftiImage targetImage(_target);
-    NiftiImage sourceMask(_sourceMask);
-    NiftiImage targetMask(_targetMask);
+    const NiftiImage sourceImage(_source);
+    const NiftiImage targetImage(_target);
+    const NiftiImage sourceMask(_sourceMask);
+    const NiftiImage targetMask(_targetMask);
     
-    checkImages(sourceImage.drop(), targetImage.drop());
+    checkImages(sourceImage, targetImage);
     
-    // Collapse the target image if necessary
-    if (isMultichannel(targetImage))
-        targetImage = collapseChannels(targetImage);
+    const int nSourceDim = nonunitaryDims(sourceImage) - static_cast<int>(isMultichannel(sourceImage));
+    const int nTargetDim = nonunitaryDims(targetImage) - static_cast<int>(isMultichannel(targetImage));
     
     const int interpolation = as<int>(_interpolation);
     const bool symmetric = as<bool>(_symmetric);
@@ -230,7 +230,7 @@ BEGIN_RCPP
     List init(_init);
     List returnValue;
     
-    if (sourceImage.nDims() == targetImage.nDims())
+    if (nSourceDim == nTargetDim && !isMultichannel(sourceImage))
     {
         AffineMatrix initAffine;
         NiftiImage initControl;
@@ -302,7 +302,7 @@ BEGIN_RCPP
         
         return returnValue;
     }
-    else if (sourceImage.nDims() - targetImage.nDims() == 1)
+    else if (nSourceDim - nTargetDim == 1)
     {
         const int nReps = sourceImage.nBlocks();
         List forwardTransforms(nReps), reverseTransforms(nReps), iterations(nReps), sourceImages(nReps);
@@ -354,7 +354,7 @@ BEGIN_RCPP
     else
     {
         std::ostringstream message;
-        message << "Cannot register a " << sourceImage.nDims() << "D source image to a " << targetImage.nDims() << "D target";
+        message << "Cannot register a " << nSourceDim << "D source image to a " << nTargetDim << "D target";
         throw std::runtime_error(message.str());
     }
     

@@ -123,5 +123,9 @@ NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &t
     size_t dataSize = nifti_get_volsize(newStruct);
     newStruct->data = calloc(1, dataSize);
     
+    // NiftyReg is picky about zero slopes
+    if (newStruct->scl_slope == 0.0)
+        newStruct->scl_slope = 1.0;
+    
     return NiftiImage(newStruct);
 }
