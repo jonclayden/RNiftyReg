@@ -2,7 +2,6 @@
 
 #include "RNifti.h"
 
-#include "config.h"
 #include "helpers.h"
 #include "DeformationField.h"
 #include "aladin.h"
