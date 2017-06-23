@@ -75,6 +75,30 @@ void checkImages (NiftiImage &sourceImage, NiftiImage &targetImage)
     }
 }
 
+NiftiImage normaliseImage (const NiftiImage &image)
+{
+    NiftiImage normalisedImage = image;
+    normalisedImage.drop();
+    
+    // NiftyReg assumes RAS when qform and sform codes are both zero
+    // That's reasonable for NIfTI, but ANALYZE defaults to LAS
+    if (image->qform_code == 0 && image->sform_code == 0 && image->nifti_type == NIFTI_FTYPE_ANALYZE)
+    {
+        Rf_warning("ANALYZE voxel order will be assumed to be LAS, but use of this format is strongly discouraged");
+        mat44 defaultXform = image.xform();
+        defaultXform.m[0][0] *= -1.0;
+        normalisedImage->qto_xyz = defaultXform;
+        normalisedImage->qto_ijk = nifti_mat44_inverse(defaultXform);
+        nifti_mat44_to_quatern(normalisedImage->qto_xyz, &normalisedImage->quatern_b, &normalisedImage->quatern_c, &normalisedImage->quatern_d, &normalisedImage->qoffset_x, &normalisedImage->qoffset_y, &normalisedImage->qoffset_z, NULL, NULL, NULL, &normalisedImage->qfac);
+        normalisedImage->qform_code = 2;
+    }
+    
+    // Get everything else the way NiftyReg wants it
+    reg_checkAndCorrectDimension(normalisedImage);
+    
+    return normalisedImage;
+}
+
 NiftiImage allocateMultiregResult (const NiftiImage &source, const NiftiImage &target, const bool forceDouble)
 {
     nifti_image *newStruct = nifti_copy_nim_info(target);

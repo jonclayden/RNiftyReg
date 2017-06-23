@@ -9,6 +9,8 @@ RNifti::NiftiImage collapseChannels (const RNifti::NiftiImage &image);
 
 void checkImages (RNifti::NiftiImage &sourceImage, RNifti::NiftiImage &targetImage);
 
+RNifti::NiftiImage normaliseImage (const RNifti::NiftiImage &image);
+
 RNifti::NiftiImage allocateMultiregResult (const RNifti::NiftiImage &source, const RNifti::NiftiImage &target, const bool forceDouble);
 
 #endif
