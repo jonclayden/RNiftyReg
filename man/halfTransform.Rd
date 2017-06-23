@@ -19,10 +19,9 @@ argument. Applying this transformation results in points or images in a
 space halfway between the original source and target images, which can be a
 useful common space in some applications.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

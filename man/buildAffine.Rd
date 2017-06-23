@@ -42,10 +42,9 @@ This function does the opposite to \code{\link{decomposeAffine}}, building
 up an affine matrix from its components. It can be useful for testing, or
 for rescaling images.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{decomposeAffine}}, \code{\link{isAffine}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

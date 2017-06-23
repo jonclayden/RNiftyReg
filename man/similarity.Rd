@@ -30,10 +30,9 @@ resampling one into the space of the other. The only supported measure is
 currently normalised mutual information, which is also used as a cost
 function by the registration algorithms.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{niftyreg}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

@@ -13,10 +13,9 @@ jacobian(x)
 This function extracts the Jacobian determinant map associated with a
 deformation field.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{deformationField}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

@@ -94,16 +94,18 @@
 #' \code{\link{niftyreg.nonlinear}} for references relating to each type of
 #' registration.
 #' @export
-niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, interpolation = 3L, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, ...)
+niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, interpolation = 3L, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, precision = c("double","single"), ...)
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
     
     scope <- match.arg(scope)
+    precision <- match.arg(precision)
+    
     if (scope == "nonlinear")
-        niftyreg.nonlinear(source, target, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, ...)
+        niftyreg.nonlinear(source, target, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, precision=precision, ...)
     else
-        niftyreg.linear(source, target, scope, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, ...)
+        niftyreg.linear(source, target, scope, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, precision=precision, ...)
 }
 
 
@@ -171,7 +173,7 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
 #' (2014). Global image registration using a symmetric block-matching approach.
 #' Journal of Medical Imaging 1(2):024003.
 #' @export
-niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA)
+niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, precision = c("double","single"))
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -185,6 +187,7 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
         stop("Final interpolation specifier must be 0, 1 or 3")
     
     scope <- match.arg(scope)
+    precision <- match.arg(precision)
     nReps <- ifelse(nSourceDim > nTargetDim, dim(source)[nSourceDim], 1L)
     
     if (!is.list(init))
@@ -203,7 +206,7 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
             return (x)
     })
     
-    result <- .Call("regLinear", source, target, scope, symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, internal, "double", PACKAGE="RNiftyReg")
+    result <- .Call("regLinear", source, target, scope, symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, internal, precision, PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)
@@ -287,7 +290,7 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
 #' processing units. Computer Methods and Programs in Biomedicine
 #' 98(3):278-284.
 #' @export
-niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001, linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA)
+niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001, linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, precision = c("double","single"))
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -308,6 +311,7 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
         symmetric <- FALSE
     
     nReps <- ifelse(nSourceDim > nTargetDim, dim(source)[nSourceDim], 1L)
+    precision <- match.arg(precision)
     spacingUnit <- match.arg(spacingUnit)
     spacingChanged <- FALSE
     
@@ -350,7 +354,7 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
     else
         finalSpacing <- finalSpacing[1:3]
     
-    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, linearEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, internal, "double", PACKAGE="RNiftyReg")
+    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, linearEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, internal, precision, PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)

@@ -2,22 +2,36 @@
 % Please edit documentation in R/zzz.R
 \docType{import}
 \name{reexports}
-\alias{dumpNifti}
-\alias{ndim}
-\alias{pixdim}
+\alias{reexports}
 \alias{pixdim<-}
-\alias{pixunits}
+\alias{reexports}
 \alias{pixunits<-}
+\alias{reexports}
 \alias{qform<-}
 \alias{reexports}
-\alias{retrieveNifti}
 \alias{sform<-}
+\alias{reexports}
+\alias{dumpNifti}
+\alias{reexports}
+\alias{ndim}
+\alias{reexports}
+\alias{pixdim}
+\alias{reexports}
+\alias{pixunits}
+\alias{reexports}
+\alias{retrieveNifti}
+\alias{reexports}
 \alias{updateNifti}
+\alias{reexports}
 \alias{voxelToWorld}
+\alias{reexports}
 \alias{worldToVoxel}
+\alias{reexports}
 \alias{writeNifti}
+\alias{reexports}
 \alias{xform}
 \title{Objects exported from other packages}
+\keyword{internal}
 \description{
 These objects are imported from other packages. Follow the links
 below to see their documentation.
@@ -25,5 +39,4 @@ below to see their documentation.
 \describe{
   \item{RNifti}{\code{\link[RNifti]{pixdim<-}}, \code{\link[RNifti]{pixunits<-}}, \code{\link[RNifti]{qform<-}}, \code{\link[RNifti]{sform<-}}, \code{\link[RNifti]{dumpNifti}}, \code{\link[RNifti]{ndim}}, \code{\link[RNifti]{pixdim}}, \code{\link[RNifti]{pixunits}}, \code{\link[RNifti]{retrieveNifti}}, \code{\link[RNifti]{updateNifti}}, \code{\link[RNifti]{voxelToWorld}}, \code{\link[RNifti]{worldToVoxel}}, \code{\link[RNifti]{writeNifti}}, \code{\link[RNifti]{xform}}}
 }}
-\keyword{internal}
 

@@ -18,11 +18,10 @@ The composed transform. If all arguments are affines then the result
 Compute the composition of two or more transforms, the single transform that
 combines their effects in order.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}},
   \code{\link{deformationField}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

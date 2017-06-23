@@ -22,10 +22,9 @@ print(affine)
 print(invertAffine(affine))
 
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{solve}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

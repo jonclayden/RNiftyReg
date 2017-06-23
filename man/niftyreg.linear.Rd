@@ -8,7 +8,7 @@ niftyreg.linear(source, target, scope = c("affine", "rigid"), init = NULL,
   sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L,
   maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L,
   verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE,
-  internal = NA)
+  internal = NA, precision = c("double", "single"))
 }
 \arguments{
 \item{source}{The source image, an object of class \code{"nifti"} or
@@ -117,9 +117,6 @@ appropriate. In the latter case the last dimension of the resulting image is
 taken from the source image, while all other dimensions come from the
 target. One affine matrix is returned for each registration performed.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \references{
 The algorithm used by this function is described in the
 following publication.
@@ -135,4 +132,6 @@ Journal of Medical Imaging 1(2):024003.
   transformations, and \code{\link{applyTransform}} to apply them to new
   images or points.
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

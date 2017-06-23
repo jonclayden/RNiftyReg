@@ -37,10 +37,9 @@ software packages.
 print(readAffine(system.file("extdata","affine.txt",package="RNiftyReg")))
 
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{read.table}}, \code{\link{writeAffine}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

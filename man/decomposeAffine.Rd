@@ -48,10 +48,9 @@ The decomposition is not perfect, and there is one particular
   affine matrices derived from 2D registration will not include components
   relating to the Z direction.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{buildAffine}}, \code{\link{isAffine}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

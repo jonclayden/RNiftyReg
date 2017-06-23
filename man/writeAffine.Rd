@@ -20,10 +20,9 @@ transformation to a file. A comment is also (optionally) written, which
 specifies the matrix as using the NiftyReg convention, for the benefit of
 \code{\link{readAffine}}.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{write.table}}, \code{\link{readAffine}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

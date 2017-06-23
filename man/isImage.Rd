@@ -24,4 +24,3 @@ is returned.
 \author{
 Jon Clayden <code@clayden.org>
 }
-

@@ -34,10 +34,9 @@ compatible with \code{\link{applyTransform}} and other functions. They are
 (S3) generic, but only methods for \code{"niftyreg"} objects currently
 exist.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{niftyreg}}, \code{\link{applyTransform}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

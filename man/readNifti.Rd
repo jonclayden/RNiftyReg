@@ -33,4 +33,3 @@ package with source and target image parameters.
 \author{
 Jon Clayden <code@clayden.org>
 }
-

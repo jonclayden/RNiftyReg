@@ -52,10 +52,9 @@ requested location. Otherwise, a block of four voxels in each dimension
 around the point of interest is extracted from the deformation field, and
 the final location is estimated by local cubic spline regression.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}

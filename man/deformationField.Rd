@@ -25,10 +25,9 @@ the location in source image space corresponding to the centre of each voxel
 in target space. It is used as a common form for linear and nonlinear
 transformations, and allows them to be visualised.
 }
-\author{
-Jon Clayden <code@clayden.org>
-}
 \seealso{
 \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}}
 }
-
+\author{
+Jon Clayden <code@clayden.org>
+}
