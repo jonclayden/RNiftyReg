@@ -3,11 +3,13 @@
 
 #include "RNifti.h"
 
+int nonunitaryDims (const RNifti::NiftiImage &image);
+
 bool isMultichannel (const RNifti::NiftiImage &image);
 
 RNifti::NiftiImage collapseChannels (const RNifti::NiftiImage &image);
 
-void checkImages (RNifti::NiftiImage &sourceImage, RNifti::NiftiImage &targetImage);
+void checkImages (const RNifti::NiftiImage &sourceImage, const RNifti::NiftiImage &targetImage);
 
 RNifti::NiftiImage normaliseImage (const RNifti::NiftiImage &image);
 

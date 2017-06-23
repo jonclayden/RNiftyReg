@@ -7,6 +7,14 @@
 
 using namespace RNifti;
 
+int nonunitaryDims (const NiftiImage &image)
+{
+    int nDims = image.nDims();
+    while (nDims > 0 && image->dim[nDims] < 2)
+        nDims--;
+    return nDims;
+}
+
 bool isMultichannel (const NiftiImage &image)
 {
     // Assume 2D RGB or RGBA image
@@ -42,18 +50,16 @@ NiftiImage collapseChannels (const NiftiImage &image)
         return image;
 }
 
-void checkImages (NiftiImage &sourceImage, NiftiImage &targetImage)
+void checkImages (const NiftiImage &sourceImage, const NiftiImage &targetImage)
 {
     if (sourceImage.isNull())
         throw std::runtime_error("Cannot read or retrieve source image");
     if (targetImage.isNull())
         throw std::runtime_error("Cannot read or retrieve target image");
     
-    reg_checkAndCorrectDimension(sourceImage);
-    reg_checkAndCorrectDimension(targetImage);
-    
-    const int nSourceDim = sourceImage.nDims();
-    const int nTargetDim = targetImage.nDims();
+    // Find the dimensionality of the images, ignoring final unitary dimensions
+    const int nSourceDim = nonunitaryDims(sourceImage);
+    const int nTargetDim = nonunitaryDims(targetImage);
     
     if (nSourceDim < 2 || nSourceDim > 4)
         throw std::runtime_error("Source image should have 2, 3 or 4 dimensions");
