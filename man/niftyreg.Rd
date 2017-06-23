@@ -64,6 +64,9 @@ purposes, but using \code{TRUE} may save memory, while using \code{FALSE}
 can be necessary if there is a chance that external pointers will be
 invalidated, for example when returning from worker threads.}
 
+\item{precision}{Working precision for the registration. Using single-
+precision may be desirable to save memory when coregistering large images.}
+
 \item{...}{Further arguments to \code{\link{niftyreg.linear}} or
 \code{\link{niftyreg.nonlinear}}.}
 

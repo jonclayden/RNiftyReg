@@ -46,6 +46,8 @@
 #'   purposes, but using \code{TRUE} may save memory, while using \code{FALSE}
 #'   can be necessary if there is a chance that external pointers will be
 #'   invalidated, for example when returning from worker threads.
+#' @param precision Working precision for the registration. Using single-
+#'   precision may be desirable to save memory when coregistering large images.
 #' @param ... Further arguments to \code{\link{niftyreg.linear}} or
 #'   \code{\link{niftyreg.nonlinear}}.
 #' @param x A \code{"niftyreg"} object.

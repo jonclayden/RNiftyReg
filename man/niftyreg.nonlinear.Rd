@@ -92,6 +92,9 @@ if \code{FALSE}, they will all be R arrays. The default is fine for most
 purposes, but using \code{TRUE} may save memory, while using \code{FALSE}
 can be necessary if there is a chance that external pointers will be
 invalidated, for example when returning from worker threads.}
+
+\item{precision}{Working precision for the registration. Using single-
+precision may be desirable to save memory when coregistering large images.}
 }
 \value{
 See \code{\link{niftyreg}}.
