@@ -4,12 +4,12 @@
 #include <RcppEigen.h>
 
 #include "RNifti.h"
-#include "config.h"
 #include "_reg_localTrans.h"
 #include "_reg_globalTrans.h"
 #include "_reg_resampling.h"
 #include "AffineMatrix.h"
 
+template <typename PrecisionType>
 class DeformationField
 {
 protected:

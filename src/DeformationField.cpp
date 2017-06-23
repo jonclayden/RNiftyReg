@@ -5,10 +5,10 @@
 #include "_reg_globalTrans.h"
 #include "_reg_resampling.h"
 
-#include "config.h"
 #include "DeformationField.h"
 
-void DeformationField::initImages (const RNifti::NiftiImage &targetImage)
+template <typename PrecisionType>
+void DeformationField<PrecisionType>::initImages (const RNifti::NiftiImage &targetImage)
 {
     this->targetImage = targetImage;
     
@@ -29,8 +29,9 @@ void DeformationField::initImages (const RNifti::NiftiImage &targetImage)
     deformationField->scl_slope = 1.0f;
     deformationField->scl_inter = 0.0f;
     
-    deformationField->datatype = (sizeof(PRECISION_TYPE)==4 ? NIFTI_TYPE_FLOAT32 : NIFTI_TYPE_FLOAT64);
-    deformationField->nbyper = sizeof(PRECISION_TYPE);
+    // This is a little flakey, but we know only float or double will be used
+    deformationField->datatype = (sizeof(PrecisionType)==4 ? NIFTI_TYPE_FLOAT32 : NIFTI_TYPE_FLOAT64);
+    deformationField->nbyper = sizeof(PrecisionType);
     deformationField->data = (void *) calloc(deformationField->nvox, deformationField->nbyper);
 
     // Initialise the deformation field with an identity transformation
@@ -41,14 +42,16 @@ void DeformationField::initImages (const RNifti::NiftiImage &targetImage)
     this->deformationFieldImage = RNifti::NiftiImage(deformationField);
 }
 
-DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, const AffineMatrix &affine, const bool compose)
+template <typename PrecisionType>
+DeformationField<PrecisionType>::DeformationField (const RNifti::NiftiImage &targetImage, const AffineMatrix &affine, const bool compose)
 {
     initImages(targetImage);
     mat44 affineMatrix = affine;
     reg_affine_getDeformationField(&affineMatrix, deformationFieldImage, compose, NULL);
 }
 
-DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, RNifti::NiftiImage &transformationImage, const bool compose)
+template <typename PrecisionType>
+DeformationField<PrecisionType>::DeformationField (const RNifti::NiftiImage &targetImage, RNifti::NiftiImage &transformationImage, const bool compose)
 {
     initImages(targetImage);
     reg_checkAndCorrectDimension(transformationImage);
@@ -84,7 +87,8 @@ DeformationField::DeformationField (const RNifti::NiftiImage &targetImage, RNift
     }
 }
 
-RNifti::NiftiImage DeformationField::getJacobian ()
+template <typename PrecisionType>
+RNifti::NiftiImage DeformationField<PrecisionType>::getJacobian ()
 {
     // Allocate Jacobian determinant image
     nifti_image *jacobianImage = nifti_copy_nim_info(targetImage);
@@ -102,7 +106,8 @@ RNifti::NiftiImage DeformationField::getJacobian ()
     return RNifti::NiftiImage(jacobianImage);
 }
 
-RNifti::NiftiImage DeformationField::resampleImage (RNifti::NiftiImage &sourceImage, const int interpolation)
+template <typename PrecisionType>
+RNifti::NiftiImage DeformationField<PrecisionType>::resampleImage (RNifti::NiftiImage &sourceImage, const int interpolation)
 {
     // Allocate result image
     nifti_image *resultImage = nifti_copy_nim_info(targetImage);
@@ -123,13 +128,14 @@ RNifti::NiftiImage DeformationField::resampleImage (RNifti::NiftiImage &sourceIm
     return RNifti::NiftiImage(resultImage);
 }
 
+template <typename PrecisionType>
 template <int Dim>
-Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const
+Rcpp::NumericVector DeformationField<PrecisionType>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const
 {
     typedef Eigen::Matrix<double,Dim,1> Point;
     Point closestLoc = Point::Zero();
     
-    const PRECISION_TYPE *deformationPointer = (const PRECISION_TYPE *) deformationFieldImage->data;
+    const std::vector<double> deformationData = deformationFieldImage.getData<double>();
     const size_t nVoxels = deformationFieldImage->nx * deformationFieldImage->ny * deformationFieldImage->nz;
     double closestDistance = R_PosInf;
     size_t closestVoxel = 0;
@@ -138,7 +144,7 @@ Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourc
     {
         Point loc;
         for (int i=0; i<Dim; i++)
-            loc[i] = deformationPointer[v + i*nVoxels];
+            loc[i] = deformationData[v + i*nVoxels];
         
         const double currentDistance = (loc - sourceLoc).norm();
         if (currentDistance < closestDistance)
@@ -185,8 +191,8 @@ Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourc
                     const size_t v = closestVoxel + xShift + yShift * strides[1];
                     const size_t w = size_t(i + j*4);
                 
-                    result[2*Dim*w] = deformationPointer[v];
-                    result[2*Dim*w + 1] = deformationPointer[v + nVoxels];
+                    result[2*Dim*w] = deformationData[v];
+                    result[2*Dim*w + 1] = deformationData[v + nVoxels];
                     result[2*Dim*w + 2] = v % deformationFieldImage->dim[1] + 1.0;
                     result[2*Dim*w + 3] = (v / strides[1]) % deformationFieldImage->dim[2] + 1.0;
                 }
@@ -198,9 +204,9 @@ Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourc
                         const size_t v = closestVoxel + xShift + yShift * strides[1] + zShift * strides[2];
                         const size_t w = size_t(i + j*4 + k*16);
                         
-                        result[2*Dim*w] = deformationPointer[v];
-                        result[2*Dim*w + 1] = deformationPointer[v + nVoxels];
-                        result[2*Dim*w + 2] = deformationPointer[v + 2*nVoxels];
+                        result[2*Dim*w] = deformationData[v];
+                        result[2*Dim*w + 1] = deformationData[v + nVoxels];
+                        result[2*Dim*w + 2] = deformationData[v + 2*nVoxels];
                         result[2*Dim*w + 3] = v % deformationFieldImage->dim[1] + 1.0;
                         result[2*Dim*w + 4] = (v / strides[1]) % deformationFieldImage->dim[2] + 1.0;
                         result[2*Dim*w + 5] = (v / strides[2]) % deformationFieldImage->dim[3] + 1.0;
@@ -213,13 +219,23 @@ Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourc
     }
 }
 
-void DeformationField::compose (const DeformationField &otherField)
+template <typename PrecisionType>
+void DeformationField<PrecisionType>::compose (const DeformationField &otherField)
 {
     reg_defField_compose(otherField.getFieldImage(), deformationFieldImage, NULL);
 }
 
-template
-Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
+template class DeformationField<float>;
+template class DeformationField<double>;
 
 template
-Rcpp::NumericVector DeformationField::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;
+Rcpp::NumericVector DeformationField<float>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
+
+template
+Rcpp::NumericVector DeformationField<float>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;
+
+template
+Rcpp::NumericVector DeformationField<double>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
+
+template
+Rcpp::NumericVector DeformationField<double>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;

@@ -203,7 +203,7 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
             return (x)
     })
     
-    result <- .Call("regLinear", source, target, scope, symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, internal, PACKAGE="RNiftyReg")
+    result <- .Call("regLinear", source, target, scope, symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, internal, "double", PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)
@@ -350,7 +350,7 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
     else
         finalSpacing <- finalSpacing[1:3]
     
-    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, linearEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, internal, PACKAGE="RNiftyReg")
+    result <- .Call("regNonlinear", source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, linearEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, internal, "double", PACKAGE="RNiftyReg")
     class(result) <- "niftyreg"
     
     return (result)
