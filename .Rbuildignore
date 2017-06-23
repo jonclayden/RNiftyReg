@@ -1,3 +1,4 @@
 ^README.*\.jpg$
 .*\.o$
 ^\.travis\.yml$
+^appveyor\.yml$
