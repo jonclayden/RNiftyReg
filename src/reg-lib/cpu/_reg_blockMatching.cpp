@@ -243,7 +243,7 @@ void initialise_block_matching_method(nifti_image * reference,
    char text[255];
    sprintf(text, "There are %i active block(s) out of %i.",
            params->activeBlockNumber, params->totalBlockNumber);
-   reg_print_msg_debug(text)
+   reg_print_msg_debug(text);
       #endif
          //params->activeBlock = (int *)malloc(params->activeBlockNumber * sizeof(int));
          params->referencePosition = (float *)malloc(params->activeBlockNumber * params->dim * sizeof(float));
