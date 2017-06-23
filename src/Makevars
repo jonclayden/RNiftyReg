@@ -8,4 +8,4 @@ OBJECTS_LIB_CPU = reg-lib/cpu/CPUAffineDeformationFieldKernel.o reg-lib/cpu/CPUB
 
 OBJECTS_LIB = reg-lib/AladinContent.o reg-lib/Platform.o reg-lib/_reg_aladin.o reg-lib/_reg_aladin_sym.o reg-lib/_reg_base.o reg-lib/_reg_f3d.o reg-lib/_reg_f3d2.o reg-lib/_reg_f3d_sym.o
 
-OBJECTS = main.o RNifti.o AffineMatrix.o DeformationField.o aladin.o f3d.o $(OBJECTS_LIB) $(OBJECTS_LIB_CPU)
+OBJECTS = main.o helpers.o RNifti.o AffineMatrix.o DeformationField.o aladin.o f3d.o $(OBJECTS_LIB) $(OBJECTS_LIB_CPU)
