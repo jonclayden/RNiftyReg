@@ -19,7 +19,8 @@ The [`mmand` package](https://github.com/jonclayden/mmand) for image processing 
 
 - [Reading and writing images](#reading-and-writing-images)
 - [Image registration](#image-registration)
-- [Applying transformations](#applying-transformations)
+- [Applying and manipulating transformations](#applying-and-manipulating-transformations)
+- [Convenience functions](#convenience-functions)
 - [Upgrading to RNiftyReg 2.x](#upgrading-to-rniftyreg-2x)
 
 ## Reading and writing images
@@ -68,7 +69,7 @@ result <- niftyreg(source, target, scope="nonlinear", init=forward(result))
 
 Notice the `scope` argument, and also the fact that we use the result of the previous linear registration to initialise the nonlinear one. (The `forward` function extracts the forward transformation from the previous registration.) This should result in reduced convergence time, since the affine transformation provides a first approximation for the nonlinear registration algorithm. Nevertheless, this algorithm will generally take longer to complete.
 
-## Applying transformations
+## Applying and manipulating transformations
 
 Once a transformation between two images has been established through registration, it can be extracted, applied to another image or pixel coordinates, or manipulated. Transformations can also be read from or written to file, or created from scratch. Registration is by default symmetric, meaning that forward and reverse transformations are calculated simultaneously. These can be extracted using the `forward` and `reverse` functions.
 
@@ -162,6 +163,39 @@ This results in half of the skew effect being applied. Finally, the `composeTran
 all.equal(forward(result), composeTransforms(half_xfm,half_xfm), check.attributes=FALSE)
 # TRUE
 ```
+
+## Convenience functions
+
+The package provides a group of convenience functions—`translate`, `rescale`, `skew` and `rotate`—which can be used to quickly apply simple transformations to an image. For example, the skew operation applied above can be more compactly written as
+
+```r
+house_skewed <- skew(house, 0.1)
+display(house_skewed)
+```
+
+![Skewed house photo](tools/figures/house-skewed.jpg)
+
+Since these take the image as their first argument, they are compatible with the chaining operator from the [popular `magrittr` package](https://cran.r-project.org/package=magrittr). However, because such a chain applies multiple transformations to an image, there may be a loss of precision, or of data, compared to a single more complex operation. For example, while
+
+```r
+library(magrittr)
+house_transformed <- house %>% rotate(pi/4, anchor="centre") %>% translate(30)
+display(house_transformed)
+```
+
+![First transformed house](tools/figures/house-transformed1.jpg)
+
+is much more readable than
+
+```r
+xfm <- composeTransforms(buildAffine(angles=pi/4, anchor="centre", source=house), buildAffine(translation=30, source=house))
+house_transformed <- applyTransform(xfm, house)
+display(house_transformed)
+```
+
+![Second transformed house](tools/figures/house-transformed2.jpg)
+
+the latter avoids the creation of a black band across the top of the final image, since it has access to the full content of the original image, rather than just the truncated version produced by the rotation.
 
 ## Upgrading to RNiftyReg 2.x
 

@@ -166,6 +166,58 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE, i
 }
 
 
+#' Apply simple transformations
+#' 
+#' These functions allow simple transformations to be applied quickly, or in a
+#' chosen order. They represent simplified interfaces to the
+#' \code{\link{buildAffine}} and \code{\link{applyTransform}} functions, and
+#' are compatible with the chaining operator from the popular \code{magrittr}
+#' package (although performing one single transformation may be preferable).
+#' 
+#' @inheritParams buildAffine
+#' @param source A 2D or 3D image, in the sense of \code{\link{isImage}}.
+#' @param ... Additional arguments to \code{\link{applyTransform}}.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{buildAffine}}, \code{\link{applyTransform}}
+#' @export
+translate <- function (source, translation, ...)
+{
+    xfm <- buildAffine(translation=translation, source=source)
+    applyTransform(xfm, source, ...)
+}
+
+
+#' @rdname translate
+#' @export
+rescale <- function (source, scales, anchor = c("none","origin","centre","center"), ...)
+{
+    anchor <- match.arg(anchor)
+    xfm <- buildAffine(scales=scales, source=source, anchor=anchor)
+    applyTransform(xfm, source, ...)
+}
+
+
+#' @rdname translate
+#' @export
+skew <- function (source, skews, anchor = c("none","origin","centre","center"), ...)
+{
+    anchor <- match.arg(anchor)
+    xfm <- buildAffine(skews=skews, source=source, anchor=anchor)
+    applyTransform(xfm, source, ...)
+}
+
+
+#' @rdname translate
+#' @export
+rotate <- function (source, angles, anchor = c("none","origin","centre","center"), ...)
+{
+    anchor <- match.arg(anchor)
+    xfm <- buildAffine(angles=angles, source=source, anchor=anchor)
+    applyTransform(xfm, source, ...)
+}
+
+
 #' Calculate a half transformation
 #' 
 #' This function calculates the half-way transformation corresponding to its
