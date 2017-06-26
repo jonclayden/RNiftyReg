@@ -508,7 +508,7 @@ BEGIN_RCPP
         return _transform1;
     else if (transform1.inherits("affine") && transform2.inherits("affine"))
     {
-        Eigen::MatrixXd matrix = as<Eigen::MatrixXd>(_transform2) * as<Eigen::MatrixXd>(_transform1);
+        Eigen::MatrixXd matrix = as<Eigen::MatrixXd>(_transform1) * as<Eigen::MatrixXd>(_transform2);
         result = AffineMatrix(matrix);
     }
     else
