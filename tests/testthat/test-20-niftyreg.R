@@ -1,11 +1,11 @@
 context("Registration")
 
 test_that("Core registration functions work", {
-    if (system.file(package="png") == "")
-        skip("The \"png\" package is not available")
+    if (system.file(package="loder") == "")
+        skip("The \"loder\" package is not available")
     else
     {
-        house <- png::readPNG(system.file("extdata","house.png",package="RNiftyReg"))
+        house <- loder::readPng(system.file("extdata","house.png",package="RNiftyReg"))
         affine <- buildAffine(skews=0.1, source=house, target=house)
         skewedHouse <- applyTransform(affine, house)
         

@@ -9,7 +9,7 @@ Authors@R: c(person("Jon","Clayden",role=c("cre","aut"),email="code@clayden.org"
              person("Pankaj","Daga",role="aut"))
 Maintainer: Jon Clayden <code@clayden.org>
 Imports: Rcpp (>= 0.11.0), RNifti (>= 0.4.0), ore
-Suggests: jpeg, png, mmand, testthat (>= 0.11.0)
+Suggests: jpeg, loder, mmand, testthat (>= 0.11.0)
 LinkingTo: Rcpp, RcppEigen, RNifti
 Description: Provides an 'R' interface to the 'NiftyReg' image registration tools
     <http://sourceforge.net/projects/niftyreg/>. Linear and nonlinear registration

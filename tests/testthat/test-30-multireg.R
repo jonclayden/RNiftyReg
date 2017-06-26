@@ -1,15 +1,15 @@
 context("Multiple registration")
 
 test_that("Multiple registration works", {
-    if (system.file(package="png") == "")
-        skip("The \"png\" package is not available")
+    if (system.file(package="loder") == "")
+        skip("The \"loder\" package is not available")
     else
     {
-        house <- png::readPNG(system.file("extdata","house.png",package="RNiftyReg"))
+        house <- loder::readPng(system.file("extdata","house.png",package="RNiftyReg"))
         affine <- buildAffine(skews=0.1, source=house, target=house)
         skewedHouse <- applyTransform(affine, house)
         
-        colourHouse <- png::readPNG(system.file("extdata","house_colour.png",package="RNiftyReg"))
+        colourHouse <- loder::readPng(system.file("extdata","house_colour.png",package="RNiftyReg"))
         skewedColourHouse <- applyTransform(affine, colourHouse)
         
         # Rec. 709 luma RGB-to-greyscale coefficients (as used by ImageMagick)
