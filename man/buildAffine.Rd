@@ -18,7 +18,9 @@ skews and angles.}
 
 \item{skews}{Skews in the XY, XZ and YZ planes.}
 
-\item{angles}{Roll, pitch and yaw rotation angles, in radians.}
+\item{angles}{Roll, pitch and yaw rotation angles, in radians. If
+\code{source} is two-dimensional, a single angle will be interpreted as
+being in the plane as expected.}
 
 \item{source}{The source image for the transformation (required).}
 

@@ -262,7 +262,9 @@ invertAffine <- function (affine)
 #'   skews and angles.
 #' @param scales Scale factors along each axis.
 #' @param skews Skews in the XY, XZ and YZ planes.
-#' @param angles Roll, pitch and yaw rotation angles, in radians.
+#' @param angles Roll, pitch and yaw rotation angles, in radians. If
+#'   \code{source} is two-dimensional, a single angle will be interpreted as
+#'   being in the plane as expected.
 #' @param source The source image for the transformation (required).
 #' @param target The target image for the transformation. If \code{NULL} (the
 #'   default), it will be equal to \code{source}, or a rescaled version of it
@@ -294,6 +296,8 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
         stop("Scales should not be zero")
     if (length(x$scales) < 3)
         x$scales <- c(x$scales, rep(1,3-length(x$scales)))
+    if (length(x$angles) == 1 && (ndim(source) == 2 || (ndim(source) == 3 && dim(source)[3] <= 4)))
+        x$angles <- c(0, 0, x$angles)
     for (name in c("translation","skews","angles"))
     {
         if (length(x[[name]]) < 3)
