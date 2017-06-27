@@ -1,6 +1,6 @@
 Package: RNiftyReg
-Version: 2.5.0
-Date: 2017-02-03
+Version: 2.6.0
+Date: 2017-06-27
 Title: Image Registration Using the 'NiftyReg' Library
 Authors@R: c(person("Jon","Clayden",role=c("cre","aut"),email="code@clayden.org"),
              person("Marc","Modat",role="aut"),

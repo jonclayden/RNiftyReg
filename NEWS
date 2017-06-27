@@ -2,6 +2,25 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.6.0
+
+- New convenience functions translate(), rescale(), skew() and rotate() can be
+  used to apply simple transformations to images easily.
+- The niftyreg() group of functions gain a "precision" argument, which controls
+  the working precision of the optimisation.
+- A single angle supplied to buildAffine() with a 2D source file will now be
+  interpreted in the way that would usually be expected (i.e., equivalent to a
+  yaw angle).
+- Compositions of two affine transformations appear to have been happening in the
+  wrong order. This has been corrected.
+- ANALYZE-format files, whose orientation is intrinsically ambiguous, are now
+  assumed to be use LAS storage order (with a warning).
+- The registration functions will no longer modify the low-level C structures
+  attributed to their arguments.
+- The "loder" package is now used in preference to "png".
+
+=================================================================================
+
 VERSION 2.5.0
 
 - RNiftyReg can now register 2D multichannel (RGB or RGBA) images. The red, green
