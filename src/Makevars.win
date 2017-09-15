@@ -1,8 +1,6 @@
-PKG_CFLAGS = $(SHLIB_OPENMP_CFLAGS)
+PKG_CPPFLAGS = -DNDEBUG -DHAVE_R -DHAVE_ZLIB -I. -Ireg-lib -Ireg-lib/cpu
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
 PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS)
-
-PKG_CPPFLAGS = -DNDEBUG -DHAVE_R -DHAVE_ZLIB -I. -Ireg-lib -Ireg-lib/cpu
 
 OBJECTS_LIB_CPU = reg-lib/cpu/CPUAffineDeformationFieldKernel.o reg-lib/cpu/CPUBlockMatchingKernel.o reg-lib/cpu/CPUConvolutionKernel.o reg-lib/cpu/CPUKernelFactory.o reg-lib/cpu/CPUOptimiseKernel.o reg-lib/cpu/CPUResampleImageKernel.o reg-lib/cpu/_reg_blockMatching.o reg-lib/cpu/_reg_globalTrans.o reg-lib/cpu/_reg_localTrans.o reg-lib/cpu/_reg_localTrans_jac.o reg-lib/cpu/_reg_localTrans_regul.o reg-lib/cpu/_reg_maths.o reg-lib/cpu/_reg_maths_eigen.o reg-lib/cpu/_reg_nmi.o reg-lib/cpu/_reg_optimiser.o reg-lib/cpu/_reg_resampling.o reg-lib/cpu/_reg_splineBasis.o reg-lib/cpu/_reg_tools.o
 

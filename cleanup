@@ -1,0 +1,3 @@
+#!/bin/sh
+
+rm -f src/Makevars src/*.o src/reg-lib/*.o src/reg-lib/cpu/*.o
