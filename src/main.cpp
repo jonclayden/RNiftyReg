@@ -488,8 +488,27 @@ BEGIN_RCPP
         result = transformationImage.toPointer("F3D transformation");
     }
     
+    const NiftiImage sourceImage(SEXP(transform.attr("source")), false);
+    const AffineMatrix sourceXform(sourceImage.xform(false));
     result.attr("source") = transform.attr("source");
-    result.attr("target") = transform.attr("target");
+    
+    NiftiImage targetImage(SEXP(transform.attr("target")));
+    AffineMatrix targetXform(targetImage.xform(false));
+    targetXform.column(3) = (sourceXform.column(3) + targetXform.column(3)) / 2.0;
+    if (targetImage->sform_code > 0)
+    {
+        targetImage->sto_xyz = targetXform;
+        targetImage->sto_ijk = nifti_mat44_inverse(targetImage->sto_xyz);
+    }
+    if (targetImage->qform_code > 0)
+    {
+        targetImage->qto_xyz = targetXform;
+        targetImage->qto_ijk = nifti_mat44_inverse(targetImage->qto_xyz);
+        targetImage->qoffset_x = targetXform(0,3);
+        targetImage->qoffset_y = targetXform(1,3);
+        targetImage->qoffset_z = targetXform(2,3);
+    }
+    result.attr("target") = targetImage.toPointer("Target image");
     
     return result;
 END_RCPP
