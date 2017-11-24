@@ -248,6 +248,12 @@ halfTransform <- function (transform)
 #' @return The composed transform. If all arguments are affines then the result
 #'   will also be an affine; otherwise it will be a deformation field.
 #' 
+#' @note The source image for the composed transform is generally the source
+#'   image from the first transform, and the target is the target image from
+#'   the second transform. However, the target image attached to half
+#'   transforms (as calculated by \code{\link{halfTransform}}) generally has a
+#'   modified xform, compared to the original target. Therefore, composing a
+#'   half transform with itself may not be exactly equivalent to the original.
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg.linear}}, \code{\link{niftyreg.nonlinear}},
 #'   \code{\link{deformationField}}
