@@ -2,6 +2,14 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.6.1
+
+- The target image for a half transform now has its xform modified to better
+  represent a half-way space between the original source and target.
+- The package now uses a configure script to more robustly detect OpenMP support.
+
+=================================================================================
+
 VERSION 2.6.0
 
 - New convenience functions translate(), rescale(), skew() and rotate() can be
