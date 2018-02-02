@@ -30,8 +30,9 @@ test_that("Existing transformations can be applied and combined", {
     t2_to_t1_half <- halfTransform(t2_to_t1)
     expect_that(composeTransforms(t2_to_t1_half,t2_to_t1_half), is_equivalent_to(t2_to_t1))
     
+    # Use an identity transform to ensure that the target is right
     t1_to_mni_half <- halfTransform(t1_to_mni)
-    t1_to_mni_reconstructed <- composeTransforms(t1_to_mni_half, t1_to_mni_half)
-    attr(t1_to_mni_reconstructed, "target") <- mni
+    mniIdentity <- buildAffine(source=mni)
+    t1_to_mni_reconstructed <- composeTransforms(t1_to_mni_half, t1_to_mni_half, mniIdentity)
     expect_that(applyTransform(t1_to_mni_reconstructed,point,nearest=TRUE), equals(c(33,49,24)))
 })
