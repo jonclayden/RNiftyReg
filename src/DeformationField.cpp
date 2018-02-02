@@ -48,6 +48,7 @@ DeformationField<PrecisionType>::DeformationField (const RNifti::NiftiImage &tar
     initImages(targetImage);
     mat44 affineMatrix = affine;
     reg_affine_getDeformationField(&affineMatrix, deformationFieldImage, compose, NULL);
+    updateData();
 }
 
 template <typename PrecisionType>
@@ -85,6 +86,8 @@ DeformationField<PrecisionType>::DeformationField (const RNifti::NiftiImage &tar
         reg_defField_compose(transformationImage, deformationFieldImage, NULL);
         break;
     }
+    
+    updateData();
 }
 
 template <typename PrecisionType>
@@ -134,9 +137,6 @@ Rcpp::NumericVector DeformationField<PrecisionType>::findPoint (const RNifti::Ni
 {
     typedef Eigen::Matrix<double,Dim,1> Point;
     Point closestLoc = Point::Zero();
-    
-    const std::vector<double> deformationData = deformationFieldImage.getData<double>();
-    const size_t nVoxels = deformationFieldImage->nx * deformationFieldImage->ny * deformationFieldImage->nz;
     double closestDistance = R_PosInf;
     size_t closestVoxel = 0;
     
@@ -223,6 +223,7 @@ template <typename PrecisionType>
 void DeformationField<PrecisionType>::compose (const DeformationField &otherField)
 {
     reg_defField_compose(otherField.getFieldImage(), deformationFieldImage, NULL);
+    updateData();
 }
 
 template class DeformationField<float>;

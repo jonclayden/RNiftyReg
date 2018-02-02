@@ -15,8 +15,15 @@ class DeformationField
 protected:
     RNifti::NiftiImage deformationFieldImage;
     RNifti::NiftiImage targetImage;
+    std::vector<double> deformationData;
+    size_t nVoxels;
     
     void initImages (const RNifti::NiftiImage &targetImage);
+    void updateData ()
+    {
+        deformationData = deformationFieldImage.getData<double>();
+        nVoxels = deformationFieldImage->nx * deformationFieldImage->ny * deformationFieldImage->nz;
+    }
     
 public:
     DeformationField () {}
