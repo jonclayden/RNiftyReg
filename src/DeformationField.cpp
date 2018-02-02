@@ -54,37 +54,45 @@ DeformationField<PrecisionType>::DeformationField (const RNifti::NiftiImage &tar
 template <typename PrecisionType>
 DeformationField<PrecisionType>::DeformationField (const RNifti::NiftiImage &targetImage, RNifti::NiftiImage &transformationImage, const bool compose)
 {
-    initImages(targetImage);
-    reg_checkAndCorrectDimension(transformationImage);
-    
-    switch (reg_round(transformationImage->intent_p1))
+    if (transformationImage->intent_p1 == DEF_FIELD)
     {
-        case CUB_SPLINE_GRID:
-        reg_spline_getDeformationField(transformationImage, deformationFieldImage, NULL, compose, true);
-        break;
+        this->targetImage = targetImage;
+        this->deformationFieldImage = transformationImage;
+    }
+    else
+    {
+        initImages(targetImage);
+        reg_checkAndCorrectDimension(transformationImage);
         
-        case DISP_VEL_FIELD:
-        reg_getDeformationFromDisplacement(transformationImage);
-        case DEF_VEL_FIELD:
+        switch (reg_round(transformationImage->intent_p1))
         {
-            nifti_image *tempFlowField = deformationFieldImage;
-            reg_defField_compose(transformationImage, tempFlowField, NULL);
-            tempFlowField->intent_p1 = transformationImage->intent_p1;
-            tempFlowField->intent_p2 = transformationImage->intent_p2;
-            reg_defField_getDeformationFieldFromFlowField(tempFlowField, deformationFieldImage, false);
-            nifti_image_free(tempFlowField);
+            case CUB_SPLINE_GRID:
+            reg_spline_getDeformationField(transformationImage, deformationFieldImage, NULL, compose, true);
+            break;
+            
+            case DISP_VEL_FIELD:
+            reg_getDeformationFromDisplacement(transformationImage);
+            case DEF_VEL_FIELD:
+            {
+                nifti_image *tempFlowField = deformationFieldImage;
+                reg_defField_compose(transformationImage, tempFlowField, NULL);
+                tempFlowField->intent_p1 = transformationImage->intent_p1;
+                tempFlowField->intent_p2 = transformationImage->intent_p2;
+                reg_defField_getDeformationFieldFromFlowField(tempFlowField, deformationFieldImage, false);
+                nifti_image_free(tempFlowField);
+            }
+            break;
+            
+            case SPLINE_VEL_GRID:
+            reg_spline_getDefFieldFromVelocityGrid(transformationImage, deformationFieldImage, false);
+            break;
+            
+            case DISP_FIELD:
+            reg_getDeformationFromDisplacement(transformationImage);
+            default:
+            reg_defField_compose(transformationImage, deformationFieldImage, NULL);
+            break;
         }
-        break;
-        
-        case SPLINE_VEL_GRID:
-        reg_spline_getDefFieldFromVelocityGrid(transformationImage, deformationFieldImage, false);
-        break;
-        
-        case DISP_FIELD:
-        reg_getDeformationFromDisplacement(transformationImage);
-        default:
-        reg_defField_compose(transformationImage, deformationFieldImage, NULL);
-        break;
     }
     
     updateData();
