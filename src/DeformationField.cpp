@@ -145,28 +145,94 @@ Rcpp::NumericVector DeformationField<PrecisionType>::findPoint (const RNifti::Ni
 {
     typedef Eigen::Matrix<double,Dim,1> Point;
     Point closestLoc = Point::Zero();
+    Point centre = Point::Zero();
+    Point direction = Point::Zero();
     double closestDistance = R_PosInf;
     size_t closestVoxel = 0;
-    
-    for (size_t v=0; v<nVoxels; v++)
-    {
-        Point loc;
-        for (int i=0; i<Dim; i++)
-            loc[i] = deformationData[v + i*nVoxels];
-        
-        const double currentDistance = (loc - sourceLoc).norm();
-        if (currentDistance < closestDistance)
-        {
-            closestDistance = currentDistance;
-            closestVoxel = v;
-            closestLoc = loc;
-        }
-    }
     
     std::vector<size_t> strides(Dim);
     strides[0] = 1;
     for (int i=1; i<Dim; i++)
         strides[i] = strides[i-1] * std::abs(deformationFieldImage->dim[i]);
+    
+    double currentClosestDistance = R_PosInf;
+    while (true)
+    {
+        // Closest distance will initially be infinite, but direction will also be zero, so this test suffices
+        if (direction.norm() > 0)
+        {
+            for (int i=0; i<Dim; i++)
+            {
+                // Take a step in the best previous direction, reining it in if we step outside the deformation field
+                centre[i] += direction[i] * std::ceil(0.75 * closestDistance / std::abs(deformationFieldImage->pixdim[i+1] * direction.norm()));
+                centre[i] = std::max(0.0, std::min(centre[i], static_cast<double>(deformationFieldImage->dim[i+1]-1)));
+            }
+        }
+        
+        // Check the neighbourhood of the current location for a better option
+        for (int i=-1; i<=1; i++)
+        {
+            const int x = static_cast<int>(centre[0]) + i;
+            if (x < 0 || x >= deformationFieldImage->dim[1])
+                continue;
+            
+            for (int j=-1; j<=1; j++)
+            {
+                const int y = static_cast<int>(centre[1]) + j;
+                if (y < 0 || y >= deformationFieldImage->dim[2])
+                    continue;
+                const size_t v = x + y * strides[1];
+                
+                if (Dim == 2)
+                {
+                    Point currentLoc;
+                    currentLoc[0] = deformationData[v];
+                    currentLoc[1] = deformationData[v + nVoxels];
+                    
+                    const double currentDistance = (currentLoc - sourceLoc).norm();
+                    if (currentDistance < currentClosestDistance)
+                    {
+                        currentClosestDistance = currentDistance;
+                        closestVoxel = v;
+                        closestLoc = currentLoc;
+                        direction[0] = static_cast<double>(i);
+                        direction[1] = static_cast<double>(j);
+                    }
+                }
+                else
+                {
+                    for (int k=-1; k<=1; k++)
+                    {
+                        const int z = static_cast<int>(centre[2]) + k;
+                        if (z < 0 || z >= deformationFieldImage->dim[3])
+                            continue;
+                        const size_t w = v + z * strides[2];
+                        
+                        Point currentLoc;
+                        currentLoc[0] = deformationData[w];
+                        currentLoc[1] = deformationData[w + nVoxels];
+                        currentLoc[2] = deformationData[w + 2*nVoxels];
+                        
+                        const double currentDistance = (currentLoc - sourceLoc).norm();
+                        if (currentDistance < currentClosestDistance)
+                        {
+                            currentClosestDistance = currentDistance;
+                            closestVoxel = w;
+                            closestLoc = currentLoc;
+                            direction[0] = static_cast<double>(i);
+                            direction[1] = static_cast<double>(j);
+                            direction[2] = static_cast<double>(k);
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (currentClosestDistance == closestDistance)
+            break;
+        else
+            closestDistance = currentClosestDistance;
+    }
     
     if (nearest || closestDistance == 0.0)
     {
