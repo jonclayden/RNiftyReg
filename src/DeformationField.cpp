@@ -141,11 +141,11 @@ RNifti::NiftiImage DeformationField<PrecisionType>::resampleImage (RNifti::Nifti
 
 template <typename PrecisionType>
 template <int Dim>
-Rcpp::NumericVector DeformationField<PrecisionType>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest) const
+Rcpp::NumericVector DeformationField<PrecisionType>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,Dim,1> &sourceLoc, const bool nearest, const Eigen::Matrix<double,Dim,1> &start) const
 {
     typedef Eigen::Matrix<double,Dim,1> Point;
     Point closestLoc = Point::Zero();
-    Point centre = Point::Zero();
+    Point centre = start;
     Point direction = Point::Zero();
     double closestDistance = R_PosInf;
     size_t closestVoxel = 0;
@@ -304,13 +304,13 @@ template class DeformationField<float>;
 template class DeformationField<double>;
 
 template
-Rcpp::NumericVector DeformationField<float>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
+Rcpp::NumericVector DeformationField<float>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest, const Eigen::Matrix<double,2,1> &start) const;
 
 template
-Rcpp::NumericVector DeformationField<float>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;
+Rcpp::NumericVector DeformationField<float>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest, const Eigen::Matrix<double,3,1> &start) const;
 
 template
-Rcpp::NumericVector DeformationField<double>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest) const;
+Rcpp::NumericVector DeformationField<double>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,2,1> &sourceLoc, const bool nearest, const Eigen::Matrix<double,2,1> &start) const;
 
 template
-Rcpp::NumericVector DeformationField<double>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest) const;
+Rcpp::NumericVector DeformationField<double>::findPoint (const RNifti::NiftiImage &sourceImage, const Eigen::Matrix<double,3,1> &sourceLoc, const bool nearest, const Eigen::Matrix<double,3,1> &start) const;

@@ -402,23 +402,38 @@ BEGIN_RCPP
     
     if (points.ncol() == 2)
     {
+        // Begin at the centre of the target image
+        Eigen::Vector2d start(std::round((targetImage->dim[1]-1.0) / 2.0), std::round((targetImage->dim[2]-1.0) / 2.0));
         for (int i=0; i<points.nrow(); i++)
         {
             Eigen::Vector2d point;
             point[0] = points(i, 0);
             point[1] = points(i, 1);
-            result[i] = deformationField.findPoint(sourceImage, point, nearest);
+            result[i] = deformationField.findPoint(sourceImage, point, nearest, start);
+            
+            // Begin subsequent searches near the previous solution
+            NumericVector resultVector(result[i]);
+            start[0] = resultVector[2];
+            start[1] = resultVector[3];
         }
     }
     else if (points.ncol() == 3)
     {
+        // Begin at the centre of the target image
+        Eigen::Vector3d start(std::round((targetImage->dim[1]-1.0) / 2.0), std::round((targetImage->dim[2]-1.0) / 2.0), std::round((targetImage->dim[3]-1.0) / 2.0));
         for (int i=0; i<points.nrow(); i++)
         {
             Eigen::Vector3d point;
             point[0] = points(i, 0);
             point[1] = points(i, 1);
             point[2] = points(i, 2);
-            result[i] = deformationField.findPoint(sourceImage, point, nearest);
+            result[i] = deformationField.findPoint(sourceImage, point, nearest, start);
+            
+            // Begin subsequent searches near the previous solution
+            NumericVector resultVector(result[i]);
+            start[0] = resultVector[3];
+            start[1] = resultVector[4];
+            start[2] = resultVector[5];
         }
     }
     else
