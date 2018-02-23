@@ -403,7 +403,7 @@ BEGIN_RCPP
     if (points.ncol() == 2)
     {
         // Begin at the centre of the target image
-        Eigen::Vector2d start(std::round((targetImage->dim[1]-1.0) / 2.0), std::round((targetImage->dim[2]-1.0) / 2.0));
+        Eigen::Vector2d start(Rf_fround((targetImage->dim[1]-1.0) / 2.0, 0), Rf_fround((targetImage->dim[2]-1.0) / 2.0, 0));
         for (int i=0; i<points.nrow(); i++)
         {
             Eigen::Vector2d point;
@@ -420,7 +420,7 @@ BEGIN_RCPP
     else if (points.ncol() == 3)
     {
         // Begin at the centre of the target image
-        Eigen::Vector3d start(std::round((targetImage->dim[1]-1.0) / 2.0), std::round((targetImage->dim[2]-1.0) / 2.0), std::round((targetImage->dim[3]-1.0) / 2.0));
+        Eigen::Vector3d start(Rf_fround((targetImage->dim[1]-1.0) / 2.0, 0), Rf_fround((targetImage->dim[2]-1.0) / 2.0, 0), Rf_fround((targetImage->dim[3]-1.0) / 2.0, 0));
         for (int i=0; i<points.nrow(); i++)
         {
             Eigen::Vector3d point;
