@@ -2,6 +2,14 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.6.2
+
+- Searching a deformation field is now done with gradient descent, rather than
+  exhaustively. This makes applyTransform() substantially faster when applying a
+  nonlinear transform to points.
+
+=================================================================================
+
 VERSION 2.6.1
 
 - The target image for a half transform now has its xform modified to better
