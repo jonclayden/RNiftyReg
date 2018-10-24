@@ -586,6 +586,18 @@ BEGIN_RCPP
 END_RCPP
 }
 
+RcppExport SEXP RNifti_version ()
+{
+BEGIN_RCPP
+#ifdef RNIFTI_VERSION
+    return wrap(RNIFTI_VERSION);
+#else
+    // RNIFTI_VERSION was not defined before RNifti v0.10.0, so 0 is a placeholder for everything before 10
+    return wrap(0);
+#endif
+END_RCPP
+}
+
 static R_CallMethodDef callMethods[] = {
     { "calculateMeasure",       (DL_FUNC) &calculateMeasure,    4 },
     { "regLinear",              (DL_FUNC) &regLinear,           16 },
@@ -594,6 +606,7 @@ static R_CallMethodDef callMethods[] = {
     { "transformPoints",        (DL_FUNC) &transformPoints,     3 },
     { "halfTransform",          (DL_FUNC) &halfTransform,       1 },
     { "composeTransforms",      (DL_FUNC) &composeTransforms,   2 },
+    { "RNifti_version",         (DL_FUNC) &RNifti_version,      0 },
     { NULL, NULL, 0 }
 };
 
