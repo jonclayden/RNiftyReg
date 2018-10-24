@@ -2,6 +2,14 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.6.3
+
+- The package now checks at load time whether it was built against a version of
+  the RNifti package which is compatible with the currently installed one, and
+  raises a warning prompting reinstallation if not.
+
+=================================================================================
+
 VERSION 2.6.2
 
 - Searching a deformation field is now done with gradient descent, rather than
