@@ -155,11 +155,12 @@ Rcpp::NumericVector DeformationField<PrecisionType>::findPoint (const RNifti::Ni
     for (int i=1; i<Dim; i++)
         strides[i] = strides[i-1] * std::abs(deformationFieldImage->dim[i]);
     
+    int stepsDone = 0;
     double currentClosestDistance = R_PosInf;
     while (true)
     {
-        // Closest distance will initially be infinite, but direction will also be zero, so this test suffices
-        if (direction.norm() > 0)
+        // If the direction is zero and we're not just starting, no improvement is possible, so stop
+        if (direction.norm() > 0.0)
         {
             for (int i=0; i<Dim; i++)
             {
@@ -168,6 +169,10 @@ Rcpp::NumericVector DeformationField<PrecisionType>::findPoint (const RNifti::Ni
                 centre[i] = std::max(0.0, std::min(centre[i], static_cast<double>(deformationFieldImage->dim[i+1]-1)));
             }
         }
+        else if (stepsDone > 0)
+            break;
+        
+        direction = Point::Zero();
         
         // Check the neighbourhood of the current location for a better option
         for (int i=-1; i<=1; i++)
@@ -230,8 +235,22 @@ Rcpp::NumericVector DeformationField<PrecisionType>::findPoint (const RNifti::Ni
         
         if (currentClosestDistance == closestDistance)
             break;
+        else if (ISNAN(currentClosestDistance))
+        {
+            Rf_warning("Deformation field distance evaluates to NaN");
+            break;
+        }
         else
+        {
             closestDistance = currentClosestDistance;
+            stepsDone++;
+            
+            if (stepsDone == 1000)
+            {
+                Rf_warning("Iteration limit reached while searching deformation field");
+                break;
+            }
+        }
     }
     
     if (nearest || closestDistance == 0.0)
