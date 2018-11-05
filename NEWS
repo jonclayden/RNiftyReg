@@ -2,6 +2,13 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.6.4
+
+- The algorithm for searching a deformation field is now more careful to avoid a
+  potentially infinite loop.
+
+=================================================================================
+
 VERSION 2.6.3
 
 - The package now checks at load time whether it was built against a version of
