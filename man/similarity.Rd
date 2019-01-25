@@ -4,7 +4,8 @@
 \alias{similarity}
 \title{Similarity measures between images}
 \usage{
-similarity(source, target, targetMask = NULL, interpolation = 3L)
+similarity(source, target, targetMask = NULL, interpolation = 3L,
+  threads = getOption("RNiftyReg.threads"))
 }
 \arguments{
 \item{source}{The source image, in any acceptable form.}
@@ -19,6 +20,9 @@ region will be the area over which the measure is calculated.}
 to be applied to the source image when resampling it into the space of the
 target image. May be 0 (nearest neighbour), 1 (trilinear) or 3 (cubic
 spline). No other values are valid.}
+
+\item{threads}{For OpenMP-capable builds of the package, the maximum number
+of threads to use.}
 }
 \value{
 A single numeric value representing the similarity between the

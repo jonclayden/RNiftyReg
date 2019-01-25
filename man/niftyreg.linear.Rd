@@ -4,11 +4,13 @@
 \alias{niftyreg.linear}
 \title{Two and three dimensional linear image registration}
 \usage{
-niftyreg.linear(source, target, scope = c("affine", "rigid"), init = NULL,
-  sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L,
-  maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L,
-  verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE,
-  internal = NA, precision = c("double", "single"))
+niftyreg.linear(source, target, scope = c("affine", "rigid"),
+  init = NULL, sourceMask = NULL, targetMask = NULL,
+  symmetric = TRUE, nLevels = 3L, maxIterations = 5L,
+  useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE,
+  estimateOnly = FALSE, sequentialInit = FALSE, internal = NA,
+  precision = c("double", "single"),
+  threads = getOption("RNiftyReg.threads"))
 }
 \arguments{
 \item{source}{The source image, an object of class \code{"nifti"} or
@@ -82,6 +84,9 @@ invalidated, for example when returning from worker threads.}
 
 \item{precision}{Working precision for the registration. Using single-
 precision may be desirable to save memory when coregistering large images.}
+
+\item{threads}{For OpenMP-capable builds of the package, the maximum number
+of threads to use.}
 }
 \value{
 See \code{\link{niftyreg}}.

@@ -6,9 +6,10 @@
 \title{Two and three dimensional image registration}
 \usage{
 niftyreg(source, target, scope = c("affine", "rigid", "nonlinear"),
-  init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE,
-  interpolation = 3L, estimateOnly = FALSE, sequentialInit = FALSE,
-  internal = NA, precision = c("double", "single"), ...)
+  init = NULL, sourceMask = NULL, targetMask = NULL,
+  symmetric = TRUE, interpolation = 3L, estimateOnly = FALSE,
+  sequentialInit = FALSE, internal = NA, precision = c("double",
+  "single"), threads = getOption("RNiftyReg.threads"), ...)
 
 \method{as.array}{niftyreg}(x, ...)
 }
@@ -66,6 +67,9 @@ invalidated, for example when returning from worker threads.}
 
 \item{precision}{Working precision for the registration. Using single-
 precision may be desirable to save memory when coregistering large images.}
+
+\item{threads}{For OpenMP-capable builds of the package, the maximum number
+of threads to use.}
 
 \item{...}{Further arguments to \code{\link{niftyreg.linear}} or
 \code{\link{niftyreg.nonlinear}}.}
