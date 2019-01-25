@@ -1,6 +1,8 @@
 context("Multiple registration")
 
 test_that("Multiple registration works", {
+    options(RNiftyReg.threads=2L)
+
     if (system.file(package="loder") == "")
         skip("The \"loder\" package is not available")
     else

@@ -1,6 +1,8 @@
 context("Applying transformations")
 
 test_that("Existing transformations can be applied and combined", {
+    options(RNiftyReg.threads=2L)
+
     t2 <- readNifti(system.file("extdata","epi_t2.nii.gz",package="RNiftyReg"))
     t1 <- readNifti(system.file("extdata","flash_t1.nii.gz",package="RNiftyReg"))
     mni <- readNifti(system.file("extdata","mni_brain.nii.gz",package="RNiftyReg"))
