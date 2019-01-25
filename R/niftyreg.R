@@ -48,6 +48,8 @@
 #'   invalidated, for example when returning from worker threads.
 #' @param precision Working precision for the registration. Using single-
 #'   precision may be desirable to save memory when coregistering large images.
+#' @param threads For OpenMP-capable builds of the package, the maximum number
+#'   of threads to use.
 #' @param ... Further arguments to \code{\link{niftyreg.linear}} or
 #'   \code{\link{niftyreg.nonlinear}}.
 #' @param x A \code{"niftyreg"} object.
@@ -96,7 +98,7 @@
 #' \code{\link{niftyreg.nonlinear}} for references relating to each type of
 #' registration.
 #' @export
-niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, interpolation = 3L, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, precision = c("double","single"), ...)
+niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, interpolation = 3L, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, precision = c("double","single"), threads = getOption("RNiftyReg.threads"), ...)
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -105,9 +107,9 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
     precision <- match.arg(precision)
     
     if (scope == "nonlinear")
-        niftyreg.nonlinear(source, target, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, precision=precision, ...)
+        niftyreg.nonlinear(source, target, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, precision=precision, threads=threads, ...)
     else
-        niftyreg.linear(source, target, scope, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, precision=precision, ...)
+        niftyreg.linear(source, target, scope, init, sourceMask, targetMask, interpolation=interpolation, symmetric=symmetric, estimateOnly=estimateOnly, sequentialInit=sequentialInit, internal=internal, precision=precision, threads=threads, ...)
 }
 
 
@@ -175,7 +177,7 @@ niftyreg <- function (source, target, scope = c("affine","rigid","nonlinear"), i
 #' (2014). Global image registration using a symmetric block-matching approach.
 #' Journal of Medical Imaging 1(2):024003.
 #' @export
-niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, precision = c("double","single"))
+niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, precision = c("double","single"), threads = getOption("RNiftyReg.threads"))
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -208,7 +210,7 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
             return (x)
     })
     
-    result <- .Call(C_regLinear, source, target, scope, symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, internal, precision)
+    result <- .Call(C_regLinear, source, target, scope, symmetric, nLevels, maxIterations, useBlockPercentage, interpolation, sourceMask, targetMask, init, verbose, estimateOnly, sequentialInit, internal, precision, threads)
     class(result) <- "niftyreg"
     
     return (result)
@@ -292,7 +294,7 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
 #' processing units. Computer Methods and Programs in Biomedicine
 #' 98(3):278-284.
 #' @export
-niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001, linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, precision = c("double","single"))
+niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L, maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001, linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,5,5), spacingUnit = c("voxel","world"), interpolation = 3L, verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE, internal = NA, precision = c("double","single"), threads = getOption("RNiftyReg.threads"))
 {
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
@@ -356,7 +358,7 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
     else
         finalSpacing <- finalSpacing[1:3]
     
-    result <- .Call(C_regNonlinear, source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, linearEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, internal, precision)
+    result <- .Call(C_regNonlinear, source, target, symmetric, nLevels, maxIterations, interpolation, sourceMask, targetMask, init, nBins, finalSpacing, bendingEnergyWeight, linearEnergyWeight, jacobianWeight, verbose, estimateOnly, sequentialInit, internal, precision, threads)
     class(result) <- "niftyreg"
     
     return (result)
@@ -451,16 +453,18 @@ reverse.niftyreg <- function (object, i = 1, ...)
 #'   to be applied to the source image when resampling it into the space of the
 #'   target image. May be 0 (nearest neighbour), 1 (trilinear) or 3 (cubic
 #'   spline). No other values are valid.
+#' @param threads For OpenMP-capable builds of the package, the maximum number
+#'   of threads to use.
 #' @return A single numeric value representing the similarity between the
 #'   images.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{niftyreg}}
 #' @export
-similarity <- function (source, target, targetMask = NULL, interpolation = 3L)
+similarity <- function (source, target, targetMask = NULL, interpolation = 3L, threads = getOption("RNiftyReg.threads"))
 {
     if (!(interpolation %in% c(0,1,3)))
         stop("Final interpolation specifier must be 0, 1 or 3")
     
-    return (.Call(C_calculateMeasure, source, target, targetMask, interpolation))
+    return (.Call(C_calculateMeasure, source, target, targetMask, interpolation, threads))
 }

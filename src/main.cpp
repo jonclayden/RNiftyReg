@@ -13,12 +13,17 @@ using namespace RNifti;
 
 typedef std::vector<float> float_vector;
 
-RcppExport SEXP calculateMeasure (SEXP _source, SEXP _target, SEXP _targetMask, SEXP _interpolation)
+RcppExport SEXP calculateMeasure (SEXP _source, SEXP _target, SEXP _targetMask, SEXP _interpolation, SEXP _threads)
 {
 BEGIN_RCPP
     const NiftiImage sourceImage(_source);
     const NiftiImage targetImage(_target);
     const NiftiImage targetMask(_targetMask);
+    
+#ifdef _OPENMP
+    if (!Rf_isNull(_threads) && as<int>(_threads) > 0)
+        omp_set_num_threads(as<int>(_threads));
+#endif
     
     checkImages(sourceImage, targetImage);
     if (sourceImage.nDims() != targetImage.nDims())
@@ -59,13 +64,18 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit, SEXP _internal, SEXP _precision)
+RcppExport SEXP regLinear (SEXP _source, SEXP _target, SEXP _type, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _useBlockPercentage, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit, SEXP _internal, SEXP _precision, SEXP _threads)
 {
 BEGIN_RCPP
     const NiftiImage sourceImage(_source);
     const NiftiImage targetImage(_target);
     const NiftiImage sourceMask(_sourceMask);
     const NiftiImage targetMask(_targetMask);
+    
+#ifdef _OPENMP
+    if (!Rf_isNull(_threads) && as<int>(_threads) > 0)
+        omp_set_num_threads(as<int>(_threads));
+#endif
     
     checkImages(sourceImage, targetImage);
     
@@ -198,13 +208,18 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _linearEnergyWeight, SEXP _jacobianWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit, SEXP _internal, SEXP _precision)
+RcppExport SEXP regNonlinear (SEXP _source, SEXP _target, SEXP _symmetric, SEXP _nLevels, SEXP _maxIterations, SEXP _interpolation, SEXP _sourceMask, SEXP _targetMask, SEXP _init, SEXP _nBins, SEXP _spacing, SEXP _bendingEnergyWeight, SEXP _linearEnergyWeight, SEXP _jacobianWeight, SEXP _verbose, SEXP _estimateOnly, SEXP _sequentialInit, SEXP _internal, SEXP _precision, SEXP _threads)
 {
 BEGIN_RCPP
     const NiftiImage sourceImage(_source);
     const NiftiImage targetImage(_target);
     const NiftiImage sourceMask(_sourceMask);
     const NiftiImage targetMask(_targetMask);
+    
+#ifdef _OPENMP
+    if (!Rf_isNull(_threads) && as<int>(_threads) > 0)
+        omp_set_num_threads(as<int>(_threads));
+#endif
     
     checkImages(sourceImage, targetImage);
     
@@ -599,9 +614,9 @@ END_RCPP
 }
 
 static R_CallMethodDef callMethods[] = {
-    { "calculateMeasure",       (DL_FUNC) &calculateMeasure,    4 },
-    { "regLinear",              (DL_FUNC) &regLinear,           16 },
-    { "regNonlinear",           (DL_FUNC) &regNonlinear,        19 },
+    { "calculateMeasure",       (DL_FUNC) &calculateMeasure,    5 },
+    { "regLinear",              (DL_FUNC) &regLinear,           17 },
+    { "regNonlinear",           (DL_FUNC) &regNonlinear,        20 },
     { "getDeformationField",    (DL_FUNC) &getDeformationField, 2 },
     { "transformPoints",        (DL_FUNC) &transformPoints,     3 },
     { "halfTransform",          (DL_FUNC) &halfTransform,       1 },
