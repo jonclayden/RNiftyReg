@@ -2,6 +2,15 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.6.5
+
+- The core registration functions gain an argument to control the maximum number
+  of OpenMP threads to use, where applicable. The default is determined by the
+  "RNiftyReg.threads" option, which is now set during testing to comply with
+  CRAN's multithreading requirements.
+
+=================================================================================
+
 VERSION 2.6.4
 
 - The algorithm for searching a deformation field is now more careful to avoid a
