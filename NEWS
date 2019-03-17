@@ -2,6 +2,13 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.6.6
+
+- This update makes a minor change to the package directory structure to satisfy
+  current CRAN requirements.
+
+=================================================================================
+
 VERSION 2.6.5
 
 - The core registration functions gain an argument to control the maximum number
