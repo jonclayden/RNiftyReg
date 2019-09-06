@@ -501,6 +501,9 @@ void reg_aladin<T>::resolveMatrix(unsigned int iterations, const unsigned int op
     this->UpdateTransformationMatrix(optimizationFlag);
 
     iteration++;
+#ifdef HAVE_R
+    Rcpp::checkUserInterrupt();
+#endif
   }
   
 #ifdef HAVE_R
