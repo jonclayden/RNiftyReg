@@ -424,12 +424,15 @@ BEGIN_RCPP
             Eigen::Vector2d point;
             point[0] = points(i, 0);
             point[1] = points(i, 1);
-            result[i] = deformationField.findPoint(sourceImage, point, nearest, start);
+            
+            // This result will have two elements if it is exact; otherwise it is much larger
+            const NumericVector resultVector = deformationField.findPoint(sourceImage, point, nearest, start);
+            const bool isExact = (resultVector.length() == 2);
+            result[i] = resultVector;
             
             // Begin subsequent searches near the previous solution
-            NumericVector resultVector(result[i]);
-            start[0] = resultVector[2];
-            start[1] = resultVector[3];
+            start[0] = resultVector[isExact ? 0 : 2];
+            start[1] = resultVector[isExact ? 1 : 3];
         }
     }
     else if (points.ncol() == 3)
@@ -442,13 +445,16 @@ BEGIN_RCPP
             point[0] = points(i, 0);
             point[1] = points(i, 1);
             point[2] = points(i, 2);
-            result[i] = deformationField.findPoint(sourceImage, point, nearest, start);
+            
+            // This result will have three elements if it is exact; otherwise it is much larger
+            const NumericVector resultVector = deformationField.findPoint(sourceImage, point, nearest, start);
+            const bool isExact = (resultVector.length() == 3);
+            result[i] = resultVector;
             
             // Begin subsequent searches near the previous solution
-            NumericVector resultVector(result[i]);
-            start[0] = resultVector[3];
-            start[1] = resultVector[4];
-            start[2] = resultVector[5];
+            start[0] = resultVector[isExact ? 0 : 3];
+            start[1] = resultVector[isExact ? 1 : 4];
+            start[2] = resultVector[isExact ? 2 : 5];
         }
     }
     else
