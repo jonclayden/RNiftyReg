@@ -2,6 +2,17 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.6.7
+
+- It is once again possible to interrupt linear registrations. The relevant code
+  had been accidentally removed during an upstream update. (Reported by Mark
+  Padgham, issue #8.)
+- A C++ bug picked up valgrind has been fixed. This could lead to erroneous
+  initialisation (or possibly even a crash) when searching a deformation field,
+  if "nearest=TRUE" had been specified.
+
+=================================================================================
+
 VERSION 2.6.6
 
 - This update makes a minor change to the package directory structure to satisfy
