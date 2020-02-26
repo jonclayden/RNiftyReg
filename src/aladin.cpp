@@ -17,8 +17,8 @@ AladinResult regAladin (const NiftiImage &sourceImage, const NiftiImage &targetI
     AladinResult result;
     result.source = normaliseImage(isMultichannel(sourceImage) ? collapseChannels(sourceImage) : sourceImage);
     result.target = normaliseImage(isMultichannel(targetImage) ? collapseChannels(targetImage) : targetImage);
-    NiftiImage sourceMask(sourceMaskImage);
-    NiftiImage targetMask(targetMaskImage);
+    NiftiImage sourceMask = normaliseImage(sourceMaskImage);
+    NiftiImage targetMask = normaliseImage(targetMaskImage);
     
     // Binarise the mask images
     if (!sourceMask.isNull())

@@ -84,6 +84,10 @@ void checkImages (const NiftiImage &sourceImage, const NiftiImage &targetImage)
 NiftiImage normaliseImage (const NiftiImage &image)
 {
     NiftiImage normalisedImage = image;
+    if (normalisedImage.isNull())
+        return normalisedImage;
+    
+    // Drop nonunitary dimensions
     normalisedImage.drop();
     
     // NiftyReg assumes RAS when qform and sform codes are both zero

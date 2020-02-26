@@ -17,9 +17,9 @@ F3dResult regF3d (const NiftiImage &sourceImage, const NiftiImage &targetImage, 
     F3dResult result;
     result.source = normaliseImage(isMultichannel(sourceImage) ? collapseChannels(sourceImage) : sourceImage);
     result.target = normaliseImage(isMultichannel(targetImage) ? collapseChannels(targetImage) : targetImage);
-    NiftiImage sourceMask(sourceMaskImage);
-    NiftiImage targetMask(targetMaskImage);
-    NiftiImage controlPoints(initControlPoints);
+    NiftiImage sourceMask = normaliseImage(sourceMaskImage);
+    NiftiImage targetMask = normaliseImage(targetMaskImage);
+    NiftiImage controlPoints = normaliseImage(initControlPoints);
     
     // Binarise the mask images
     if (!sourceMask.isNull())
