@@ -2,6 +2,14 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.6.8
+
+- Mask images without a valid "qform" would lead to inaccurate resampling and
+  hence spurious errors. This has been corrected. (Reported by @christmanjc,
+  issue #9.)
+
+=================================================================================
+
 VERSION 2.6.7
 
 - It is once again possible to interrupt linear registrations. The relevant code
