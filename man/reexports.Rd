@@ -24,6 +24,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{RNifti}{\code{\link[RNifti]{pixdim<-}}, \code{\link[RNifti]{pixunits<-}}, \code{\link[RNifti]{qform<-}}, \code{\link[RNifti]{sform<-}}, \code{\link[RNifti]{dumpNifti}}, \code{\link[RNifti]{ndim}}, \code{\link[RNifti]{pixdim}}, \code{\link[RNifti]{pixunits}}, \code{\link[RNifti]{retrieveNifti}}, \code{\link[RNifti]{updateNifti}}, \code{\link[RNifti]{voxelToWorld}}, \code{\link[RNifti]{worldToVoxel}}, \code{\link[RNifti]{writeNifti}}, \code{\link[RNifti]{xform}}}
+  \item{RNifti}{\code{\link[RNifti]{dumpNifti}}, \code{\link[RNifti]{ndim}}, \code{\link[RNifti]{pixdim}}, \code{\link[RNifti]{pixdim<-}}, \code{\link[RNifti]{pixunits}}, \code{\link[RNifti]{pixunits<-}}, \code{\link[RNifti]{qform<-}}, \code{\link[RNifti]{retrieveNifti}}, \code{\link[RNifti]{sform<-}}, \code{\link[RNifti]{updateNifti}}, \code{\link[RNifti]{voxelToWorld}}, \code{\link[RNifti]{worldToVoxel}}, \code{\link[RNifti]{writeNifti}}, \code{\link[RNifti]{xform}}}
 }}
 

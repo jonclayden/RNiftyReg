@@ -9,14 +9,11 @@
 \usage{
 translate(source, translation, ...)
 
-rescale(source, scales, anchor = c("none", "origin", "centre", "center"),
-  ...)
+rescale(source, scales, anchor = c("none", "origin", "centre", "center"), ...)
 
-skew(source, skews, anchor = c("none", "origin", "centre", "center"),
-  ...)
+skew(source, skews, anchor = c("none", "origin", "centre", "center"), ...)
 
-rotate(source, angles, anchor = c("none", "origin", "centre", "center"),
-  ...)
+rotate(source, angles, anchor = c("none", "origin", "centre", "center"), ...)
 }
 \arguments{
 \item{source}{A 2D or 3D image, in the sense of \code{\link{isImage}}.}

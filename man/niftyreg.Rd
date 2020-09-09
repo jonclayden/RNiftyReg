@@ -2,14 +2,17 @@
 % Please edit documentation in R/niftyreg.R
 \name{niftyreg}
 \alias{niftyreg}
+\alias{asNifti.niftyreg}
 \alias{as.array.niftyreg}
 \title{Two and three dimensional image registration}
 \usage{
 niftyreg(source, target, scope = c("affine", "rigid", "nonlinear"),
-  init = NULL, sourceMask = NULL, targetMask = NULL,
-  symmetric = TRUE, interpolation = 3L, estimateOnly = FALSE,
-  sequentialInit = FALSE, internal = NA, precision = c("double",
-  "single"), threads = getOption("RNiftyReg.threads"), ...)
+  init = NULL, sourceMask = NULL, targetMask = NULL, symmetric = TRUE,
+  interpolation = 3L, estimateOnly = FALSE, sequentialInit = FALSE,
+  internal = NA, precision = c("double", "single"),
+  threads = getOption("RNiftyReg.threads"), ...)
+
+\method{asNifti}{niftyreg}(x, ...)
 
 \method{as.array}{niftyreg}(x, ...)
 }

@@ -7,8 +7,8 @@
 niftyreg.nonlinear(source, target, init = NULL, sourceMask = NULL,
   targetMask = NULL, symmetric = TRUE, nLevels = 3L,
   maxIterations = 150L, nBins = 64L, bendingEnergyWeight = 0.001,
-  linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5,
-  5, 5), spacingUnit = c("voxel", "world"), interpolation = 3L,
+  linearEnergyWeight = 0.01, jacobianWeight = 0, finalSpacing = c(5, 5,
+  5), spacingUnit = c("voxel", "world"), interpolation = 3L,
   verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE,
   internal = NA, precision = c("double", "single"),
   threads = getOption("RNiftyReg.threads"))

@@ -4,12 +4,11 @@
 \alias{niftyreg.linear}
 \title{Two and three dimensional linear image registration}
 \usage{
-niftyreg.linear(source, target, scope = c("affine", "rigid"),
-  init = NULL, sourceMask = NULL, targetMask = NULL,
-  symmetric = TRUE, nLevels = 3L, maxIterations = 5L,
-  useBlockPercentage = 50L, interpolation = 3L, verbose = FALSE,
-  estimateOnly = FALSE, sequentialInit = FALSE, internal = NA,
-  precision = c("double", "single"),
+niftyreg.linear(source, target, scope = c("affine", "rigid"), init = NULL,
+  sourceMask = NULL, targetMask = NULL, symmetric = TRUE, nLevels = 3L,
+  maxIterations = 5L, useBlockPercentage = 50L, interpolation = 3L,
+  verbose = FALSE, estimateOnly = FALSE, sequentialInit = FALSE,
+  internal = NA, precision = c("double", "single"),
   threads = getOption("RNiftyReg.threads"))
 }
 \arguments{

@@ -4,9 +4,9 @@
 \alias{buildAffine}
 \title{Build an affine matrix up from its constituent transformations}
 \usage{
-buildAffine(translation = c(0, 0, 0), scales = c(1, 1, 1),
-  skews = c(0, 0, 0), angles = c(0, 0, 0), source = NULL,
-  target = NULL, anchor = c("none", "origin", "centre", "center"))
+buildAffine(translation = c(0, 0, 0), scales = c(1, 1, 1), skews = c(0,
+  0, 0), angles = c(0, 0, 0), source = NULL, target = NULL,
+  anchor = c("none", "origin", "centre", "center"))
 }
 \arguments{
 \item{translation}{Translations along each axis, in \code{\link{pixunits}}
