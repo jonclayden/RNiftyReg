@@ -367,6 +367,14 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
 
 #' @rdname niftyreg
 #' @export
+asNifti.niftyreg <- function (x, ...)
+{
+    return (x$image)
+}
+
+
+#' @rdname niftyreg
+#' @export
 as.array.niftyreg <- function (x, ...)
 {
     as.array(x$image)
