@@ -1,15 +1,15 @@
 Package: RNiftyReg
-Version: 2.6.8
-Date: 2020-03-31
+Version: 2.7.0
+Date: 2020-09-10
 Title: Image Registration Using the 'NiftyReg' Library
-Authors@R: c(person("Jon","Clayden",role=c("cre","aut"),email="code@clayden.org"),
-             person("Marc","Modat",role="aut"),
-             person("Benoit","Presles",role="aut"),
-             person("Thanasis","Anthopoulos",role="aut"),
-             person("Pankaj","Daga",role="aut"))
+Authors@R: c(person("Jon", "Clayden", role=c("cre","aut"), email="code@clayden.org", comment=c(ORCID="0000-0002-6608-0619")),
+             person("Marc", "Modat", role="aut"),
+             person("Benoit", "Presles", role="aut"),
+             person("Thanasis", "Anthopoulos", role="aut"),
+             person("Pankaj", "Daga", role="aut"))
 Maintainer: Jon Clayden <code@clayden.org>
-Imports: Rcpp (>= 0.11.0), RNifti (>= 0.4.0), ore
-Suggests: jpeg, loder, mmand, testthat (>= 0.11.0), covr
+Imports: Rcpp, RNifti, ore
+Suggests: jpeg, loder, mmand, testthat, covr
 LinkingTo: Rcpp, RcppEigen, RNifti
 Description: Provides an 'R' interface to the 'NiftyReg' image registration tools
     <http://sourceforge.net/projects/niftyreg/>. Linear and nonlinear registration

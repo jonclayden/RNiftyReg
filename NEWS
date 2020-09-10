@@ -2,6 +2,20 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.7.0
+
+- New functions saveTransform() and loadTransform() allow a linear transform to
+  be serialised, complete with source and target image metadata, into a single
+  compact RDS file. This does not yet work with nonlinear transforms, because
+  of their more complex metadata. (Suggested by Yves Rozenholc and Christine
+  Keribin.)
+- There is now an asNifti() method for "niftyreg" objects, for use with RNifti
+  version 1.2.0 and above. This allows, for example, writeNifti() to be called
+  directly on the result of a registration. (Suggested by @charleswg, issue
+  #10.)
+
+=================================================================================
+
 VERSION 2.6.8
 
 - Mask images without a valid "qform" would lead to inaccurate resampling and

@@ -7,7 +7,7 @@ knitr::opts_chunk$set(collapse=TRUE, fig.path="tools/figures/", dpi=150, fig.dim
 
 # RNiftyReg: Nifty Registration in R
 
-The `RNiftyReg` package is an R-native interface to the [NiftyReg image registration library](http://sourceforge.net/projects/niftyreg/) developed within the Translational Imaging Group at University College London. The package incorporates the library, so it does not need to be installed separately, and it replaces the NiftyReg command-line front-end with a direct, in-memory bridge to R, based on [Rcpp](http://www.rcpp.org).
+The `RNiftyReg` package is an R-native interface to the [NiftyReg image registration library](https://github.com/KCL-BMEIS/niftyreg). The package incorporates the library, so it does not need to be installed separately, and it replaces the NiftyReg command-line front-end with a direct, in-memory bridge to R, based on [the `RNifti` package](https://github.com/jonclayden/RNifti).
 
 This `README` file primarily covers version 2.0.0 of the package and later. The interface was substantially reworked in that version to make it more natural and less verbose, and earlier versions are incompatible. Information on [moving from prior versions of `RNiftyReg` to 2.x](#upgrading-to-rniftyreg-2x) is included at the end of this file.
 
