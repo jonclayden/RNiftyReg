@@ -17,6 +17,12 @@ test_that("Existing transformations can be applied and combined", {
     expect_that(applyTransform(t2_to_t1,c(40,40,20),nearest=TRUE), equals(c(34,49,64)))
     expect_that(class(applyTransform(t2_to_t1,t2,internal=TRUE))[1], equals("internalImage"))
     
+    saveTransform(t2_to_t1, "t2_to_t1.rds")
+    reloadedTransform <- load("t2_to_t1.rds")
+    expect_equal(applyTransform(reloadedTransform,c(40,40,20),nearest=TRUE), c(34,49,64))
+    expect_equivalent(applyTransform(t2_to_t1,t2), applyTransform(reloadedTransform,t2))
+    unlink("t2_to_t1.rds")
+    
     skip_on_os("solaris")
     
     point <- applyTransform(t2_to_t1, c(40,40,20), nearest=FALSE)

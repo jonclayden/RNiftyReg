@@ -166,6 +166,53 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE, i
 }
 
 
+#' Save and load transform objects
+#' 
+#' These objects save a full transformation object, including source and target
+#' image metadata, to a self-contained RDS file, or load it back from such a
+#' file. This is currently only possible for linear transforms.
+#' 
+#' @param transform A transform, possibly obtained from \code{\link{forward}}
+#'   or \code{\link{reverse}}.
+#' @param file The filename to save to, or load from.
+#' @return \code{loadTransform} returns a deserialised transform object.
+#' 
+#' @author Jon Clayden <code@@clayden.org>
+#' @seealso \code{\link{writeAffine}}, \code{\link{readAffine}}
+#' @export
+saveTransform <- function (transform, file)
+{
+    source <- niftiHeader(attr(transform, "source"))
+    target <- niftiHeader(attr(transform, "target"))
+    
+    if (isAffine(transform, strict=TRUE))
+    {
+        transform <- structure(transform, source=NULL, target=NULL)
+        object <- structure(list(transform=transform, source=source, target=target), class="niftyregRDS")
+        saveRDS(object, file)
+    }
+    else if (isImage(transform, FALSE))
+        stop("Nonlinear transforms cannot currently be serialised using this method")
+    else
+        stop("Specified transform is not valid")
+}
+
+
+#' @rdname saveTransform
+#' @export
+loadTransform <- function (file)
+{
+    object <- readRDS(file)
+    if (!inherits(object, "niftyregRDS"))
+        stop("The specified file does not contain a serialised transform")
+    
+    source <- asNifti(object$source, internal=TRUE)
+    target <- asNifti(object$target, internal=TRUE)
+    transform <- structure(object$transform, source=source, target=target)
+    return (transform)
+}
+
+
 #' Apply simple transformations
 #' 
 #' These functions allow simple transformations to be applied quickly, or in a
@@ -177,6 +224,7 @@ applyTransform <- function (transform, x, interpolation = 3L, nearest = FALSE, i
 #' @inheritParams buildAffine
 #' @param source A 2D or 3D image, in the sense of \code{\link{isImage}}.
 #' @param ... Additional arguments to \code{\link{applyTransform}}.
+#' @return The transformed image.
 #' 
 #' @author Jon Clayden <code@@clayden.org>
 #' @seealso \code{\link{buildAffine}}, \code{\link{applyTransform}}

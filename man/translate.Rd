@@ -38,6 +38,9 @@ point remains in the same place after transformation.}
 \code{source} is two-dimensional, a single angle will be interpreted as
 being in the plane as expected.}
 }
+\value{
+The transformed image.
+}
 \description{
 These functions allow simple transformations to be applied quickly, or in a
 chosen order. They represent simplified interfaces to the
