@@ -12,21 +12,21 @@ test_that("Core registration functions work", {
         skewedHouse <- applyTransform(affine, house)
         
         reg <- niftyreg(skewedHouse, house, symmetric=FALSE)
-        expect_that(forward(reg)[1,2], equals(0.1,tolerance=0.1))
+        expect_equal(forward(reg)[1,2], 0.1, tolerance=0.1)
         
         reg <- niftyreg(skewedHouse, house, symmetric=TRUE)
-        expect_that(forward(reg)[1,2], equals(0.1,tolerance=0.1))
+        expect_equal(forward(reg)[1,2], 0.1, tolerance=0.1)
         
         # Only true for the symmetric case
-        expect_that(invertAffine(forward(reg)), equals(reverse(reg),tolerance=0.0001,check.attributes=FALSE))
+        expect_equivalent(invertAffine(forward(reg)), reverse(reg), tolerance=0.0001)
         
         # Hopefully registration has improved the NMI!
-        expect_that(similarity(skewedHouse,house), is_less_than(similarity(reg$image,house)))
+        expect_lt(similarity(skewedHouse,house), similarity(reg$image,house))
         
         skip_on_cran()
         skip_on_travis()
         
         reg <- niftyreg(skewedHouse, house, scope="nonlinear", init=forward(reg))
-        expect_that(dim(forward(reg)), equals(c(47L,59L,1L,1L,2L)))
+        expect_equal(dim(forward(reg)), c(47L,59L,1L,1L,2L))
     }
 })
