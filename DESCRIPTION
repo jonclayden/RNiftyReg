@@ -12,7 +12,7 @@ Imports: Rcpp, RNifti, ore
 Suggests: jpeg, loder, mmand, testthat, covr
 LinkingTo: Rcpp, RcppEigen, RNifti
 Description: Provides an 'R' interface to the 'NiftyReg' image registration tools
-    <http://sourceforge.net/projects/niftyreg/>. Linear and nonlinear registration
+    <https://github.com/KCL-BMEIS/niftyreg>. Linear and nonlinear registration
     are supported, in two and three dimensions.
 License: GPL-2
 URL: https://github.com/jonclayden/RNiftyReg
