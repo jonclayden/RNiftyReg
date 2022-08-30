@@ -18,5 +18,5 @@ test_that("Affine operations work", {
     expect_equal(round(buildAffine(angles=c(0,0,pi/4),source=source,anchor="centre")[,4]), c(18,5,0,1))
     
     xfm <- buildAffine(scales=c(2,2,2), source=source)
-    expect_equal(origin(attr(xfm,"target")), (origin(attr(xfm,"source"))-1)*2+1)
+    expect_equal(RNifti::origin(attr(xfm,"target")), (RNifti::origin(attr(xfm,"source"))-1)*2+1)
 })
