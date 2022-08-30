@@ -369,6 +369,8 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
 #' @export
 asNifti.niftyreg <- function (x, ...)
 {
+    if (!is.null(x$forwardTransforms[[1]]) && isImage(x$forwardTransforms[[1]],FALSE))
+        message("Note: the transformed image rather than the transform will be extracted")
     return (x$image)
 }
 
@@ -377,6 +379,8 @@ asNifti.niftyreg <- function (x, ...)
 #' @export
 as.array.niftyreg <- function (x, ...)
 {
+    if (!is.null(x$forwardTransforms[[1]]) && isImage(x$forwardTransforms[[1]],FALSE))
+        message("Note: the transformed image rather than the transform will be extracted")
     as.array(x$image)
 }
 
