@@ -95,7 +95,7 @@ void reg_f3d2<T>::GetDeformationField()
       updateStepNumber=false;
 #ifndef NDEBUG
    char text[255];
-   sprintf(text, "Velocity integration forward. Step number update=%i",updateStepNumber);
+   snprintf(text, 255, "Velocity integration forward. Step number update=%i",updateStepNumber);
    reg_print_msg_debug(text);
 #endif
    // The forward transformation is computed using the scaling-and-squaring approach
@@ -104,7 +104,7 @@ void reg_f3d2<T>::GetDeformationField()
                                           updateStepNumber
                                           );
 #ifndef NDEBUG
-   sprintf(text, "Velocity integration backward. Step number update=%i",updateStepNumber);
+   snprintf(text, 255, "Velocity integration backward. Step number update=%i",updateStepNumber);
    reg_print_msg_debug(text);
 #endif
    // The number of step number is copied over from the forward transformation

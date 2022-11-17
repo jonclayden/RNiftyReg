@@ -3839,7 +3839,7 @@ void reg_defField_getDeformationFieldFromFlowField(nifti_image *flowFieldImage,
       if(fabs(flowFieldImage->intent_p2)!=squaringNumber)
       {
          char text[255];
-         sprintf(text, "Changing from %i to %i squaring step (equivalent to scaling down by %i)",
+         snprintf(text, 255, "Changing from %i to %i squaring step (equivalent to scaling down by %i)",
                 static_cast<int>(reg_round(fabs(flowFieldImage->intent_p2))),
                 abs(squaringNumber),
                 (int)pow(2.0f,squaringNumber));
@@ -3884,7 +3884,7 @@ void reg_defField_getDeformationFieldFromFlowField(nifti_image *flowFieldImage,
              deformationFieldImage->nvox*deformationFieldImage->nbyper);
 #ifndef NDEBUG
       char text[255];
-      sprintf(text, "Squaring (composition) step %u/%u", i+1, squaringNumber);
+      snprintf(text, 255, "Squaring (composition) step %u/%u", i+1, squaringNumber);
       reg_print_msg_debug(text);
 #endif
    }
@@ -4029,7 +4029,7 @@ void reg_spline_getIntermediateDefFieldFromVelGrid(nifti_image *velocityFieldGri
                NULL);
    #ifndef NDEBUG
          char text[255];
-         sprintf(text, "Squaring (composition) step %u/%u", i+1, squaringNumber);
+         snprintf(text, 255, "Squaring (composition) step %u/%u", i+1, squaringNumber);
          reg_print_msg_debug(text);
    #endif
       }

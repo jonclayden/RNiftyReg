@@ -327,87 +327,87 @@ void reg_f3d<T>::Initialise()
       reg_print_info(this->executableName, "INPUT PARAMETERS");
       reg_print_info(this->executableName, "***********************************************************");
       reg_print_info(this->executableName, "Reference image:");
-      sprintf(text, "\t* name: %s", this->inputReference->fname);
+      snprintf(text, 255, "\t* name: %s", this->inputReference->fname);
       reg_print_info(this->executableName, text);
-      sprintf(text, "\t* image dimension: %i x %i x %i x %i",
+      snprintf(text, 255, "\t* image dimension: %i x %i x %i x %i",
               this->inputReference->nx, this->inputReference->ny,
               this->inputReference->nz, this->inputReference->nt);
       reg_print_info(this->executableName, text);
-      sprintf(text, "\t* image spacing: %g x %g x %g mm",
+      snprintf(text, 255, "\t* image spacing: %g x %g x %g mm",
               this->inputReference->dx,
               this->inputReference->dy, this->inputReference->dz);
       reg_print_info(this->executableName, text);
       for(int i=0; i<this->inputReference->nt; i++)
       {
-         sprintf(text, "\t* intensity threshold for timepoint %i/%i: [%.2g %.2g]",
+         snprintf(text, 255, "\t* intensity threshold for timepoint %i/%i: [%.2g %.2g]",
                  i, this->inputReference->nt-1, this->referenceThresholdLow[i],this->referenceThresholdUp[i]);
          reg_print_info(this->executableName, text);
          if(this->measure_nmi!=NULL){
             if(this->measure_nmi->GetActiveTimepoints()[i]){
-               sprintf(text, "\t* binnining size for timepoint %i/%i: %i",
+               snprintf(text, 255, "\t* binnining size for timepoint %i/%i: %i",
                        i, this->inputFloating->nt-1, this->measure_nmi->GetReferenceBinNumber()[i]-4);
                reg_print_info(this->executableName, text);
             }
          }
       }
-      sprintf(text, "\t* gaussian smoothing sigma: %g", this->referenceSmoothingSigma);
+      snprintf(text, 255, "\t* gaussian smoothing sigma: %g", this->referenceSmoothingSigma);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "");
       reg_print_info(this->executableName, "Floating image:");
       reg_print_info(this->executableName, text);
-      sprintf(text, "\t* name: %s", this->inputFloating->fname);
+      snprintf(text, 255, "\t* name: %s", this->inputFloating->fname);
       reg_print_info(this->executableName, text);
-      sprintf(text, "\t* image dimension: %i x %i x %i x %i",
+      snprintf(text, 255, "\t* image dimension: %i x %i x %i x %i",
               this->inputFloating->nx, this->inputFloating->ny,
               this->inputFloating->nz, this->inputFloating->nt);
       reg_print_info(this->executableName, text);
-      sprintf(text, "\t* image spacing: %g x %g x %g mm",
+      snprintf(text, 255, "\t* image spacing: %g x %g x %g mm",
               this->inputFloating->dx,
               this->inputFloating->dy, this->inputFloating->dz);
       reg_print_info(this->executableName, text);
       for(int i=0; i<this->inputFloating->nt; i++)
       {
-         sprintf(text, "\t* intensity threshold for timepoint %i/%i: [%.2g %.2g]",
+         snprintf(text, 255, "\t* intensity threshold for timepoint %i/%i: [%.2g %.2g]",
                  i, this->inputFloating->nt-1, this->floatingThresholdLow[i],this->floatingThresholdUp[i]);
          reg_print_info(this->executableName, text);
          if(this->measure_nmi!=NULL){
             if(this->measure_nmi->GetActiveTimepoints()[i]){
-               sprintf(text, "\t* binnining size for timepoint %i/%i: %i",
+               snprintf(text, 255, "\t* binnining size for timepoint %i/%i: %i",
                        i, this->inputFloating->nt-1, this->measure_nmi->GetFloatingBinNumber()[i]-4);
                reg_print_info(this->executableName, text);
             }
          }
       }
-      sprintf(text, "\t* gaussian smoothing sigma: %g", this->floatingSmoothingSigma);
+      snprintf(text, 255, "\t* gaussian smoothing sigma: %g", this->floatingSmoothingSigma);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "");
-      sprintf(text, "Warped image padding value: %g", this->warpedPaddingValue);
+      snprintf(text, 255, "Warped image padding value: %g", this->warpedPaddingValue);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "");
-      sprintf(text, "Level number: %i", this->levelNumber);
+      snprintf(text, 255, "Level number: %i", this->levelNumber);
       reg_print_info(this->executableName, text);
       if(this->levelNumber!=this->levelToPerform){
-         sprintf(text, "\t* Level to perform: %i", this->levelToPerform);
+         snprintf(text, 255, "\t* Level to perform: %i", this->levelToPerform);
          reg_print_info(this->executableName, text);
       }
       reg_print_info(this->executableName, "");
-      sprintf(text, "Maximum iteration number during the last level: %i", (int)this->maxiterationNumber);
+      snprintf(text, 255, "Maximum iteration number during the last level: %i", (int)this->maxiterationNumber);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "");
 
 #ifdef BUILD_DEV
       if(this->linearSpline){
-         sprintf(text, "Linear interpolation is used for the parametrisation");
+         snprintf(text, 255, "Linear interpolation is used for the parametrisation");
          reg_print_info(this->executableName, text);
       }
       else{
 #endif
-         sprintf(text, "Cubic B-Spline is used for the parametrisation");
+         snprintf(text, 255, "Cubic B-Spline is used for the parametrisation");
          reg_print_info(this->executableName, text);
 #ifdef BUILD_DEV
       }
 #endif
-      sprintf(text, "Final spacing in mm: %g %g %g",
+      snprintf(text, 255, "Final spacing in mm: %g %g %g",
               this->spacing[0], this->spacing[1], this->spacing[2]);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "");
@@ -430,22 +430,22 @@ void reg_f3d<T>::Initialise()
                                      this->measure_mindssc==NULL) )
 #endif
          reg_print_info(this->executableName, "The NMI is used as a similarity measure.");
-      sprintf(text, "Similarity measure term weight: %g", this->similarityWeight);
+      snprintf(text, 255, "Similarity measure term weight: %g", this->similarityWeight);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "");
       if(this->bendingEnergyWeight>0){
-         sprintf(text, "Bending energy penalty term weight: %g", this->bendingEnergyWeight);
+         snprintf(text, 255, "Bending energy penalty term weight: %g", this->bendingEnergyWeight);
          reg_print_info(this->executableName, text);
          reg_print_info(this->executableName, "");
       }
       if((this->linearEnergyWeight)>0){
-         sprintf(text, "Linear energy penalty term weight: %g",
+         snprintf(text, 255, "Linear energy penalty term weight: %g",
                  this->linearEnergyWeight);
          reg_print_info(this->executableName, text);
          reg_print_info(this->executableName, "");
       }
       if(this->jacobianLogWeight>0){
-         sprintf(text, "Jacobian-based penalty term weight: %g", this->jacobianLogWeight);
+         snprintf(text, 255, "Jacobian-based penalty term weight: %g", this->jacobianLogWeight);
          reg_print_info(this->executableName, text);
          if(this->jacobianLogApproximation){
             reg_print_info(this->executableName, "\t* Jacobian-based penalty term is approximated");
@@ -455,7 +455,7 @@ void reg_f3d<T>::Initialise()
       }
 #ifdef BUILD_DEV
       if((this->pairwiseEnergyWeight)>0){
-         sprintf(text, "Pairwise energy penalty term weight: %g",
+         snprintf(text, 255, "Pairwise energy penalty term weight: %g",
                  this->pairwiseEnergyWeight);
          reg_print_info(this->executableName, text);
          reg_print_info(this->executableName, "");
@@ -541,7 +541,7 @@ double reg_f3d<T>::ComputeJacobianBasedPenaltyTerm(int type)
 #ifndef NDEBUG
          if(it>0){
             char text[255];
-            sprintf(text, "Folding correction, %i step(s)", it);
+            snprintf(text, 255, "Folding correction, %i step(s)", it);
             reg_print_msg_debug(text);
          }
 #endif
@@ -792,7 +792,7 @@ T reg_f3d<T>::NormaliseGradient()
       // It will be normalised later when running f3d_sym or f3d2
 #ifndef NDEBUG
       char text[255];
-      sprintf(text, "Objective function gradient maximal length: %g",maxGradValue);
+      snprintf(text, 255, "Objective function gradient maximal length: %g",maxGradValue);
       reg_print_msg_debug(text);
 #endif
       ptrX = static_cast<T *>(this->transformationGradient->data);
@@ -863,34 +863,34 @@ void reg_f3d<T>::DisplayCurrentLevelParameters()
    {
 #endif
       char text[255];
-      sprintf(text, "Current level: %i / %i", this->currentLevel+1, this->levelNumber);
+      snprintf(text, 255, "Current level: %i / %i", this->currentLevel+1, this->levelNumber);
       reg_print_info(this->executableName, text);
-      sprintf(text, "Maximum iteration number: %i", (int)this->maxiterationNumber);
+      snprintf(text, 255, "Maximum iteration number: %i", (int)this->maxiterationNumber);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "Current reference image");
-      sprintf(text, "\t* image dimension: %i x %i x %i x %i",
+      snprintf(text, 255, "\t* image dimension: %i x %i x %i x %i",
               this->currentReference->nx, this->currentReference->ny,
               this->currentReference->nz,this->currentReference->nt);
       reg_print_info(this->executableName, text);
-      sprintf(text, "\t* image spacing: %g x %g x %g mm",
+      snprintf(text, 255, "\t* image spacing: %g x %g x %g mm",
               this->currentReference->dx, this->currentReference->dy,
               this->currentReference->dz);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "Current floating image");
-      sprintf(text, "\t* image dimension: %i x %i x %i x %i",
+      snprintf(text, 255, "\t* image dimension: %i x %i x %i x %i",
               this->currentFloating->nx, this->currentFloating->ny,
               this->currentFloating->nz,this->currentFloating->nt);
       reg_print_info(this->executableName, text);
-      sprintf(text, "\t* image spacing: %g x %g x %g mm",
+      snprintf(text, 255, "\t* image spacing: %g x %g x %g mm",
               this->currentFloating->dx, this->currentFloating->dy,
               this->currentFloating->dz);
       reg_print_info(this->executableName, text);
       reg_print_info(this->executableName, "Current control point image");
-      sprintf(text, "\t* image dimension: %i x %i x %i",
+      snprintf(text, 255, "\t* image dimension: %i x %i x %i",
               this->controlPointGrid->nx, this->controlPointGrid->ny,
               this->controlPointGrid->nz);
       reg_print_info(this->executableName, text);
-      sprintf(text, "\t* image spacing: %g x %g x %g mm",
+      snprintf(text, 255, "\t* image spacing: %g x %g x %g mm",
               this->controlPointGrid->dx, this->controlPointGrid->dy,
               this->controlPointGrid->dz);
       reg_print_info(this->executableName, text);
@@ -939,7 +939,7 @@ double reg_f3d<T>::GetObjectiveFunctionValue()
    }
 #ifndef NDEBUG
    char text[255];
-   sprintf(text, "(wMeasure) %g | (wBE) %g | (wLE) %g | (wJac) %g",
+   snprintf(text, 255, "(wMeasure) %g | (wBE) %g | (wLE) %g | (wJac) %g",
            this->currentWMeasure, this->currentWBE, this->currentWLE, this->currentWJac);
    reg_print_msg_debug(text);
 #endif
@@ -1156,10 +1156,10 @@ void reg_f3d<T>::PrintInitialObjFunctionValue()
 
    char text[255];
 #ifdef BUILD_DEV
-   sprintf(text, "Initial objective function: %g = (wSIM)%g - (wBE)%g - (wLE)%g - (wJAC)%g - (wPW)%g",
+   snprintf(text, 255, "Initial objective function: %g = (wSIM)%g - (wBE)%g - (wLE)%g - (wJAC)%g - (wPW)%g",
            bestValue, this->bestWMeasure, this->bestWBE, this->bestWLE, this->bestWJac, this->bestWPE);
 #else
-   sprintf(text, "Initial objective function: %g = (wSIM)%g - (wBE)%g - (wLE)%g - (wJAC)%g",
+   snprintf(text, 255, "Initial objective function: %g = (wSIM)%g - (wBE)%g - (wLE)%g - (wJAC)%g",
            bestValue, this->bestWMeasure, this->bestWBE, this->bestWLE, this->bestWJac);
 #endif
    reg_print_info(this->executableName, text);
@@ -1175,21 +1175,21 @@ void reg_f3d<T>::PrintCurrentObjFunctionValue(T currentSize)
    if(!this->verbose) return;
 
    char text[255];
-   sprintf(text, "[%i] Current objective function: %g",
+   snprintf(text, 255, "[%i] Current objective function: %g",
            (int)this->optimiser->GetCurrentIterationNumber(),
            this->optimiser->GetBestObjFunctionValue());
-   sprintf(text+strlen(text), " = (wSIM)%g", this->bestWMeasure);
+   snprintf(text+strlen(text), 255-strlen(text), " = (wSIM)%g", this->bestWMeasure);
    if(this->bendingEnergyWeight>0)
-      sprintf(text+strlen(text), " - (wBE)%.2e", this->bestWBE);
+      snprintf(text+strlen(text), 255-strlen(text), " - (wBE)%.2e", this->bestWBE);
    if(this->linearEnergyWeight>0)
-      sprintf(text+strlen(text), " - (wLE)%.2e", this->bestWLE);
+      snprintf(text+strlen(text), 255-strlen(text), " - (wLE)%.2e", this->bestWLE);
    if(this->jacobianLogWeight>0)
-      sprintf(text+strlen(text), "- (wJAC)%.2e", this->bestWJac);
+      snprintf(text+strlen(text), 255-strlen(text), "- (wJAC)%.2e", this->bestWJac);
 #ifdef BUILD_DEV
    if(this->pairwiseEnergyWeight>0)
-      sprintf(text+strlen(text), " - (wPW)%.2e", this->bestWPE);
+      snprintf(text+strlen(text), 255-strlen(text), " - (wPW)%.2e", this->bestWPE);
 #endif
-   sprintf(text+strlen(text), " [+ %g mm]", currentSize);
+   snprintf(text+strlen(text), 255-strlen(text), " [+ %g mm]", currentSize);
    reg_print_info(this->executableName, text);
 #ifndef NDEBUG
    reg_print_fct_debug("reg_f3d<T>::PrintCurrentObjFunctionValue");
@@ -1391,7 +1391,7 @@ void reg_f3d<T>::DiscreteInitialisation()
       delete discrete_init_object;
       char text[255];
 
-      sprintf(text, "Discrete initialisation done");
+      snprintf(text, 255, "Discrete initialisation done");
       reg_print_info(this->executableName, text);
    }
    else{

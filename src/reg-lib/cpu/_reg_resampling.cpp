@@ -124,9 +124,9 @@ void reg_dti_resampling_preprocessing(nifti_image *floatingImage,
 #ifndef NDEBUG
       char text[255];
       reg_print_msg_debug("DTI indices:");
-      sprintf(text, "Active time point:");
+      snprintf(text, 255, "Active time point:");
       for(unsigned int i = 0; i < 6; i++ )
-         sprintf(text, "%s %i", text, dtIndicies[i]);
+         snprintf(text, 255, "%s %i", text, dtIndicies[i]);
       reg_print_msg_debug(text);
 #endif
 
@@ -417,7 +417,7 @@ void ResampleImage3D(nifti_image *floatingImage,
    {
 #ifndef NDEBUG
       char text[255];
-      sprintf(text, "3D resampling of volume number %lu",t);
+      snprintf(text, 255, "3D resampling of volume number %lu",t);
       reg_print_msg_debug(text);
 #endif
 
@@ -595,7 +595,7 @@ void ResampleImage2D(nifti_image *floatingImage,
    {
 #ifndef NDEBUG
       char text[255];
-      sprintf(text, "2D resampling of volume number %lu",t);
+      snprintf(text, 255, "2D resampling of volume number %lu",t);
       reg_print_msg_debug(text);
 #endif
       FloatingTYPE *warpedIntensity = &warpedIntensityPtr[t*warpedVoxelNumber];
@@ -1393,7 +1393,7 @@ void ResampleImage3D_PSF(nifti_image *floatingImage,
    {
 #ifndef NDEBUG
       char text[255];
-      sprintf(text,"PSF 3D resampling of volume number %lu\n",t);
+      snprintf(text, 255,"PSF 3D resampling of volume number %lu\n",t);
       reg_print_msg_debug(text);
 #endif
 
@@ -2557,7 +2557,7 @@ void TrilinearImageGradient(nifti_image *floatingImage,
 
 #ifndef NDEBUG
    char text[255];
-   sprintf(text, "3D linear gradient computation of volume number %i", active_timepoint);
+   snprintf(text, 255, "3D linear gradient computation of volume number %i", active_timepoint);
    reg_print_msg_debug(text);
 #endif
 
@@ -2752,7 +2752,7 @@ void BilinearImageGradient(nifti_image *floatingImage,
 
 #ifndef NDEBUG
    char text[255];
-   sprintf(text, "2D linear gradient computation of volume number %i",active_timepoint);
+   snprintf(text, 255, "2D linear gradient computation of volume number %i",active_timepoint);
    reg_print_msg_debug(text);
 #endif
 
@@ -2887,7 +2887,7 @@ void CubicSplineImageGradient3D(nifti_image *floatingImage,
 
 #ifndef NDEBUG
       char text[255];
-      sprintf(text, "3D cubic spline gradient computation of volume number %i",active_timepoint);
+      snprintf(text, 255, "3D cubic spline gradient computation of volume number %i",active_timepoint);
       reg_print_msg_debug(text);
 #endif
 
@@ -3049,7 +3049,7 @@ void CubicSplineImageGradient2D(nifti_image *floatingImage,
 
 #ifndef NDEBUG
    char text[255];
-   sprintf(text, "2D cubic spline gradient computation of volume number %i",active_timepoint);
+   snprintf(text, 255, "2D cubic spline gradient computation of volume number %i",active_timepoint);
    reg_print_msg_debug(text);
 #endif
    int previous[2], b, Y, a;

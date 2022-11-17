@@ -241,7 +241,7 @@ void initialise_block_matching_method(nifti_image * reference,
    }
 #ifndef NDEBUG
    char text[255];
-   sprintf(text, "There are %i active block(s) out of %i.",
+   snprintf(text, 255, "There are %i active block(s) out of %i.",
            params->activeBlockNumber, params->totalBlockNumber);
    reg_print_msg_debug(text);
       #endif
@@ -719,7 +719,7 @@ void optimize(_reg_blockMatchingParam *params,
          if(params->definedActiveBlockNumber < 6)
          {
             char text[255];
-            sprintf(text, "%i correspondances between blocks were found", params->definedActiveBlockNumber);
+            snprintf(text, 255, "%i correspondances between blocks were found", params->definedActiveBlockNumber);
             reg_print_msg_error(text);
             reg_print_msg_error("Not enough correspondences were found - it is impossible to estimate an affine transfomation");
             reg_exit();
@@ -728,7 +728,7 @@ void optimize(_reg_blockMatchingParam *params,
          if(params->definedActiveBlockNumber < 4)
          {
             char text[255];
-            sprintf(text, "%i correspondances between blocks were found", params->definedActiveBlockNumber);
+            snprintf(text, 255, "%i correspondances between blocks were found", params->definedActiveBlockNumber);
             reg_print_msg_error(text);
             reg_print_msg_error("Not enough correspondences were found - it is impossible to estimate a rigid transfomation");
             reg_exit();
@@ -769,7 +769,7 @@ void optimize(_reg_blockMatchingParam *params,
          if(params->definedActiveBlockNumber < 8)
          {
             char text[255];
-            sprintf(text, "%i correspondances between blocks were found", params->definedActiveBlockNumber);
+            snprintf(text, 255, "%i correspondances between blocks were found", params->definedActiveBlockNumber);
             reg_print_msg_error(text);
             reg_print_msg_error("Not enough correspondances were found - it is impossible to estimate an affine tranfomation");
             reg_exit();
@@ -778,7 +778,7 @@ void optimize(_reg_blockMatchingParam *params,
          if(params->definedActiveBlockNumber < 4)
          {
             char text[255];
-            sprintf(text, "%i correspondances between blocks were found", params->definedActiveBlockNumber);
+            snprintf(text, 255, "%i correspondances between blocks were found", params->definedActiveBlockNumber);
             reg_print_msg_error(text);
             reg_print_msg_error("Not enough correspondances were found - it is impossible to estimate a rigid tranfomation");
             reg_exit();

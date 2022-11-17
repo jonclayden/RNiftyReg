@@ -354,9 +354,9 @@ template <class T>
 void reg_aladin_sym<T>::DebugPrintLevelInfoStart()
 {
    char text[255];
-   sprintf(text, "Current level %i / %i", this->CurrentLevel+1, this->NumberOfLevels);
+   snprintf(text, 255, "Current level %i / %i", this->CurrentLevel+1, this->NumberOfLevels);
    reg_print_info(this->executableName,text);
-   sprintf(text, "reference image size: \t%ix%ix%i voxels\t%gx%gx%g mm",
+   snprintf(text, 255, "reference image size: \t%ix%ix%i voxels\t%gx%gx%g mm",
            this->con->getCurrentReference()->nx,
            this->con->getCurrentReference()->ny,
            this->con->getCurrentReference()->nz,
@@ -364,7 +364,7 @@ void reg_aladin_sym<T>::DebugPrintLevelInfoStart()
            this->con->getCurrentReference()->dy,
            this->con->getCurrentReference()->dz);
    reg_print_info(this->executableName,text);
-   sprintf(text, "floating image size: \t%ix%ix%i voxels\t%gx%gx%g mm",
+   snprintf(text, 255, "floating image size: \t%ix%ix%i voxels\t%gx%gx%g mm",
            this->con->getCurrentFloating()->nx,
            this->con->getCurrentFloating()->ny,
            this->con->getCurrentFloating()->nz,
@@ -377,10 +377,10 @@ void reg_aladin_sym<T>::DebugPrintLevelInfoStart()
    }
    else reg_print_info(this->executableName, "Block size = [4 4 4]");
    reg_print_info(this->executableName, "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *");
-   sprintf(text, "Forward Block number = [%i %i %i]", this->blockMatchingParams->blockNumber[0],
+   snprintf(text, 255, "Forward Block number = [%i %i %i]", this->blockMatchingParams->blockNumber[0],
           this->blockMatchingParams->blockNumber[1], this->blockMatchingParams->blockNumber[2]);
    reg_print_info(this->executableName, text);
-   sprintf(text, "Backward Block number = [%i %i %i]", this->BackwardBlockMatchingParams->blockNumber[0],
+   snprintf(text, 255, "Backward Block number = [%i %i %i]", this->BackwardBlockMatchingParams->blockNumber[0],
           this->BackwardBlockMatchingParams->blockNumber[1], this->BackwardBlockMatchingParams->blockNumber[2]);
    reg_print_info(this->executableName, text);
    reg_mat44_disp(this->TransformationMatrix,

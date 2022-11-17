@@ -210,25 +210,25 @@ int reg_aladin<T>::Print()
 #endif
     char text[255];
     reg_print_info(this->executableName, "Parameters");
-    sprintf(text, "Platform: %s", this->platform->getName().c_str());
+    snprintf(text, 255, "Platform: %s", this->platform->getName().c_str());
     reg_print_info(this->executableName, text);
-    sprintf(text, "Reference image name: %s", this->InputReference->fname);
+    snprintf(text, 255, "Reference image name: %s", this->InputReference->fname);
     reg_print_info(this->executableName, text);
-    sprintf(text, "\t%ix%ix%i voxels", this->InputReference->nx, this->InputReference->ny, this->InputReference->nz);
+    snprintf(text, 255, "\t%ix%ix%i voxels", this->InputReference->nx, this->InputReference->ny, this->InputReference->nz);
     reg_print_info(this->executableName, text);
-    sprintf(text, "\t%gx%gx%g mm", this->InputReference->dx, this->InputReference->dy, this->InputReference->dz);
+    snprintf(text, 255, "\t%gx%gx%g mm", this->InputReference->dx, this->InputReference->dy, this->InputReference->dz);
     reg_print_info(this->executableName, text);
-    sprintf(text, "Floating image name: %s", this->InputFloating->fname);
+    snprintf(text, 255, "Floating image name: %s", this->InputFloating->fname);
     reg_print_info(this->executableName, text);
-    sprintf(text, "\t%ix%ix%i voxels", this->InputFloating->nx, this->InputFloating->ny, this->InputFloating->nz);
+    snprintf(text, 255, "\t%ix%ix%i voxels", this->InputFloating->nx, this->InputFloating->ny, this->InputFloating->nz);
     reg_print_info(this->executableName, text);
-    sprintf(text, "\t%gx%gx%g mm", this->InputFloating->dx, this->InputFloating->dy, this->InputFloating->dz);
+    snprintf(text, 255, "\t%gx%gx%g mm", this->InputFloating->dx, this->InputFloating->dy, this->InputFloating->dz);
     reg_print_info(this->executableName, text);
-    sprintf(text, "Maximum iteration number: %i", this->MaxIterations);
+    snprintf(text, 255, "Maximum iteration number: %i", this->MaxIterations);
     reg_print_info(this->executableName, text);
-    sprintf(text, "\t(%i during the first level)", 2 * this->MaxIterations);
+    snprintf(text, 255, "\t(%i during the first level)", 2 * this->MaxIterations);
     reg_print_info(this->executableName, text);
-    sprintf(text, "Percentage of blocks: %i %%", this->BlockPercentage);
+    snprintf(text, 255, "Percentage of blocks: %i %%", this->BlockPercentage);
     reg_print_info(this->executableName, text);
     reg_print_info(this->executableName, "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *");
 #ifdef NDEBUG
@@ -332,7 +332,7 @@ void reg_aladin<T>::InitialiseRegistration()
     else
     {
       char text[255];
-      sprintf(text, "The specified input affine file (%s) can not be read", this->InputTransformName);
+      snprintf(text, 255, "The specified input affine file (%s) can not be read", this->InputTransformName);
       reg_print_fct_error("reg_aladin<T>::InitialiseRegistration()");
       reg_print_msg_error(text);
       reg_exit();
@@ -492,7 +492,7 @@ void reg_aladin<T>::resolveMatrix(unsigned int iterations, const unsigned int op
   while (iteration < iterations) {
 #ifndef NDEBUG
     char text[255];
-    sprintf(text, "%s - level: %i/%i - iteration %i/%i",
+    snprintf(text, 255, "%s - level: %i/%i - iteration %i/%i",
             optimizationFlag ? (char *)"Affine" : (char *)"Rigid",
             this->CurrentLevel+1, this->NumberOfLevels, iteration+1, iterations);
     reg_print_msg_debug(text);
@@ -633,9 +633,9 @@ void reg_aladin<T>::DebugPrintLevelInfoStart()
 {
   /* Display some parameters specific to the current level */
   char text[255];
-  sprintf(text, "Current level %i / %i", this->CurrentLevel + 1, this->NumberOfLevels);
+  snprintf(text, 255, "Current level %i / %i", this->CurrentLevel + 1, this->NumberOfLevels);
   reg_print_info(this->executableName,text);
-  sprintf(text, "reference image size: \t%ix%ix%i voxels\t%gx%gx%g mm",
+  snprintf(text, 255, "reference image size: \t%ix%ix%i voxels\t%gx%gx%g mm",
           this->con->getCurrentReference()->nx,
           this->con->getCurrentReference()->ny,
           this->con->getCurrentReference()->nz,
@@ -643,7 +643,7 @@ void reg_aladin<T>::DebugPrintLevelInfoStart()
           this->con->getCurrentReference()->dy,
           this->con->getCurrentReference()->dz);
   reg_print_info(this->executableName,text);
-  sprintf(text, "floating image size: \t%ix%ix%i voxels\t%gx%gx%g mm",
+  snprintf(text, 255, "floating image size: \t%ix%ix%i voxels\t%gx%gx%g mm",
           this->con->getCurrentFloating()->nx,
           this->con->getCurrentFloating()->ny,
           this->con->getCurrentFloating()->nz,
@@ -656,7 +656,7 @@ void reg_aladin<T>::DebugPrintLevelInfoStart()
   }
   else reg_print_info(this->executableName, "Block size = [4 4 4]");
   reg_print_info(this->executableName, "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *");
-  sprintf(text, "Block number = [%i %i %i]", this->blockMatchingParams->blockNumber[0],
+  snprintf(text, 255, "Block number = [%i %i %i]", this->blockMatchingParams->blockNumber[0],
       this->blockMatchingParams->blockNumber[1], this->blockMatchingParams->blockNumber[2]);
   reg_print_info(this->executableName,text);
   reg_mat44_disp(this->TransformationMatrix, (char *) "[reg_aladin] Initial transformation matrix:");
