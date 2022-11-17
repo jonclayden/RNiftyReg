@@ -124,8 +124,8 @@ void reg_matrixMultiply(T *mat1,
     // First check that the dimension are appropriate
     if (dim1[1] != dim2[0])
     {
-        char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
-            dim1[0], dim1[1], dim2[0], dim2[1]);
+        char text[255]; snprintf(text, 255, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
+            (unsigned long) dim1[0], (unsigned long) dim1[1], (unsigned long) dim2[0], (unsigned long) dim2[1]);
         reg_print_fct_error("reg_matrixMultiply");
         reg_print_msg_error(text);
         reg_exit();
@@ -237,8 +237,8 @@ T** reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t 
     if (transposeMat2 == false) {
         // First check that the dimension are appropriate
         if (mat1Y != mat2X) {
-            char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
-                mat1X, mat1Y, mat2X, mat2Y);
+            char text[255]; snprintf(text, 255, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
+                (unsigned long) mat1X, (unsigned long) mat1Y, (unsigned long) mat2X, (unsigned long) mat2Y);
             reg_print_fct_error("reg_matrix2DMultiply");
             reg_print_msg_error(text);
             reg_exit();
@@ -263,8 +263,8 @@ T** reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t 
     else {
         // First check that the dimension are appropriate
         if (mat1Y != mat2Y) {
-            char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
-                mat1X, mat1Y, mat2Y, mat2X);
+            char text[255]; snprintf(text, 255, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
+                (unsigned long) mat1X, (unsigned long) mat1Y, (unsigned long) mat2Y, (unsigned long) mat2X);
             reg_print_fct_error("reg_matrix2DMultiply");
             reg_print_msg_error(text);
             reg_exit();
@@ -294,8 +294,8 @@ void reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t
     if (transposeMat2 == false) {
         // First check that the dimension are appropriate
         if (mat1Y != mat2X) {
-            char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
-                mat1X, mat1Y, mat2X, mat2Y);
+            char text[255]; snprintf(text, 255, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
+                (unsigned long) mat1X, (unsigned long) mat1Y, (unsigned long) mat2X, (unsigned long) mat2Y);
             reg_print_fct_error("reg_matrix2DMultiply");
             reg_print_msg_error(text);
             reg_exit();
@@ -316,8 +316,8 @@ void reg_matrix2DMultiply(T** mat1, size_t mat1X, size_t mat1Y, T** mat2, size_t
     else {
         // First check that the dimension are appropriate
         if (mat1Y != mat2Y) {
-            char text[255]; sprintf(text, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
-                mat1X, mat1Y, mat2Y, mat2X);
+            char text[255]; snprintf(text, 255, "Matrices can not be multiplied due to their size: [%lu %lu] [%lu %lu]",
+                (unsigned long) mat1X, (unsigned long) mat1Y, (unsigned long) mat2Y, (unsigned long) mat2X);
             reg_print_fct_error("reg_matrix2DMultiply");
             reg_print_msg_error(text);
             reg_exit();
