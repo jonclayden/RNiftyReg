@@ -2,6 +2,16 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.7.1
+
+- A note is now emitted when converting a "niftyreg" object resulting from a
+  nonlinear registration to an array or "niftiImage" (implicitly or explicitly).
+  This clarifies that the transformed image, not the control point image, will be
+  converted, as there is some ambiguity in this case. (Raised by issue #22.)
+- A number of warnings from modern compilers have been addressed.
+
+=================================================================================
+
 VERSION 2.7.0
 
 - New functions saveTransform() and loadTransform() allow a linear transform to
