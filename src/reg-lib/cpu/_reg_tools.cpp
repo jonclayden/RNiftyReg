@@ -112,43 +112,8 @@ void reg_intensityRescale_core(nifti_image *image,
 
    // The rescasling is done for each volume independtly
    DTYPE *volumePtr = &imagePtr[timePoint*voxelNumber];
-   DTYPE currentMin=0;
-   DTYPE currentMax=0;
-   switch(image->datatype)
-   {
-   case NIFTI_TYPE_UINT8:
-      currentMin=(DTYPE)std::numeric_limits<unsigned char>::max();
-      currentMax=0;
-      break;
-   case NIFTI_TYPE_INT8:
-      currentMin=(DTYPE)std::numeric_limits<char>::max();
-      currentMax=(DTYPE)-std::numeric_limits<char>::max();
-      break;
-   case NIFTI_TYPE_UINT16:
-      currentMin=(DTYPE)std::numeric_limits<unsigned short>::max();
-      currentMax=0;
-      break;
-   case NIFTI_TYPE_INT16:
-      currentMin=(DTYPE)std::numeric_limits<char>::max();
-      currentMax=-(DTYPE)std::numeric_limits<char>::max();
-      break;
-   case NIFTI_TYPE_UINT32:
-      currentMin=(DTYPE)std::numeric_limits<unsigned int>::max();
-      currentMax=0;
-      break;
-   case NIFTI_TYPE_INT32:
-      currentMin=(DTYPE)std::numeric_limits<int>::max();
-      currentMax=-(DTYPE)std::numeric_limits<int>::max();
-      break;
-   case NIFTI_TYPE_FLOAT32:
-      currentMin=(DTYPE)std::numeric_limits<float>::max();
-      currentMax=-(DTYPE)std::numeric_limits<float>::max();
-      break;
-   case NIFTI_TYPE_FLOAT64:
-      currentMin=(DTYPE)std::numeric_limits<double>::max();
-      currentMax=-(DTYPE)std::numeric_limits<double>::max();
-      break;
-   }
+   DTYPE currentMin = std::numeric_limits<DTYPE>::max();
+   DTYPE currentMax = std::numeric_limits<DTYPE>::is_integer ? std::numeric_limits<DTYPE>::min() : -std::numeric_limits<DTYPE>::max();
 
    // Extract the minimal and maximal values from the current volume
    if(image->scl_slope==0) image->scl_slope=1.0f;
