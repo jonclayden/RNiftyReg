@@ -28,7 +28,7 @@ The [`mmand` package](https://github.com/jonclayden/mmand) for image processing 
 
 ## Reading and writing images
 
-`RNiftyReg` may be used to register and manipulate two and three dimensional images of any sort, although its origins are in medical imaging. Medical images in the standard [NIfTI-1 format](http://nifti.nimh.nih.gov/nifti-1) may be read into R using the `readNifti` function, which is based on the first-party [`RNifti` package](https://github.com/jonclayden/RNifti).
+`RNiftyReg` may be used to register and manipulate two and three dimensional images of any sort, although its origins are in medical imaging. Medical images in the standard NIfTI-1 format may be read into R using the `readNifti` function, which is based on the first-party [`RNifti` package](https://github.com/jonclayden/RNifti).
 
 
 ```r
