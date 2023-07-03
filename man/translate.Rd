@@ -9,7 +9,8 @@
 \usage{
 translate(source, translation, ...)
 
-rescale(source, scales, anchor = c("none", "origin", "centre", "center"), ...)
+rescale(source, scales, anchor = c("none", "origin", "centre", "center"),
+  ...)
 
 skew(source, skews, anchor = c("none", "origin", "centre", "center"), ...)
 

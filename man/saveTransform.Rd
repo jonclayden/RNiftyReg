@@ -5,23 +5,28 @@
 \alias{loadTransform}
 \title{Save and load transform objects}
 \usage{
-saveTransform(transform, file)
+saveTransform(transform, file = NULL)
 
-loadTransform(file)
+loadTransform(x)
 }
 \arguments{
 \item{transform}{A transform, possibly obtained from \code{\link{forward}}
 or \code{\link{reverse}}.}
 
-\item{file}{The filename to save to, or load from.}
+\item{file}{The filename to save to. If \code{NULL}, the serialised object
+is returned directly instead.}
+
+\item{x}{A filename to read from, or a serialised transform object.}
 }
 \value{
-\code{loadTransform} returns a deserialised transform object.
+\code{saveTransform} returns a serialised transform object, if no
+  filename is given; otherwise it is called for its side-effect of writing
+  to file. \code{loadTransform} returns a deserialised transform object.
 }
 \description{
 These objects save a full transformation object, including source and target
 image metadata, to a self-contained RDS file, or load it back from such a
-file. This is currently only possible for linear transforms.
+file.
 }
 \seealso{
 \code{\link{writeAffine}}, \code{\link{readAffine}}
