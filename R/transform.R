@@ -219,7 +219,7 @@ loadTransform <- function (x)
         object <- x
     
     if (!inherits(object, "niftyregRDS"))
-        stop("The specified file does not contain a serialised transform")
+        stop("The specified argument does not contain a serialised transform")
     
     source <- asNifti(object$source, internal=TRUE)
     target <- asNifti(object$target, internal=TRUE)
