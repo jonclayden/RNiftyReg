@@ -285,7 +285,7 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
 {
     if (is.null(source))
         stop("Source image must be specified")
-    source <- retrieveNifti(source)
+    source <- asNifti(source, internal=TRUE)
     
     if (is.list(translation))
         x <- translation
@@ -315,7 +315,7 @@ buildAffine <- function (translation = c(0,0,0), scales = c(1,1,1), skews = c(0,
         }
     }
     else
-        target <- retrieveNifti(target)
+        target <- asNifti(target, internal=TRUE)
     
     if (ndim(source) != ndim(target))
         stop("Source and target images must be of the same dimensionality")

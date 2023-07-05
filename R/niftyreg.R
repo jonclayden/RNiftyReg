@@ -182,8 +182,8 @@ niftyreg.linear <- function (source, target, scope = c("affine","rigid"), init =
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
     
-    source <- retrieveNifti(source)
-    target <- retrieveNifti(target)
+    source <- asNifti(source, internal=TRUE)
+    target <- asNifti(target, internal=TRUE)
     nSourceDim <- ndim(source)
     nTargetDim <- ndim(target)
     
@@ -299,8 +299,8 @@ niftyreg.nonlinear <- function (source, target, init = NULL, sourceMask = NULL, 
     if (missing(source) || missing(target))
         stop("Source and target images must be given")
     
-    source <- retrieveNifti(source)
-    target <- retrieveNifti(target)
+    source <- asNifti(source, internal=TRUE)
+    target <- asNifti(target, internal=TRUE)
     nSourceDim <- ndim(source)
     nTargetDim <- ndim(target)
     
