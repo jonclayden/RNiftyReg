@@ -1,8 +1,8 @@
-#' Read a NIfTI-1 format file
+#' Read a NIfTI format file
 #' 
-#' This function reads one or more NIfTI-1 files into R, using the standard
-#' NIfTI-1 C library. It extends the equivalent function from the \code{RNifti}
-#' package with source and target image parameters.
+#' This function reads files in NIfTI-1 or NIfTI-2 format into R, using the
+#' standard NIfTI C library. It extends the equivalent function from the
+#' \code{RNifti} package with source and target image parameters.
 #' 
 #' @param file A character vector of file names.
 #' @param source,target If the specified \code{file} contains a transformation,

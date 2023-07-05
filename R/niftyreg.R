@@ -411,7 +411,7 @@ forward <- function (object, ...)
 
 #' @rdname forward
 #' @export
-forward.niftyreg <- function (object, i = 1, ...)
+forward.niftyreg <- function (object, i = 1L, ...)
 {
     if (is.null(object$forwardTransforms))
         return (NULL)
@@ -435,7 +435,7 @@ reverse <- function (object, ...)
 
 #' @rdname forward
 #' @export
-reverse.niftyreg <- function (object, i = 1, ...)
+reverse.niftyreg <- function (object, i = 1L, ...)
 {
     if (is.null(object$reverseTransforms))
         return (NULL)
