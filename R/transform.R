@@ -1,3 +1,20 @@
+# For internal use: attach relevant attributes to a transform
+# NULL attributes will not be set (as this removes them) unless remove=TRUE is specified
+xfmAttrib <- function (transform, source = NULL, target = NULL, ..., remove = FALSE)
+{
+    if (!is.null(source) && !inherits(source,"niftiImage"))
+        source <- asNifti(source, internal=TRUE)
+    if (!is.null(target) && !inherits(target,"niftiImage"))
+        source <- asNifti(target, internal=TRUE)
+    
+    attribs <- list(source=source, target=target, ...)
+    if (!remove)
+        attribs <- attribs[!sapply(attribs,is.null)]
+    result <- do.call(structure, c(list(transform),attribs))
+    return (result)
+}
+
+
 #' Calculate the deformation field for a transformation
 #' 
 #' This function is used to calculate the deformation field corresponding to a

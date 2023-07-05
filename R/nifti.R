@@ -22,12 +22,6 @@
 #' @export
 readNifti <- function (file, source = NULL, target = NULL, internal = FALSE)
 {
-    image <- RNifti::readNifti(file, internal)
-    
-    if (!is.null(source))
-        attr(image, "source") <- retrieveNifti(source)
-    if (!is.null(target))
-        attr(image, "target") <- retrieveNifti(target)
-    
-    return (image)
+    image <- RNifti::readNifti(file, internal=internal)
+    return (xfmAttrib(image, source, target))
 }
