@@ -15,7 +15,7 @@
 #' @param strict If \code{TRUE}, this function just tests whether the object is
 #'   of class \code{"affine"}. Otherwise it also tests for an affine-like 4x4
 #'   matrix.
-#' @param source,target Source and target images for the transformation.
+#' @param source,target New source and target images for the transformation.
 #' @param x An \code{"affine"} object.
 #' @param ... Additional parameters to methods. Currently unused.
 #' @return A logical value, which is \code{TRUE} if \code{object} appears to be
@@ -40,23 +40,54 @@ isAffine <- function (object, strict = FALSE)
 
 #' @rdname affine
 #' @export
-asAffine <- function (object, source = NULL, target = NULL)
+asAffine <- function (object, source = NULL, target = NULL, ...)
 {
-    if ("affine" %in% class(object) && is.null(source) && is.null(target))
-        return (object)
-    else
-        object <- as.matrix(object)
+    UseMethod("asAffine")
+}
+
+#' @rdname affine
+#' @export
+asAffine.niftyreg <- function (object, source = NULL, target = NULL, i = 1L, ...)
+{
+    UseMethod("asAffine", forward(object,i))
+}
+
+#' @rdname affine
+#' @export
+asAffine.affine <- function (object, source = NULL, target = NULL, ...)
+{
+    return (xfmAttrib(object, source, target, ...))
+}
+
+#' @rdname affine
+#' @export
+asAffine.niftiImage <- function (object, source = NULL, target = NULL, ...)
+{
+    # For some reason, NiftyReg stores the half transform twice
+    halfTransforms <- lapply(extensions(object), function(ext) {
+        values <- readBin(ext, "numeric", 16L, 4L)
+        return (matrix(values, nrow=4L, ncol=4L, byrow=TRUE))
+    })
+    
+    if (length(halfTransforms) != 2L)
+        stop("NiftyReg embedded affine is not present, or in an unexpected form")
+    else if (object$intent_name != "NREG_TRANS")
+        warning("This image doesn't look like a NiftyReg transform; results may be misleading")
+    
+    transform <- do.call("%*%", halfTransforms)
+    return (xfmAttrib(transform, source, target, class="affine"))
+}
+
+#' @rdname affine
+#' @export
+asAffine.default <- function (object, source = NULL, target = NULL, ...)
+{
+    object <- as.matrix(object)
     
     if (!isTRUE(all.equal(dim(object), c(4,4))))
         stop("Affine matrix should be 4x4")
     
-    object <- structure(object, source=source, target=target, class="affine")
-    if (!is.null(source) && !("niftiImage" %in% class(source)))
-        attr(object,"source") <- retrieveNifti(attr(object,"source"))
-    if (!is.null(target) && !("niftiImage" %in% class(target)))
-        attr(object,"target") <- retrieveNifti(attr(object,"target"))
-    
-    return (object)
+    return (xfmAttrib(object, source, target, class="affine"))
 }
 
 
