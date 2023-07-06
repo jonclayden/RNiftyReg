@@ -62,7 +62,7 @@ asAffine.affine <- function (object, source = NULL, target = NULL, ...)
 
 #' @rdname affine
 #' @export
-asAffine.niftiImage <- function (object, source = NULL, target = NULL, ...)
+asAffine.niftiImage <- function (object, source = attr(object,"source"), target = attr(object,"target"), ...)
 {
     # For some reason, NiftyReg stores the half transform twice
     halfTransforms <- lapply(extensions(object), function(ext) {
@@ -76,10 +76,6 @@ asAffine.niftiImage <- function (object, source = NULL, target = NULL, ...)
         warning("This image doesn't look like a NiftyReg transform; results may be misleading")
     
     transform <- do.call("%*%", halfTransforms)
-    if (is.null(source))
-        source <- attr(object, "source")
-    if (is.null(target))
-        target <- attr(object, "target")
     return (xfmAttrib(transform, source, target, class="affine"))
 }
 
