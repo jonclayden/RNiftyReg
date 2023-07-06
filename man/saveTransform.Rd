@@ -5,7 +5,7 @@
 \alias{loadTransform}
 \title{Save and load transform objects}
 \usage{
-saveTransform(transform, file = NULL)
+saveTransform(transform, fileName = NULL)
 
 loadTransform(x)
 }
@@ -13,10 +13,10 @@ loadTransform(x)
 \item{transform}{A transform, possibly obtained from \code{\link{forward}}
 or \code{\link{reverse}}.}
 
-\item{file}{The filename to save to. If \code{NULL}, the serialised object
-is returned directly instead.}
+\item{fileName}{The file name to save to. If \code{NULL}, the serialised
+object is returned directly instead.}
 
-\item{x}{A filename to read from, or a serialised transform object.}
+\item{x}{A file name to read from, or a serialised transform object.}
 }
 \value{
 \code{saveTransform} returns a serialised transform object, if no

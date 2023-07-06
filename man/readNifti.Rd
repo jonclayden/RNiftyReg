@@ -2,7 +2,7 @@
 % Please edit documentation in R/nifti.R
 \name{readNifti}
 \alias{readNifti}
-\title{Read a NIfTI-1 format file}
+\title{Read a NIfTI format file}
 \usage{
 readNifti(file, source = NULL, target = NULL, internal = FALSE)
 }
@@ -26,9 +26,9 @@ An array or internal image, with class \code{"niftiImage"}, and
   possibly also \code{"internalImage"}.
 }
 \description{
-This function reads one or more NIfTI-1 files into R, using the standard
-NIfTI-1 C library. It extends the equivalent function from the \code{RNifti}
-package with source and target image parameters.
+This function reads files in NIfTI-1 or NIfTI-2 format into R, using the
+standard NIfTI C library. It extends the equivalent function from the
+\code{RNifti} package with source and target image parameters.
 }
 \author{
 Jon Clayden <code@clayden.org>

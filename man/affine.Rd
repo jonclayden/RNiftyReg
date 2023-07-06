@@ -4,12 +4,26 @@
 \alias{isAffine}
 \alias{affine}
 \alias{asAffine}
+\alias{asAffine.niftyreg}
+\alias{asAffine.affine}
+\alias{asAffine.niftiImage}
+\alias{asAffine.default}
 \alias{print.affine}
 \title{Create, test for and print affine matrices}
 \usage{
 isAffine(object, strict = FALSE)
 
-asAffine(object, source = NULL, target = NULL)
+asAffine(object, source = NULL, target = NULL, ...)
+
+\method{asAffine}{niftyreg}(object, source = NULL, target = NULL, i = 1L,
+  ...)
+
+\method{asAffine}{affine}(object, source = NULL, target = NULL, ...)
+
+\method{asAffine}{niftiImage}(object, source = attr(object, "source"),
+  target = attr(object, "target"), ...)
+
+\method{asAffine}{default}(object, source = NULL, target = NULL, ...)
 
 \method{print}{affine}(x, ...)
 }
@@ -20,20 +34,24 @@ asAffine(object, source = NULL, target = NULL)
 of class \code{"affine"}. Otherwise it also tests for an affine-like 4x4
 matrix.}
 
-\item{source, target}{Source and target images for the transformation.}
+\item{source, target}{New source and target images for the transformation.}
+
+\item{...}{Additional parameters to methods.}
+
+\item{i}{The transformation number, for \code{niftyreg} objects containing
+more than one.}
 
 \item{x}{An \code{"affine"} object.}
-
-\item{...}{Additional parameters to methods. Currently unused.}
 }
 \value{
-A logical value, which is \code{TRUE} if \code{object} appears to be
-  an affine matrix.
+For \code{isAffine}, a logical value, which is \code{TRUE} if
+  \code{object} appears to be an affine matrix. For \code{asAffine}, a
+  classed affine object with source and target attributes set appropriately.
 }
 \description{
 \code{isAffine} returns a logical value indicating whether its argument is,
-or resembles, a 4x4 affine matrix. \code{asAffine} converts a suitable
-matrix to the affine class, attaching the source and target images as
+or resembles, a 4x4 affine matrix. \code{asAffine} converts other objects to
+the affine class, attaching or updating the source and target image
 attributes. Affine transformations are a class of linear transformations
 which preserve points, straight lines and planes, and may consist of a
 combination of rotation, translation, scale and skew operations.

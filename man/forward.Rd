@@ -9,11 +9,11 @@
 \usage{
 forward(object, ...)
 
-\method{forward}{niftyreg}(object, i = 1, ...)
+\method{forward}{niftyreg}(object, i = 1L, ...)
 
 reverse(object, ...)
 
-\method{reverse}{niftyreg}(object, i = 1, ...)
+\method{reverse}{niftyreg}(object, i = 1L, ...)
 }
 \arguments{
 \item{object}{An R object.}

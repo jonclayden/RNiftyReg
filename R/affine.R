@@ -1,8 +1,8 @@
 #' Create, test for and print affine matrices
 #' 
 #' \code{isAffine} returns a logical value indicating whether its argument is,
-#' or resembles, a 4x4 affine matrix. \code{asAffine} converts a suitable
-#' matrix to the affine class, attaching the source and target images as
+#' or resembles, a 4x4 affine matrix. \code{asAffine} converts other objects to
+#' the affine class, attaching or updating the source and target image
 #' attributes. Affine transformations are a class of linear transformations
 #' which preserve points, straight lines and planes, and may consist of a
 #' combination of rotation, translation, scale and skew operations.
@@ -17,9 +17,12 @@
 #'   matrix.
 #' @param source,target New source and target images for the transformation.
 #' @param x An \code{"affine"} object.
-#' @param ... Additional parameters to methods. Currently unused.
-#' @return A logical value, which is \code{TRUE} if \code{object} appears to be
-#'   an affine matrix.
+#' @param ... Additional parameters to methods.
+#' @param i The transformation number, for \code{niftyreg} objects containing
+#'   more than one.
+#' @return For \code{isAffine}, a logical value, which is \code{TRUE} if
+#'   \code{object} appears to be an affine matrix. For \code{asAffine}, a
+#'   classed affine object with source and target attributes set appropriately.
 #' 
 #' @note 2D affines are a subset of 3D affines, and are stored in a 4x4 matrix
 #'   for internal consistency, even though a 3x3 matrix would suffice.
