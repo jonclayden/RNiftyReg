@@ -416,12 +416,7 @@ forward.niftyreg <- function (object, i = 1L, ...)
     if (is.null(object$forwardTransforms))
         return (NULL)
     else
-    {
-        result <- object$forwardTransforms[[i]]
-        attr(result, "source") <- object$source[[i]]
-        attr(result, "target") <- object$target
-        return (result)
-    }
+        return (xfmAttrib(object$forwardTransforms[[i]], object$source[[i]], object$target))
 }
 
 
@@ -440,12 +435,7 @@ reverse.niftyreg <- function (object, i = 1L, ...)
     if (is.null(object$reverseTransforms))
         return (NULL)
     else
-    {
-        result <- object$reverseTransforms[[i]]
-        attr(result, "source") <- object$target
-        attr(result, "target") <- object$source[[i]]
-        return (result)
-    }
+        return (xfmAttrib(object$reverseTransforms[[i]], object$target, object$source[[i]]))
 }
 
 
