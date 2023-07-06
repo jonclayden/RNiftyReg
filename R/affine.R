@@ -97,8 +97,8 @@ asAffine.default <- function (object, source = NULL, target = NULL, ...)
 print.affine <- function (x, ...)
 {
     cat("NiftyReg affine matrix:\n")
-    lines <- apply(format(x,scientific=FALSE), 1, paste, collapse="  ")
-    cat(paste(lines, collapse="\n"))
+    lines <- apply(format(round(x,6),scientific=FALSE), 1, paste, collapse="  ")
+    cat(paste0("  ",lines), sep="\n")
     
     source <- attr(x, "source")
     if (!is.null(source))
