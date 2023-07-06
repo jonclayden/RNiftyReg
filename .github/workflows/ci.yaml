@@ -54,4 +54,5 @@ jobs:
         path: Rcheck
     
     - name: Update test coverage
+      if: runner.os == 'Linux'
       run: Rscript -e 'covr::codecov()'
