@@ -29,7 +29,7 @@
 #' @export
 isAffine <- function (object, strict = FALSE)
 {
-    if ("affine" %in% class(object))
+    if (inherits(object, "affine"))
         return (TRUE)
     else if (!strict && is.matrix(object) && isTRUE(all.equal(dim(object), c(4,4))))
         return (TRUE)
