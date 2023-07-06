@@ -46,10 +46,11 @@ asAffine <- function (object, source = NULL, target = NULL, ...)
 }
 
 #' @rdname affine
+#' @method asAffine niftyreg
 #' @export
 asAffine.niftyreg <- function (object, source = NULL, target = NULL, i = 1L, ...)
 {
-    UseMethod("asAffine", forward(object,i))
+    asAffine(forward(object, i))
 }
 
 #' @rdname affine
@@ -75,6 +76,10 @@ asAffine.niftiImage <- function (object, source = NULL, target = NULL, ...)
         warning("This image doesn't look like a NiftyReg transform; results may be misleading")
     
     transform <- do.call("%*%", halfTransforms)
+    if (is.null(source))
+        source <- attr(object, "source")
+    if (is.null(target))
+        target <- attr(object, "target")
     return (xfmAttrib(transform, source, target, class="affine"))
 }
 
