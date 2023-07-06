@@ -1,6 +1,6 @@
 
 
-[![Build Status](https://travis-ci.org/jonclayden/RNiftyReg.svg?branch=master)](https://travis-ci.org/jonclayden/RNiftyReg) [![Build status](https://ci.appveyor.com/api/projects/status/svcf7h0ehvmp2r9k?svg=true)](https://ci.appveyor.com/project/jonclayden/rniftyreg)
+[![CI](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml/badge.svg)](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/jonclayden/RNiftyReg/branch/master/graph/badge.svg?token=PgPV3R4Lmw)](https://codecov.io/gh/jonclayden/RNiftyReg)
 
 # RNiftyReg: Nifty Registration in R
 
