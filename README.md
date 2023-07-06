@@ -1,6 +1,6 @@
 
 
-[![CI](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml/badge.svg)](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/jonclayden/RNiftyReg/branch/master/graph/badge.svg?token=PgPV3R4Lmw)](https://codecov.io/gh/jonclayden/RNiftyReg)
+[![CRAN version](http://www.r-pkg.org/badges/version/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg) [![CI](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml/badge.svg)](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/jonclayden/RNiftyReg/branch/master/graph/badge.svg?token=PgPV3R4Lmw)](https://codecov.io/gh/jonclayden/RNiftyReg) [![Dependencies](https://tinyverse.netlify.com/badge/RNiftyReg)](https://tinyverse.netlify.app)
 
 # RNiftyReg: Nifty Registration in R
 
