@@ -25,8 +25,16 @@ if (tolower(Sys.info()[["sysname"]]) != "sunos") {
     expect_equal(applyTransform(t1_to_mni,point,nearest=TRUE), c(33,49,24))
     expect_equal(round(applyTransform(t1_to_mni,point,nearest=FALSE)), c(33,49,24))
     
+    saveTransform(t1_to_mni, "t1_to_mni.rds")
+    reloadedTransform <- loadTransform("t1_to_mni.rds")
+    expect_equal(applyTransform(reloadedTransform,point,nearest=TRUE), c(33,49,24))
+    unlink("t1_to_mni.rds")
+    
     # Different z-value due to double-rounding
     expect_equal(applyTransform(t1_to_mni,t1,interpolation=0)[33,49,25], t1[34,49,64])
+    
+    # Extract affine embedded in extensions
+    expect_inherits(asAffine(t1_to_mni), "affine")
     
     t2_to_mni <- composeTransforms(t2_to_t1, t1_to_mni)
     expect_equal(applyTransform(t2_to_mni,c(40,40,20),nearest=TRUE), c(33,49,24))

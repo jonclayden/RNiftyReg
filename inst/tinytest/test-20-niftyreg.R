@@ -17,7 +17,7 @@ if (system.file(package="loder") == "") {
     expect_equivalent(invertAffine(forward(reg)), reverse(reg), tolerance=0.0001)
     
     # Hopefully registration has improved the NMI!
-    expect_true(similarity(skewedHouse,house) < similarity(reg$image,house))
+    expect_true(similarity(skewedHouse,house) < similarity(RNifti::asNifti(reg),house))
     
     if (at_home()) {
         reg <- niftyreg(skewedHouse, house, scope="nonlinear", init=forward(reg))
