@@ -1,6 +1,6 @@
 
 
-[![CRAN version](http://www.r-pkg.org/badges/version/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg) [![CI](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml/badge.svg)](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/jonclayden/RNiftyReg/branch/master/graph/badge.svg?token=PgPV3R4Lmw)](https://codecov.io/gh/jonclayden/RNiftyReg) [![Dependencies](https://tinyverse.netlify.com/badge/RNiftyReg)](https://tinyverse.netlify.app)
+[![CRAN version](http://www.r-pkg.org/badges/version/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg) [![CI](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml/badge.svg)](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/jonclayden/RNiftyReg/branch/master/graph/badge.svg?token=PgPV3R4Lmw)](https://app.codecov.io/gh/jonclayden/RNiftyReg) [![Dependencies](https://tinyverse.netlify.com/badge/RNiftyReg)](https://tinyverse.netlify.app)
 
 # RNiftyReg: Nifty Registration in R
 
@@ -115,10 +115,11 @@ Now, instead of registering the image to another image, let's create a simple af
 affine <- buildAffine(skews=0.1, source=house)
 print(affine)
 ## NiftyReg affine matrix:
-##  1.0  -0.1   0.0   0.0
-##  0.0   1.0   0.0   0.0
-##  0.0   0.0   1.0   0.0
-##  0.0   0.0   0.0   1.0
+##    1.0  -0.1   0.0   0.0
+##    0.0   1.0   0.0   0.0
+##    0.0   0.0   1.0   0.0
+##    0.0   0.0   0.0   1.0
+## 
 ## Source origin: (1, 1, 1)
 ## Target origin: (1, 1, 1)
 ```
@@ -150,10 +151,11 @@ Finally, we can register the original image to the skewed one, to recover the tr
 result <- niftyreg(house, house_skewed, scope="affine")
 print(forward(result))
 ## NiftyReg affine matrix:
-##  1.0008598566  -0.0992648527   0.0000000000  -0.2597596645
-## -0.0009524839   0.9996437430   0.0000000000   0.3225949407
-##  0.0000000000   0.0000000000   1.0000000000   0.0000000000
-##  0.0000000000   0.0000000000   0.0000000000   1.0000000000
+##    1.000860  -0.099265   0.000000  -0.259760
+##   -0.000952   0.999644   0.000000   0.322595
+##    0.000000   0.000000   1.000000   0.000000
+##    0.000000   0.000000   0.000000   1.000000
+## 
 ## Source origin: (1, 1, 1)
 ## Target origin: (1, 1, 1)
 ```

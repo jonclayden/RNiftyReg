@@ -2,6 +2,20 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.8.0
+
+- The saveTransform() and loadTransform() functions now also work with nonlinear
+  transforms, and saveTransform() can return the serialised transform rather than
+  writing it to file.
+- asAffine() is now generic, with methods for various classes including
+  "niftiImage". This method now exposes, for the first time, the affine
+  transforms that NiftyReg stores as NIfTI extensions within nonlinear
+  transforms.
+- Affine matrix elements are now rounded to six decimal places for printing.
+- The package now uses tinytest rather than testthat for unit testing.
+
+=================================================================================
+
 VERSION 2.7.1
 
 - A note is now emitted when converting a "niftyreg" object resulting from a
