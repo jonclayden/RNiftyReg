@@ -14,21 +14,20 @@ expect_equal(as.array(jacobian(deformation))[34,49,64], prod(diag(t2_to_t1)), to
 expect_equal(applyTransform(t2_to_t1,c(40,40,20),nearest=TRUE), c(34,49,64))
 expect_equal(class(applyTransform(t2_to_t1,t2,internal=TRUE))[1], "internalImage")
 
-saveTransform(t2_to_t1, "t2_to_t1.rds")
-reloadedTransform <- loadTransform("t2_to_t1.rds")
+rdsFile <- tempfile(fileext="rds")
+saveTransform(t2_to_t1, rdsFile)
+reloadedTransform <- loadTransform(rdsFile)
 expect_equal(applyTransform(reloadedTransform,c(40,40,20),nearest=TRUE), c(34,49,64))
 expect_equivalent(applyTransform(t2_to_t1,t2), applyTransform(reloadedTransform,t2))
-unlink("t2_to_t1.rds")
 
 if (tolower(Sys.info()[["sysname"]]) != "sunos") {
     point <- applyTransform(t2_to_t1, c(40,40,20), nearest=FALSE)
     expect_equal(applyTransform(t1_to_mni,point,nearest=TRUE), c(33,49,24))
     expect_equal(round(applyTransform(t1_to_mni,point,nearest=FALSE)), c(33,49,24))
     
-    saveTransform(t1_to_mni, "t1_to_mni.rds")
-    reloadedTransform <- loadTransform("t1_to_mni.rds")
+    saveTransform(t1_to_mni, rdsFile)
+    reloadedTransform <- loadTransform(rdsFile)
     expect_equal(applyTransform(reloadedTransform,point,nearest=TRUE), c(33,49,24))
-    unlink("t1_to_mni.rds")
     
     # Different z-value due to double-rounding
     expect_equal(applyTransform(t1_to_mni,t1,interpolation=0)[33,49,25], t1[34,49,64])
