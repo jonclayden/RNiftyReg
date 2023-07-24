@@ -2,6 +2,13 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.8.1
+
+- Package tests now write files to the R session's temporary directory to avoid
+  problems on CRAN.
+
+=================================================================================
+
 VERSION 2.8.0
 
 - The saveTransform() and loadTransform() functions now also work with nonlinear
