@@ -248,7 +248,7 @@ loadTransform <- function (x)
         return (xfmAttrib(transform, source, target))
     }
     else
-        return (xfmAttrib(object$transform, source, target))
+        return (asAffine(object$transform, source, target))
 }
 
 

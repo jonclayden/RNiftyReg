@@ -17,6 +17,7 @@ expect_equal(class(applyTransform(t2_to_t1,t2,internal=TRUE))[1], "internalImage
 rdsFile <- tempfile(fileext="rds")
 saveTransform(t2_to_t1, rdsFile)
 reloadedTransform <- loadTransform(rdsFile)
+expect_inherits(reloadedTransform, "affine")
 expect_equal(applyTransform(reloadedTransform,c(40,40,20),nearest=TRUE), c(34,49,64))
 expect_equivalent(applyTransform(t2_to_t1,t2), applyTransform(reloadedTransform,t2))
 
