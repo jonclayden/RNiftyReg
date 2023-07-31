@@ -53,7 +53,14 @@ asAffine <- function (object, source = NULL, target = NULL, ...)
 #' @export
 asAffine.niftyreg <- function (object, source = NULL, target = NULL, i = 1L, ...)
 {
-    asAffine(forward(object, i))
+    asAffine(forward(object, i), source, target, ...)
+}
+
+#' @rdname affine
+#' @export
+asAffine.niftyregRDS <- function (object, source = NULL, target = NULL, ...)
+{
+    asAffine(loadTransform(object), source, target, ...)
 }
 
 #' @rdname affine

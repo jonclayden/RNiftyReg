@@ -5,6 +5,7 @@
 \alias{affine}
 \alias{asAffine}
 \alias{asAffine.niftyreg}
+\alias{asAffine.niftyregRDS}
 \alias{asAffine.affine}
 \alias{asAffine.niftiImage}
 \alias{asAffine.default}
@@ -17,6 +18,8 @@ asAffine(object, source = NULL, target = NULL, ...)
 
 \method{asAffine}{niftyreg}(object, source = NULL, target = NULL, i = 1L,
   ...)
+
+\method{asAffine}{niftyregRDS}(object, source = NULL, target = NULL, ...)
 
 \method{asAffine}{affine}(object, source = NULL, target = NULL, ...)
 
