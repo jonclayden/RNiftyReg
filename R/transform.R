@@ -5,7 +5,7 @@ xfmAttrib <- function (transform, source = NULL, target = NULL, ..., remove = FA
     if (!is.null(source) && !inherits(source,"niftiImage"))
         source <- asNifti(source, internal=TRUE)
     if (!is.null(target) && !inherits(target,"niftiImage"))
-        source <- asNifti(target, internal=TRUE)
+        target <- asNifti(target, internal=TRUE)
     
     attribs <- list(source=source, target=target, ...)
     if (!remove)
