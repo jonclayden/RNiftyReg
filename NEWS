@@ -2,6 +2,15 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.8.2
+
+- Objects of class "niftyregRDS" gain a simple asAffine() method for convenience.
+- The code should now ensure that an affine result from loadTransform() has the
+  "affine" class.
+- An incorrect internal assignment has been corrected.
+
+=================================================================================
+
 VERSION 2.8.1
 
 - Package tests now write files to the R session's temporary directory to avoid
