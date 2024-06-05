@@ -1,6 +1,6 @@
 
 
-[![CRAN version](http://www.r-pkg.org/badges/version/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg) [![CI](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml/badge.svg)](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/jonclayden/RNiftyReg/branch/master/graph/badge.svg?token=PgPV3R4Lmw)](https://app.codecov.io/gh/jonclayden/RNiftyReg) [![Dependencies](https://tinyverse.netlify.com/badge/RNiftyReg)](https://tinyverse.netlify.app)
+[![CRAN version](http://www.r-pkg.org/badges/version/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg) [![CI](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml/badge.svg)](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/jonclayden/RNiftyReg/branch/master/graph/badge.svg?token=PgPV3R4Lmw)](https://app.codecov.io/gh/jonclayden/RNiftyReg) [![Dependencies](https://tinyverse.netlify.app/badge/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg)
 
 # RNiftyReg: Nifty Registration in R
 
@@ -11,7 +11,7 @@ This `README` file primarily covers version 2.0.0 of the package and later. The 
 The package can be installed from CRAN, or the latest development version obtained directly from GitHub:
 
 
-```r
+``` r
 ## install.packages("remotes")
 remotes::install_github("jonclayden/RNiftyReg")
 ```
@@ -31,7 +31,7 @@ The [`mmand` package](https://github.com/jonclayden/mmand) for image processing 
 `RNiftyReg` may be used to register and manipulate two and three dimensional images of any sort, although its origins are in medical imaging. Medical images in the standard NIfTI-1 format may be read into R using the `readNifti` function, which is based on the first-party [`RNifti` package](https://github.com/jonclayden/RNifti).
 
 
-```r
+``` r
 library(RNiftyReg)
 image <- readNifti(system.file("extdata", "epi_t2.nii.gz", package="RNiftyReg"))
 ```
@@ -41,7 +41,7 @@ This image is an R array with some additional attributes containing information 
 As mentioned above, however, images do not have to be in NIfTI-1 format. Any numeric matrix or array can be used, and standard image formats such as JPEG and PNG can be read in using additional packages. For example,
 
 
-```r
+``` r
 ## install.packages("jpeg")
 library(jpeg)
 image <- readJPEG(system.file("extdata", "house_colour_large.jpg", package="RNiftyReg"))
@@ -58,7 +58,7 @@ There are two main classes of transformation available: linear and nonlinear. Li
 Some sample 3D medical images are included with the package. We begin by registering two brain scan images, of the same person, with different contrasts. First we read them in, and then we pass them to the package's core registration function, `niftyreg`.
 
 
-```r
+``` r
 source <- readNifti(system.file("extdata", "epi_t2.nii.gz", package="RNiftyReg"))
 target <- readNifti(system.file("extdata", "flash_t1.nii.gz", package="RNiftyReg"))
 
@@ -70,7 +70,7 @@ The last command will take a few seconds to complete. The `result` is a list wit
 By default the transformation will be an affine matrix. If we want to allow for a nonlinear transformation, with scope for local deformations between one space and the other, we can perform an additional registration as follows.
 
 
-```r
+``` r
 result <- niftyreg(source, target, scope="nonlinear", init=forward(result))
 ```
 
@@ -83,7 +83,7 @@ Once a transformation between two images has been established through registrati
 Let's use a simple image by way of example. We will need the `jpeg` package to read it in, and the `mmand` package (version 1.2.0 or later) to visualise it.
 
 
-```r
+``` r
 ## install.packages(c("jpeg","mmand"))
 library(jpeg); library(mmand)
 ## 
@@ -91,6 +91,9 @@ library(jpeg); library(mmand)
 ## The following object is masked from 'package:RNiftyReg':
 ## 
 ##     rescale
+```
+
+``` r
 
 house <- readJPEG(system.file("extdata", "house_colour_large.jpg", package="RNiftyReg"))
 display(house)
@@ -101,7 +104,7 @@ display(house)
 Clearly this is a colour image, with red, green and blue channels. `RNiftyReg` can work with it in this format, but internally the channels will be averaged before the registration starts. This step performs a colour-to-greyscale conversion equivalent to
 
 
-```r
+``` r
 house_bw <- apply(house, 1:2, mean)
 display(house_bw)
 ```
@@ -111,15 +114,14 @@ display(house_bw)
 Now, instead of registering the image to another image, let's create a simple affine transformation that applies a skew to the image.
 
 
-```r
+``` r
 affine <- buildAffine(skews=0.1, source=house)
 print(affine)
 ## NiftyReg affine matrix:
-##    1.0  -0.1   0.0   0.0
-##    0.0   1.0   0.0   0.0
-##    0.0   0.0   1.0   0.0
-##    0.0   0.0   0.0   1.0
-## 
+##  1.0  -0.1   0.0   0.0
+##  0.0   1.0   0.0   0.0
+##  0.0   0.0   1.0   0.0
+##  0.0   0.0   0.0   1.0
 ## Source origin: (1, 1, 1)
 ## Target origin: (1, 1, 1)
 ```
@@ -127,7 +129,7 @@ print(affine)
 So, this is a diagonal matrix with just a single off-diagonal element, which produces the skew effect. (The sign is negative because NiftyReg actually represents transforms from target to source space, not the more intuitive reverse.) Let's apply it to the image using the important `applyTransform` function, and see the effect.
 
 
-```r
+``` r
 house_skewed <- applyTransform(affine, house)
 display(house_skewed)
 ```
@@ -137,7 +139,7 @@ display(house_skewed)
 Moreover, we can transform a pixel coordinate into the space of the skewed image:
 
 
-```r
+``` r
 applyTransform(affine, c(182,262,1))
 ## [1] 208.1 262.0   1.0
 ```
@@ -147,15 +149,14 @@ Notice that the skew changes the first coordinate (in the up-down direction), bu
 Finally, we can register the original image to the skewed one, to recover the transformation:
 
 
-```r
+``` r
 result <- niftyreg(house, house_skewed, scope="affine")
 print(forward(result))
 ## NiftyReg affine matrix:
-##    1.000860  -0.099265   0.000000  -0.259760
-##   -0.000952   0.999644   0.000000   0.322595
-##    0.000000   0.000000   1.000000   0.000000
-##    0.000000   0.000000   0.000000   1.000000
-## 
+##  1.0008598566  -0.0992648527   0.0000000000  -0.2597596645
+## -0.0009524839   0.9996437430   0.0000000000   0.3225949407
+##  0.0000000000   0.0000000000   1.0000000000   0.0000000000
+##  0.0000000000   0.0000000000   0.0000000000   1.0000000000
 ## Source origin: (1, 1, 1)
 ## Target origin: (1, 1, 1)
 ```
@@ -163,7 +164,7 @@ print(forward(result))
 Notice that the estimated transformation closely approximates the generative one, with the element in row 1, column 2 being very close to -0.1. We can decompose this estimated transformation and recover the skew component:
 
 
-```r
+``` r
 decomposeAffine(forward(result))$skews
 ##        xy        xz        yz 
 ## 0.1001419 0.0000000 0.0000000
@@ -172,7 +173,7 @@ decomposeAffine(forward(result))$skews
 Two other manipulations can be helpful to know about. The first is calculating a half-transform, which can be used to transform the image into a space halfway to the target. For example, using our registration result from above,
 
 
-```r
+``` r
 half_xfm <- halfTransform(forward(result))
 display(applyTransform(half_xfm, house))
 ```
@@ -182,7 +183,7 @@ display(applyTransform(half_xfm, house))
 This results in half of the skew effect being applied. Finally, the `composeTransforms` function allows the effects of two transforms to be combined together. Combining a half-transform with itself will result in the original full transform.
 
 
-```r
+``` r
 all.equal(forward(result), composeTransforms(half_xfm,half_xfm), check.attributes=FALSE)
 ## [1] TRUE
 ```
@@ -192,7 +193,7 @@ all.equal(forward(result), composeTransforms(half_xfm,half_xfm), check.attribute
 The package provides a group of convenience functions—`translate`, `rescale`, `skew` and `rotate`—which can be used to quickly apply simple transformations to an image. For example, the skew operation applied above can be more compactly written as
 
 
-```r
+``` r
 house_skewed <- skew(house, 0.1)
 display(house_skewed)
 ```
@@ -202,7 +203,7 @@ display(house_skewed)
 Since these take the image as their first argument, they are compatible with the chaining operator from the [popular `magrittr` package](https://cran.r-project.org/package=magrittr). However, because such a chain applies multiple transformations to an image, there may be a loss of precision, or of data, compared to a single more complex operation. For example, while
 
 
-```r
+``` r
 library(magrittr)
 house_transformed <- house %>% rotate(pi/4, anchor="centre") %>% translate(30)
 display(house_transformed)
@@ -213,7 +214,7 @@ display(house_transformed)
 is much more readable than
 
 
-```r
+``` r
 xfm <- composeTransforms(buildAffine(angles=pi/4, anchor="centre", source=house), buildAffine(translation=30, source=house))
 house_transformed <- applyTransform(xfm, house)
 display(house_transformed)
