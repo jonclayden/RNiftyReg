@@ -173,10 +173,6 @@ class reg_aladin
         }
 
         void SetInputTransform(const char *filename);
-        mat44 *GetInputTransform()
-        {
-            return this->InputTransform;
-        }
 
 #ifdef HAVE_R
         std::vector<int> GetCompletedIterations()
