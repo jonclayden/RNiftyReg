@@ -1,3 +1,6 @@
 ^\.travis\.yml$
 ^appveyor\.yml$
 ^README\.Rmd$
+^\.github$
+^\.covrignore$
+^compile_commands.json$
