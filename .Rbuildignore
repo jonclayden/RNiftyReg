@@ -3,3 +3,4 @@
 ^README\.Rmd$
 ^\.github$
 ^\.covrignore$
+^compile_commands.json$
