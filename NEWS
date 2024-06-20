@@ -2,6 +2,13 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.8.3
+
+- A NiftyReg class method referencing a nonexistent data member has been removed.
+  (Picked up by LLVM pre-19, reported by BDR.)
+
+=================================================================================
+
 VERSION 2.8.2
 
 - Objects of class "niftyregRDS" gain a simple asAffine() method for convenience.
