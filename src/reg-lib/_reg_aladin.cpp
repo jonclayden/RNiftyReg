@@ -322,10 +322,10 @@ void reg_aladin<T>::InitialiseRegistration()
     reg_thresholdImage<T>(this->FloatingPyramid[l],this->FloatingLowerThreshold, this->FloatingUpperThreshold);
   }
 
-  // Initialise the transformation
+  // Initialise the transformation - for R this is guaranteed to have been done
+#ifndef HAVE_R
   if (this->InputTransformName != NULL)
   {
-#ifndef HAVE_R
     if (FILE *aff = fopen(this->InputTransformName, "r")) {
       fclose(aff);
     }
@@ -338,7 +338,6 @@ void reg_aladin<T>::InitialiseRegistration()
       reg_exit();
     }
     reg_tool_ReadAffineFile(this->TransformationMatrix, this->InputTransformName);
-#endif
   }
   else  // No input affine transformation
   {
@@ -372,6 +371,7 @@ void reg_aladin<T>::InitialiseRegistration()
       this->TransformationMatrix->m[2][3] = floatingRealPosition[2] - referenceRealPosition[2];
     }
   }
+#endif
 }
 /* *************************************************************** */
 template<class T>
