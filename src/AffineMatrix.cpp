@@ -31,23 +31,15 @@ AffineMatrix::AffineMatrix (const Eigen::MatrixXd &matrix, const bool attributes
         addAttributes();
 }
 
-AffineMatrix::AffineMatrix (const nifti_image *sourceImage, const nifti_image *targetImage)
+AffineMatrix::AffineMatrix (const RNifti::NiftiImage &sourceImage, const RNifti::NiftiImage &targetImage)
     : Rcpp::NumericMatrix(4,4)
 {
     std::fill(this->begin(), this->end(), 0.0);
     (*this)(0,0) = (*this)(1,1) = (*this)(2,2) = (*this)(3,3) = 1.0;
     
-    mat44 *sourceMatrix, *targetMatrix;
+    const mat44 sourceMatrix = sourceImage.xform(false);
+    const mat44 targetMatrix = targetImage.xform(false);
     float sourceCentre[3], targetCentre[3], sourceRealPosition[3], targetRealPosition[3];
-    
-    if (sourceImage->sform_code>0)
-        sourceMatrix = const_cast<mat44*>(&(sourceImage->sto_xyz));
-    else
-        sourceMatrix = const_cast<mat44*>(&(sourceImage->qto_xyz));
-    if (targetImage->sform_code>0)
-        targetMatrix = const_cast<mat44*>(&(targetImage->sto_xyz));
-    else
-        targetMatrix = const_cast<mat44*>(&(targetImage->qto_xyz));
     
     sourceCentre[0] = (float) (sourceImage->nx) / 2.0f;
     sourceCentre[1] = (float) (sourceImage->ny) / 2.0f;
@@ -57,8 +49,8 @@ AffineMatrix::AffineMatrix (const nifti_image *sourceImage, const nifti_image *t
     targetCentre[1] = (float) (targetImage->ny) / 2.0f;
     targetCentre[2] = (float) (targetImage->nz) / 2.0f;
     
-    reg_mat44_mul(sourceMatrix, sourceCentre, sourceRealPosition);
-    reg_mat44_mul(targetMatrix, targetCentre, targetRealPosition);
+    reg_mat44_mul(&sourceMatrix, sourceCentre, sourceRealPosition);
+    reg_mat44_mul(&targetMatrix, targetCentre, targetRealPosition);
     
     // Use origins to initialise translation elements
     (*this)(0,3) = sourceRealPosition[0] - targetRealPosition[0];
