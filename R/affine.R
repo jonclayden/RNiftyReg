@@ -213,6 +213,20 @@ convertAffine <- function (affine, source = NULL, target = NULL, newType = c("ni
     sourceScaling <- diag(c(sqrt(colSums(sourceXform[1:3,1:3]^2)), 1))
     targetScaling <- diag(c(sqrt(colSums(targetXform[1:3,1:3]^2)), 1))
     
+    # Handle FSL/FLIRT quirk where images whose xforms have positive determinant are flipped before transformation
+    if (det(sourceXform[1:3,1:3]) > 0)
+    {
+        orient <- unlist(strsplit(orientation(sourceXform), ""))
+        orient[1] <- switch(orient[1], R="L", L="R", A="P", P="A", S="I", I="S")
+        orientation(sourceXform) <- paste(orient, collapse="")
+    }
+    if (det(targetXform[1:3,1:3]) > 0)
+    {
+        orient <- unlist(strsplit(orientation(targetXform), ""))
+        orient[1] <- switch(orient[1], R="L", L="R", A="P", P="A", S="I", I="S")
+        orientation(targetXform) <- paste(orient, collapse="")
+    }
+    
     # NiftyReg transforms convert world coordinates from target to source space
     # FSL transforms convert pseudo-world coordinates (scaled only) from source to target space
     if (newType == "fsl")
