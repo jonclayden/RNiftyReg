@@ -157,17 +157,27 @@ readAffine <- function (fileName, source = NULL, target = NULL, type = NULL)
     
     lines <- readLines(fileName)
     
-    isSourceLine <- (lines %~% "^\\s*# source:\\s*(.+)$")
-    if (is.null(source) && any(isSourceLine))
-        source <- groups(ore.lastmatch())
-    isTargetLine <- (lines %~% "^\\s*# target:\\s*(.+)$")
-    if (is.null(target) && any(isTargetLine))
-        target <- groups(ore.lastmatch())
-    isTypeLine <- (lines %~% "^\\s*# affineType:\\s*(\\w+)\\s*$")
+    match <- regexpr("^\\s*# source:\\s*(.+)$", lines, perl=TRUE)
+    if (is.null(source) && any(match > 0))
+    {
+        index <- which(match > 0)[1]
+        source <- substr(lines[index], attr(match,"capture.start")[index], attr(match,"capture.start")[index]+attr(match,"capture.length")[index])
+    }
+    match <- regexpr("^\\s*# target:\\s*(.+)$", lines, perl=TRUE)
+    if (is.null(target) && any(match > 0))
+    {
+        index <- which(match > 0)[1]
+        target <- substr(lines[index], attr(match,"capture.start")[index], attr(match,"capture.start")[index]+attr(match,"capture.length")[index])
+    }
+    match <- regexpr("^\\s*# affineType:\\s*(\\w+)\\s*$", lines, perl=TRUE)
     if (is.null(type))
     {
-        if (any(isTypeLine))
-            type <- match.arg(tolower(na.omit(groups(ore.lastmatch()))), c("niftyreg","fsl"))
+        if (any(match > 0))
+        {
+            index <- which(match > 0)[1]
+            type <- substr(lines[index], attr(match,"capture.start")[index], attr(match,"capture.start")[index]+attr(match,"capture.length")[index])
+            type <- match.arg(tolower(type), c("niftyreg","fsl"))
+        }
         else
             type <- "niftyreg"
     }

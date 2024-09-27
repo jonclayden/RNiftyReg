@@ -8,7 +8,7 @@ Authors@R: c(person("Jon", "Clayden", role=c("cre","aut"), email="code@clayden.o
              person("Thanasis", "Anthopoulos", role="aut"),
              person("Pankaj", "Daga", role="aut"))
 Maintainer: Jon Clayden <code@clayden.org>
-Imports: Rcpp, RNifti, ore
+Imports: Rcpp, RNifti
 Suggests: jpeg, loder, mmand, tinytest, covr
 LinkingTo: Rcpp, RcppEigen, RNifti
 Description: Provides an 'R' interface to the 'NiftyReg' image registration tools
@@ -18,5 +18,5 @@ License: GPL-2
 URL: https://github.com/jonclayden/RNiftyReg
 BugReports: https://github.com/jonclayden/RNiftyReg/issues
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 Roxygen: list(old_usage=TRUE)
