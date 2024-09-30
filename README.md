@@ -1,6 +1,6 @@
 
 
-[![CRAN version](http://www.r-pkg.org/badges/version/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg) [![CI](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml/badge.svg)](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/jonclayden/RNiftyReg/branch/master/graph/badge.svg?token=PgPV3R4Lmw)](https://app.codecov.io/gh/jonclayden/RNiftyReg) [![Dependencies](https://tinyverse.netlify.app/badge/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg)
+[![CRAN version](https://www.r-pkg.org/badges/version/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg) [![CI](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml/badge.svg)](https://github.com/jonclayden/RNiftyReg/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/jonclayden/RNiftyReg/branch/master/graph/badge.svg?token=PgPV3R4Lmw)](https://app.codecov.io/gh/jonclayden/RNiftyReg) [![Dependencies](https://tinyverse.netlify.app/badge/RNiftyReg)](https://cran.r-project.org/package=RNiftyReg)
 
 # RNiftyReg: Nifty Registration in R
 
@@ -118,10 +118,11 @@ Now, instead of registering the image to another image, let's create a simple af
 affine <- buildAffine(skews=0.1, source=house)
 print(affine)
 ## NiftyReg affine matrix:
-##  1.0  -0.1   0.0   0.0
-##  0.0   1.0   0.0   0.0
-##  0.0   0.0   1.0   0.0
-##  0.0   0.0   0.0   1.0
+##    1.0  -0.1   0.0   0.0
+##    0.0   1.0   0.0   0.0
+##    0.0   0.0   1.0   0.0
+##    0.0   0.0   0.0   1.0
+## 
 ## Source origin: (1, 1, 1)
 ## Target origin: (1, 1, 1)
 ```
@@ -153,10 +154,11 @@ Finally, we can register the original image to the skewed one, to recover the tr
 result <- niftyreg(house, house_skewed, scope="affine")
 print(forward(result))
 ## NiftyReg affine matrix:
-##  1.0008598566  -0.0992648527   0.0000000000  -0.2597596645
-## -0.0009524839   0.9996437430   0.0000000000   0.3225949407
-##  0.0000000000   0.0000000000   1.0000000000   0.0000000000
-##  0.0000000000   0.0000000000   0.0000000000   1.0000000000
+##    1.000860  -0.099265   0.000000  -0.259760
+##   -0.000952   0.999644   0.000000   0.322595
+##    0.000000   0.000000   1.000000   0.000000
+##    0.000000   0.000000   0.000000   1.000000
+## 
 ## Source origin: (1, 1, 1)
 ## Target origin: (1, 1, 1)
 ```
@@ -223,15 +225,3 @@ display(house_transformed)
 ![plot of chunk house-transformed2](tools/figures/house-transformed2-1.png)
 
 the latter avoids the creation of a black band across the top of the final image, since it has access to the full content of the original image, rather than just the truncated version produced by the rotation.
-
-## Upgrading to RNiftyReg 2.x
-
-`RNiftyReg` 2.0.0 is a more-or-less complete rewrite of the package, with the goals of simplifying both the package's dependencies and its usage. The upstream NiftyReg code has also been updated. However, it should still be possible to read and use transformations created using `RNiftyReg` 1.x.
-
-The core changes are
-
-- The `oro.nifti` package is no longer needed, nor used for reading and writing NIfTI files (`RNiftyReg` now offers `readNifti` and `writeNifti`, which are much faster). However, objects of S4 class `nifti` can still be used with the package if desired. Functions return either plain R arrays with attributes or bare-bones `internalImage` objects, which contain only some basic metadata and a pointer to a C-level data structure.
-- There are new functions for halving a transform (`halfTransform`), composing two transforms (`composeTransforms`), and building an affine transform from scratch (`buildAffine`).
-- Registration is now symmetric by default (for both linear and nonlinear), a newer symmetric nonlinear approach is now used, and default cost function weights have been tweaked. Therefore, the arguments to the core `niftyreg` function, and its linear and nonlinear special cases, have changed in both name and defaults. See `?niftyreg` and related help pages for details.
-- It is no longer necessary to use functions specific to transform type to perform many operations. For example, the work of the old `applyAffine`, `applyControlPoints`, `transformWithAffine` and `transformWithControlPoints` functions is done by the flexible new `applyTransform` function. The forward and reverse transforms can always be obtained from a registration using the new `forward` and `reverse` functions, no matter what their type is. However, some affine-only functions, such as `decomposeAffine`, retain their names.
-- The `affineType` attribute has gone, and `convertAffine` is no longer a user-visible function. All affine matrices are stored using the NiftyReg convention. FSL-FLIRT affines can still be read in, but they are converted to NiftyReg convention immediately. In addition, source and target image information is attached to the transforms in attributes, and so does not need to be specified in most function calls.
