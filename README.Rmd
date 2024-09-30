@@ -9,7 +9,7 @@ knitr::opts_chunk$set(collapse=TRUE, fig.path="tools/figures/", dpi=150, fig.dim
 
 The `RNiftyReg` package is an R-native interface to the [NiftyReg image registration library](https://github.com/KCL-BMEIS/niftyreg). The package incorporates the library, so it does not need to be installed separately, and it replaces the NiftyReg command-line front-end with a direct, in-memory bridge to R, based on [the `RNifti` package](https://github.com/jonclayden/RNifti).
 
-This `README` file primarily covers version 2.0.0 of the package and later. The interface was substantially reworked in that version to make it more natural and less verbose, and earlier versions are incompatible. Information on [moving from prior versions of `RNiftyReg` to 2.x](#upgrading-to-rniftyreg-2x) is included at the end of this file.
+This `README` file primarily covers version 2.0.0 of the package and later. The interface was substantially reworked in that version to make it more natural and less verbose, and earlier versions are incompatible.
 
 The package can be installed from CRAN, or the latest development version obtained directly from GitHub:
 
@@ -26,7 +26,6 @@ The [`mmand` package](https://github.com/jonclayden/mmand) for image processing 
 - [Image registration](#image-registration)
 - [Applying and manipulating transformations](#applying-and-manipulating-transformations)
 - [Convenience functions](#convenience-functions)
-- [Upgrading to RNiftyReg 2.x](#upgrading-to-rniftyreg-2x)
 
 ## Reading and writing images
 
