@@ -182,7 +182,7 @@ readAffine <- function (fileName, source = NULL, target = NULL, type = NULL)
             type <- "niftyreg"
     }
     
-    connection <- textConnection(lines[!(lines %~% "^\\s*#")])
+    connection <- textConnection(grep("^\\s*#", lines, perl=TRUE, value=TRUE, invert=TRUE))
     affine <- as.matrix(read.table(connection))
     close(connection)
     
