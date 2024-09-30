@@ -2,6 +2,24 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.8.4
+
+- The logic for reading FSL-FLIRT transforms from file previously overlooked a
+  quirk whereby FLIRT flips images whose xforms have positive determinant (see,
+  for example, https://neurostars.org/t/understanding-fsl-flirt-transformation-matrices/26406).
+  This could result in a spurious flip when these transforms were applied, if the
+  originally registered images were in, say, LAS and RAS orientations. This
+  detail is now handled when FLIRT transforms are imported. (Reported by Martin
+  Wilson.)
+- Affine initialisation matrices for linear registration would previously be
+  replaced by a default internally. This has been corrected.
+- Default affine initialisation matrices now take the pixel/voxel dimensions into
+  account when image "sform" and "qform" codes are both zero.
+- The package's dependency on the "ore" package has been removed, with base R
+  regular expression functions being used instead.
+
+=================================================================================
+
 VERSION 2.8.3
 
 - A NiftyReg class method referencing a nonexistent data member has been removed.
