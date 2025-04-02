@@ -18,5 +18,5 @@ License: GPL-2
 URL: https://github.com/jonclayden/RNiftyReg
 BugReports: https://github.com/jonclayden/RNiftyReg/issues
 Encoding: UTF-8
-RoxygenNote: 7.1.0
+RoxygenNote: 7.3.2
 Roxygen: list(old_usage=TRUE)
