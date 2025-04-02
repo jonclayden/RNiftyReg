@@ -2,6 +2,15 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.7.2
+
+- A NiftyReg class method referencing a nonexistent data member has been removed.
+  This would prevent compilation in some environments. (Back-ported from v2.8.3.)
+- Fixes to affine initialisation and FLIRT transformation handling have been
+  back-ported from v2.8.4.
+
+=================================================================================
+
 VERSION 2.7.1
 
 - A note is now emitted when converting a "niftyreg" object resulting from a
