@@ -14,6 +14,7 @@ expect_equal(as.array(jacobian(deformation))[34,49,64], prod(diag(t2_to_t1)), to
 expect_equal(applyTransform(t2_to_t1,c(40,40,20),nearest=TRUE), c(34,49,64))
 expect_equal(class(applyTransform(t2_to_t1,t2,internal=TRUE))[1], "internalImage")
 
+expect_inherits(saveTransform(t2_to_t1), "niftyregRDS")
 rdsFile <- tempfile(fileext="rds")
 saveTransform(t2_to_t1, rdsFile)
 reloadedTransform <- loadTransform(rdsFile)

@@ -219,7 +219,7 @@ saveTransform <- function (transform, fileName = NULL)
     else
         stop("Specified transform is not valid")
     
-    if (is.null(file))
+    if (is.null(fileName))
         return (object)
     else
         saveRDS(object, fileName)
