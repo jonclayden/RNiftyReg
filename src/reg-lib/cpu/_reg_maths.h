@@ -34,6 +34,17 @@
 #include <omp.h>
 #endif
 
+// C++20 deprecated comparisons between enum types and floating-point values
+// (intent_p1 in this case), so define the values explicitly instead
+#if defined(__cplusplus) && __cplusplus >= 202002L
+#define DEF_FIELD       0
+#define DISP_FIELD      1
+#define CUB_SPLINE_GRID 2
+#define DEF_VEL_FIELD   3
+#define DISP_VEL_FIELD  4
+#define SPLINE_VEL_GRID 5
+#define LIN_SPLINE_GRID 6
+#else
 typedef enum
 {
    DEF_FIELD,
@@ -44,6 +55,7 @@ typedef enum
    SPLINE_VEL_GRID,
    LIN_SPLINE_GRID
 } NREG_TRANS_TYPE;
+#endif
 
 /* *************************************************************** */
 #ifdef HAVE_R
