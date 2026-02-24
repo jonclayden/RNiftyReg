@@ -1,6 +1,6 @@
 Package: RNiftyReg
-Version: 2.8.4
-Date: 2024-09-30
+Version: 2.8.5
+Date: 2026-02-24
 Title: Image Registration Using the 'NiftyReg' Library
 Authors@R: c(person("Jon", "Clayden", role=c("cre","aut"), email="code@clayden.org", comment=c(ORCID="0000-0002-6608-0619")),
              person("Marc", "Modat", role="aut"),

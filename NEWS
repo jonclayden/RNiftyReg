@@ -2,6 +2,18 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.8.5
+
+- Calling saveTransform() with one argument now returns the serialised transform
+  object, as intended, rather than producing an error.
+- Comparisons between floating-point and enumeration types are now avoided when
+  using the C++20 or later standard for compilation, since this now leads to a
+  warning. (Reported by BDR.)
+- The "Upgrading to RNiftyReg 2.x" section of the README has been removed, since
+  the 2.x line of releases is now over 10 years old(!).
+
+=================================================================================
+
 VERSION 2.8.4
 
 - The logic for reading FSL-FLIRT transforms from file previously overlooked a
