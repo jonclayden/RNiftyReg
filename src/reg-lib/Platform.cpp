@@ -14,23 +14,41 @@
 using namespace std;
 
 /* *************************************************************** */
-Platform::Platform(int platformCode)
+static const char *nameForPlatformCode(int platformCode)
 {
-    this->platformCode = platformCode;
+    switch (platformCode) {
+        case NR_PLATFORM_CPU:
+            return "cpu_platform";
+#ifdef _USE_CUDA
+        case NR_PLATFORM_CUDA:
+            return "cuda_platform";
+#endif
+#ifdef _USE_OPENCL
+        case NR_PLATFORM_CL:
+            return "cl_platform";
+#endif
+        default:
+            return "";
+    }
+}
+/* *************************************************************** */
+Platform::Platform(int platformCode):
+    factory(NULL),
+    platformName(nameForPlatformCode(platformCode)),
+    platformCode(platformCode),
+    gpuIdx(0)
+{
     if (platformCode == NR_PLATFORM_CPU) {
         this->factory = new CPUKernelFactory();
-        this->platformName = "cpu_platform";
     }
 #ifdef _USE_CUDA
     else if (platformCode == NR_PLATFORM_CUDA) {
         this->factory = new CUDAKernelFactory();
-        this->platformName = "cuda_platform";
     }
 #endif
 #ifdef _USE_OPENCL
     else if (platformCode == NR_PLATFORM_CL) {
         this->factory = new CLKernelFactory();
-        this->platformName = "cl_platform";
     }
 #endif
 }
