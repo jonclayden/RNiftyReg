@@ -2,6 +2,17 @@ Significant changes to the RNiftyReg package are laid out below for each release
 
 =================================================================================
 
+VERSION 2.8.6
+
+- `Rcpp::stop()`, rather than `Rf_error()`, is now used to signal errors within
+  the C++ interface codebase, to ensure correct stack unwinding. (Reported by
+  Iñaki Ucar.)
+- An attempt at a workaround for a GCC-ASAN (16.1.1) issue has been made,
+  although it may well result from a bug in GCC (cf. https://gcc.gnu.org/bugzilla/show_bug.cgi?id=125187).
+  (Reported by BDR.)
+
+=================================================================================
+
 VERSION 2.8.5
 
 - Calling saveTransform() with one argument now returns the serialised transform
